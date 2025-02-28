@@ -13,6 +13,7 @@ func main() {
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
 		Fullscreen:   true,
+		Tracing:      true,
 	})
 
 	if err := g.Start(); err != nil {
