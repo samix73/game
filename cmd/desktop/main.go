@@ -12,6 +12,7 @@ func main() {
 		Title:        "Game",
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
+		Fullscreen:   true,
 	})
 
 	if err := g.Start(); err != nil {
