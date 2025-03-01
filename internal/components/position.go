@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"golang.org/x/image/math/f64"
 )
 
@@ -24,6 +25,14 @@ func NewPositionRepository() *PositionRepository {
 
 func (c *PositionComponent) ID() ComponentID {
 	return c.id
+}
+
+func (c *PositionComponent) Update() error {
+	panic("don't call Update on PositionComponent")
+}
+
+func (c *PositionComponent) Draw(screen *ebiten.Image) {
+	panic("don't call Draw on PositionComponent")
 }
 
 func (r *PositionRepository) New(owner Component) *PositionComponent {

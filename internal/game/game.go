@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/samix73/game/internal/components"
 )
 
 var _ ebiten.Game = (*Game)(nil)
@@ -22,12 +23,13 @@ type Config struct {
 type Game struct {
 	cfg *Config
 
-	activeLevel *Level
+	dataRepo *components.Repository
 }
 
 func NewGame(cfg *Config) *Game {
 	return &Game{
-		cfg: cfg,
+		cfg:      cfg,
+		dataRepo: components.NewRepository(),
 	}
 }
 
@@ -75,25 +77,17 @@ func (g *Game) setupTrace() (func(), error) {
 	return nil, nil
 }
 
-func (g *Game) SetActiveLevel(level *Level) {
-	g.activeLevel = level
-}
-
 func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 	return g.cfg.ScreenWidth, g.cfg.ScreenHeight
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.activeLevel != nil {
-		g.activeLevel.Draw(screen)
-	}
+	g.dataRepo.Draw(screen)
 }
 
 func (g *Game) Update() error {
-	if g.activeLevel != nil {
-		if err := g.activeLevel.Update(); err != nil {
-			return fmt.Errorf("game.Game.Update activeLevel.Update error: %w", err)
-		}
+	if err := g.dataRepo.Update(); err != nil {
+		return fmt.Errorf("game.Game.Update dataRepo.Update error: %w", err)
 	}
 
 	return nil
