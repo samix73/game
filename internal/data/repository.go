@@ -1,18 +1,30 @@
 package data
 
+import (
+	"github.com/samix73/game/internal/components"
+)
+
 type Repository struct {
-	entities map[EntityType][]Entity
+	positionsRepo  *components.PositionRepository
+	charactersRepo *components.CharacterRepository
 }
 
 func NewRepository() *Repository {
-	return &Repository{
-		entities: make(map[EntityType][]Entity),
-	}
+	return &Repository{}
 }
 
-func (r *Repository) Add(e Entity) Entity {
-	e.SetID(EntityID(len(r.entities[e.Type()])))
-	r.entities[e.Type()] = append(r.entities[e.Type()], e)
+func (r *Repository) Positions() *components.PositionRepository {
+	if r.positionsRepo == nil {
+		r.positionsRepo = components.NewPositionRepository()
+	}
 
-	return e
+	return r.positionsRepo
+}
+
+func (r *Repository) Characters() *components.CharacterRepository {
+	if r.charactersRepo == nil {
+		r.charactersRepo = components.NewCharacterRepository(r.Positions())
+	}
+
+	return r.charactersRepo
 }
