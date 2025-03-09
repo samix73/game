@@ -3,24 +3,27 @@ package ecs
 type EntityID uint64
 
 type Entity struct {
-	world *World
-
 	id         EntityID
-	components map[ComponentTypeID]IComponent
+	world      *World
+	components map[ComponentTypeID]ComponentID
 }
 
-func NewEntity(world *World) *Entity {
-	return &Entity{
-		world:      world,
+func NewEntity(world *World, componentTypes ...IComponentType) *Entity {
+	entity := &Entity{
 		id:         world.nextEntityID(),
-		components: make(map[ComponentTypeID]IComponent),
+		world:      world,
+		components: make(map[ComponentTypeID]ComponentID),
 	}
+
+	for _, componentType := range componentTypes {
+		c := componentType.New()
+
+		entity.components[componentType.ID()] = c.ID()
+	}
+
+	return entity
 }
 
-func (e *Entity) AddComponent(component IComponent) {
-	e.components[component.GetTypeID()] = component
-}
-
-func (e *Entity) GetID() EntityID {
+func (e *Entity) ID() EntityID {
 	return e.id
 }

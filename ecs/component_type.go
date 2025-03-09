@@ -1,77 +1,57 @@
 package ecs
 
-import "fmt"
-
-type IComponentType interface {
-	GetName() string
-	New() IComponent
-	SetWorld(world *World)
-	GetID() ComponentTypeID
-	SetID(id ComponentTypeID)
-}
+import "reflect"
 
 type ComponentTypeID uint64
 
-var _ IComponentType = (*ComponentType[any])(nil)
-
-type ComponentType[T any] struct {
-	world *World
-	id    ComponentTypeID
-
-	name       string
-	nextID     ComponentID
-	components map[ComponentID]*Component[T]
+type IComponentType interface {
+	ID() ComponentTypeID
+	SetID(id ComponentTypeID)
+	New() IComponent
 }
 
-func NewComponentType[T any]() *ComponentType[T] {
+var _ IComponentType = (*ComponentType[IComponent])(nil)
+
+type ComponentType[T IComponent] struct {
+	id               ComponentTypeID
+	name             string
+	world            *World
+	values           map[ComponentID]T
+	nextComponentID_ ComponentID
+}
+
+func NewComponentType[T IComponent](world *World) *ComponentType[T] {
 	var v T
+
 	c := &ComponentType[T]{
-		name:       fmt.Sprintf("%T", v),
-		components: make(map[ComponentID]*Component[T]),
-		nextID:     1,
+		name:             reflect.TypeOf(v).Name(),
+		world:            world,
+		values:           make(map[ComponentID]T),
+		nextComponentID_: 1,
 	}
+
+	world.RegisterComponentType(c)
 
 	return c
 }
 
-func (c *ComponentType[T]) SetWorld(world *World) {
-	if c.world != nil {
-		panic("world already set")
-	}
-
-	c.world = world
-}
-
-func (c *ComponentType[T]) GetID() ComponentTypeID {
+func (c *ComponentType[T]) ID() ComponentTypeID {
 	return c.id
 }
 
 func (c *ComponentType[T]) SetID(id ComponentTypeID) {
 	if c.id != 0 {
-		panic("id already set")
+		panic("ComponentType ID already set")
 	}
 
 	c.id = id
 }
 
-func (c *ComponentType[T]) GetName() string {
-	return c.name
-}
-
-func (c *ComponentType[T]) nextComponentID() ComponentID {
-	id := c.nextID
-	c.nextID++
-	return id
-}
-
 func (c *ComponentType[T]) New() IComponent {
 	var v T
-	component := &Component[T]{
-		id:    c.nextComponentID(),
-		value: v,
-	}
 
-	c.components[component.id] = component
+	id := ComponentID(len(c.values) + 1)
+	c.values[id] = v
 
-	return component
+	return v
 }
