@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/samix73/game/ecs"
 )
 
 var _ ebiten.Game = (*Game)(nil)
@@ -21,12 +22,20 @@ type Config struct {
 
 type Game struct {
 	cfg *Config
+
+	world  *ecs.World
+	camera *Camera
 }
 
 func NewGame(cfg *Config) *Game {
 	return &Game{
 		cfg: cfg,
 	}
+}
+
+func (g *Game) SetWorld(world *ecs.World) {
+	g.world = world
+	g.camera = NewCamera(world, g.cfg.ScreenWidth, g.cfg.ScreenHeight)
 }
 
 func (g *Game) Start() error {
@@ -78,8 +87,17 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	if g.camera != nil {
+		g.camera.Draw(screen)
+	}
 }
 
 func (g *Game) Update() error {
+	if g.world != nil {
+		if err := g.world.Update(); err != nil {
+			return fmt.Errorf("game.Game.Update g.world.Update error: %w", err)
+		}
+	}
+
 	return nil
 }

@@ -1,36 +1,44 @@
 package ecs
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 type ComponentTypeID uint64
 
 type IComponentType interface {
 	ID() ComponentTypeID
 	SetID(id ComponentTypeID)
+	Update() error
 	New() IComponent
 }
 
 var _ IComponentType = (*ComponentType[IComponent])(nil)
 
 type ComponentType[T IComponent] struct {
-	id               ComponentTypeID
-	name             string
-	world            *World
-	values           map[ComponentID]T
-	nextComponentID_ ComponentID
+	id     ComponentTypeID
+	name   string
+	world  *World
+	values map[ComponentID]T
 }
 
 func NewComponentType[T IComponent](world *World) *ComponentType[T] {
 	var v T
+	componentType := reflect.TypeOf(v)
 
-	c := &ComponentType[T]{
-		name:             reflect.TypeOf(v).Name(),
-		world:            world,
-		values:           make(map[ComponentID]T),
-		nextComponentID_: 1,
+	// Check if the concrete type is a pointer
+	if componentType.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("ComponentType %s must be a pointer type", componentType.Name()))
 	}
 
-	world.RegisterComponentType(c)
+	c := &ComponentType[T]{
+		name:   componentType.Name(),
+		world:  world,
+		values: make(map[ComponentID]T),
+	}
+
+	world.registerComponentType(c)
 
 	return c
 }
@@ -45,6 +53,16 @@ func (c *ComponentType[T]) SetID(id ComponentTypeID) {
 	}
 
 	c.id = id
+}
+
+func (c *ComponentType[T]) Update() error {
+	for _, value := range c.values {
+		if err := value.Update(); err != nil {
+			return fmt.Errorf("error updating component %d: %w", value.ID(), err)
+		}
+	}
+
+	return nil
 }
 
 func (c *ComponentType[T]) New() IComponent {
