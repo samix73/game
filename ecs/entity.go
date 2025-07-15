@@ -55,6 +55,11 @@ func (e *Entity) HasComponent(componentTypeID ComponentTypeID) bool {
 	return exists
 }
 
+func (e *Entity) GetComponentID(componentTypeID ComponentTypeID) (ComponentID, bool) {
+	id, exists := e.components[componentTypeID]
+	return id, exists
+}
+
 // RemoveComponent removes a component from the entity
 func (e *Entity) RemoveComponent(componentTypeID ComponentTypeID) {
 	delete(e.components, componentTypeID)
@@ -67,28 +72,23 @@ func (e *Entity) GetAllComponentIDs() map[ComponentTypeID]ComponentID {
 	return result
 }
 
-func (e *Entity) GetComponentID(componentTypeID ComponentTypeID) (ComponentID, bool) {
-	id, exists := e.components[componentTypeID]
-	return id, exists
-}
-
 // GetEntityComponent retrieves a component of type T from this entity
-func GetEntityComponent[T IComponent](e *Entity, componentType *ComponentType[T]) (T, bool) {
+func GetEntityComponent[T IComponent](e *Entity, componentTypeID ComponentTypeID) (T, bool) {
 	var zero T
 
-	if e == nil || componentType == nil {
+	if e == nil || componentTypeID == 0 {
 		return zero, false
 	}
 
-	componentID, exists := e.GetComponentID(componentType.ID())
+	componentID, exists := e.components[componentTypeID]
 	if !exists {
 		return zero, false
 	}
 
-	component, ok := componentType.GetByID(componentID)
+	component, ok := e.world.componentTypes[componentTypeID].GetByID(componentID)
 	if !ok {
 		return zero, false
 	}
 
-	return component, true
+	return component.(T), true
 }
