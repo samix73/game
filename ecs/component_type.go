@@ -2,19 +2,11 @@ package ecs
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 )
 
 type ComponentTypeID uint64
-
-type IComponentType interface {
-	ID() ComponentTypeID
-	SetID(id ComponentTypeID)
-	Update() error
-	New() IComponent
-}
-
-var _ IComponentType = (*ComponentType[IComponent])(nil)
 
 type ComponentType[T IComponent] struct {
 	id     ComponentTypeID
@@ -72,4 +64,16 @@ func (c *ComponentType[T]) New() IComponent {
 	c.values[id] = v
 
 	return v
+}
+
+func (c *ComponentType[T]) GetByID(id ComponentID) (T, bool) {
+	value, exists := c.values[id]
+	return value, exists
+}
+
+func (c *ComponentType[T]) GetAll() map[ComponentID]T {
+	result := make(map[ComponentID]T)
+	maps.Copy(result, c.values)
+
+	return result
 }
