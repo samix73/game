@@ -15,7 +15,7 @@ type Transform struct {
 }
 
 func (t *Transform) Init(id ecs.ComponentID) {
-	t.SetID(id)
+	t.BaseComponent = ecs.NewBaseComponent(id)
 
 	t.vec = f64.Vec2{0, 0}
 	t.rot = 0.0

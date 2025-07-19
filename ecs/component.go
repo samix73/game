@@ -11,11 +11,10 @@ type BaseComponent struct {
 	id ComponentID
 }
 
-func (c *BaseComponent) SetID(id ComponentID) {
-	if c.id != 0 {
-		panic("Component ID already set")
+func NewBaseComponent(id ComponentID) BaseComponent {
+	return BaseComponent{
+		id: id,
 	}
-	c.id = id
 }
 
 func (c *BaseComponent) ID() ComponentID {
