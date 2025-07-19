@@ -19,26 +19,24 @@ type ComponentType[T IComponent] struct {
 
 func NewComponentType[T IComponent](world *World) *ComponentType[T] {
 	var v T
-	componentType := reflect.TypeOf(v)
+	componentReflectType := reflect.TypeOf(v)
 
 	// Check if the concrete type is a pointer
-	if componentType.Kind() != reflect.Ptr {
-		panic(fmt.Sprintf("ComponentType %s must be a pointer type", componentType.Name()))
+	if componentReflectType.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("ComponentType %s must be a pointer type", componentReflectType.Name()))
 	}
 
-	c := &ComponentType[T]{
-		name:            componentType.Name(),
+	componentType := &ComponentType[T]{
+		name:            componentReflectType.Name(),
 		world:           world,
 		values:          make(map[ComponentID]T),
 		reflectType:     reflect.TypeOf(v).Elem(),
 		nextComponentID: 1,
 	}
 
-	var a any = c
+	world.registerComponentType(componentType)
 
-	world.registerComponentType(a.(*ComponentType[IComponent]))
-
-	return c
+	return componentType
 }
 
 func (c *ComponentType[T]) ID() ComponentTypeID {
