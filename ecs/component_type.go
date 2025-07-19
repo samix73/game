@@ -40,7 +40,7 @@ func NewComponentType[T IComponent](world *World) *ComponentType[T] {
 		name:            componentReflectType.Name(),
 		world:           world,
 		values:          make(map[ComponentID]T),
-		reflectType:     reflect.TypeOf(v).Elem(),
+		reflectType:     componentReflectType.Elem(),
 		nextComponentID: 1,
 	}
 
