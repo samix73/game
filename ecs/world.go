@@ -55,17 +55,15 @@ func (w *World) GetEntities() map[EntityID]*Entity {
 	return w.entities
 }
 
-// ...existing code...
-func (w *World) registerComponentType(componentType *ComponentType[IComponent]) {
+func (w *World) registerComponentType(inputComponentType *ComponentType[IComponent]) {
 	for _, ct := range w.componentTypes {
-		if fmt.Sprintf("%T", ct) == fmt.Sprintf("%T", componentType) {
-			panic(fmt.Errorf("ComponentType already registered: %T", componentType))
+		if inputComponentType.reflectType == ct.reflectType {
+			panic(fmt.Errorf("ComponentType already registered: %T", inputComponentType))
 		}
 	}
 
-	componentType.SetID(ComponentTypeID(len(w.componentTypes) + 1))
-
-	w.componentTypes[componentType.ID()] = componentType
+	inputComponentType.SetID(ComponentTypeID(len(w.componentTypes) + 1))
+	w.componentTypes[inputComponentType.ID()] = inputComponentType
 }
 
 func (w *World) registerEntity(entity *Entity) {

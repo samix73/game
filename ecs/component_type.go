@@ -9,10 +9,11 @@ import (
 type ComponentTypeID uint64
 
 type ComponentType[T IComponent] struct {
-	id     ComponentTypeID
-	name   string
-	world  *World
-	values map[ComponentID]T
+	id          ComponentTypeID
+	name        string
+	world       *World
+	values      map[ComponentID]T
+	reflectType reflect.Type
 }
 
 func NewComponentType[T IComponent](world *World) *ComponentType[T] {
@@ -25,9 +26,10 @@ func NewComponentType[T IComponent](world *World) *ComponentType[T] {
 	}
 
 	c := &ComponentType[T]{
-		name:   componentType.Name(),
-		world:  world,
-		values: make(map[ComponentID]T),
+		name:        componentType.Name(),
+		world:       world,
+		values:      make(map[ComponentID]T),
+		reflectType: reflect.TypeOf(v).Elem(),
 	}
 
 	var a any = c
