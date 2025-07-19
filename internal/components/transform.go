@@ -8,28 +8,17 @@ import (
 var _ ecs.IComponent = (*Transform)(nil)
 
 type Transform struct {
-	id ecs.ComponentID
+	ecs.BaseComponent
 
 	vec f64.Vec2 // Position in the world
 	rot float64  // Rotation in radians
 }
 
-func (t *Transform) ID() ecs.ComponentID {
-	return t.id
-}
-
 func (t *Transform) Init(id ecs.ComponentID) {
-	if t.id != 0 {
-		panic("Transform ID already set")
-	}
+	t.SetID(id)
+
 	t.vec = f64.Vec2{0, 0}
 	t.rot = 0.0
-	t.id = id
-}
-
-// Update implements ecs.IComponent.
-func (t *Transform) Update() error {
-	return nil
 }
 
 func (t *Transform) Vec() f64.Vec2 {
