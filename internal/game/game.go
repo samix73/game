@@ -48,9 +48,7 @@ func (g *Game) Start() error {
 		return fmt.Errorf("game.Game.Start g.setupTrace error: %w", err)
 	}
 
-	if closer != nil {
-		defer closer()
-	}
+	defer closer()
 
 	if err := ebiten.RunGameWithOptions(g, nil); err != nil {
 		return fmt.Errorf("game.Game.Start ebiten.RunGameWithOptions error: %w", err)

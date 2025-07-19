@@ -30,7 +30,9 @@ func NewComponentType[T IComponent](world *World) *ComponentType[T] {
 		values: make(map[ComponentID]T),
 	}
 
-	world.registerComponentType(c)
+	var a any = c
+
+	world.registerComponentType(a.(*ComponentType[IComponent]))
 
 	return c
 }
@@ -47,26 +49,16 @@ func (c *ComponentType[T]) SetID(id ComponentTypeID) {
 	c.id = id
 }
 
-func (c *ComponentType[T]) Update() error {
-	for _, value := range c.values {
-		if err := value.Update(); err != nil {
-			return fmt.Errorf("error updating component %d: %w", value.ID(), err)
-		}
-	}
-
-	return nil
-}
-
 func (c *ComponentType[T]) New() IComponent {
 	var v T
+	v.Init(ComponentID(len(c.values) + 1))
 
-	id := ComponentID(len(c.values) + 1)
-	c.values[id] = v
+	c.values[v.ID()] = v
 
 	return v
 }
 
-func (c *ComponentType[T]) GetByID(id ComponentID) (T, bool) {
+func (c *ComponentType[T]) GetComponentByID(id ComponentID) (T, bool) {
 	value, exists := c.values[id]
 	return value, exists
 }

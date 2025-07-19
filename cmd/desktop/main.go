@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/samix73/game/internal/game"
+	"github.com/samix73/game/internal/worlds"
 )
 
 var (
@@ -23,6 +24,8 @@ func main() {
 		Fullscreen:   *fullscreen,
 		Tracing:      *tracing,
 	})
+
+	g.SetWorld(worlds.MainWorld())
 
 	if err := g.Start(); err != nil {
 		slog.Error(err.Error())
