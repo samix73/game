@@ -87,10 +87,20 @@ func GetEntityComponent[T IComponent](e *Entity, componentTypeID ComponentTypeID
 		return zero, false
 	}
 
-	component, ok := e.world.componentTypes[componentTypeID].GetComponentByID(componentID)
+	compotnentTypeI, ok := e.world.GetComponentType(componentTypeID)
 	if !ok {
 		return zero, false
 	}
 
-	return component.(T), true
+	componentType, ok := compotnentTypeI.(*ComponentType[T])
+	if !ok {
+		return zero, false
+	}
+
+	component, ok := componentType.GetComponentByID(componentID)
+	if !ok {
+		return zero, false
+	}
+
+	return component, true
 }

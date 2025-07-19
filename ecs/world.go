@@ -6,7 +6,7 @@ import (
 )
 
 type World struct {
-	componentTypes      map[ComponentTypeID]*ComponentType[IComponent]
+	componentTypes      map[ComponentTypeID]IComponentType
 	entities            map[EntityID]*Entity
 	nextEntityID        EntityID
 	nextComponentTypeID ComponentTypeID
@@ -15,7 +15,7 @@ type World struct {
 
 func NewWorld() *World {
 	return &World{
-		componentTypes:      make(map[ComponentTypeID]*ComponentType[IComponent]),
+		componentTypes:      make(map[ComponentTypeID]IComponentType),
 		entities:            make(map[EntityID]*Entity),
 		systems:             make([]ISystem, 0),
 		nextEntityID:        1,
@@ -73,9 +73,9 @@ func (w *World) GetEntities() map[EntityID]*Entity {
 	return w.entities
 }
 
-func (w *World) registerComponentType(inputComponentType *ComponentType[IComponent]) {
+func (w *World) registerComponentType(inputComponentType IComponentType) {
 	for _, ct := range w.componentTypes {
-		if inputComponentType.reflectType == ct.reflectType {
+		if inputComponentType.ReflectType() == ct.ReflectType() {
 			panic(fmt.Errorf("ComponentType already registered: %T", inputComponentType))
 		}
 	}
@@ -97,7 +97,7 @@ func (w *World) registerEntity(entity *Entity) {
 	w.entities[id] = entity
 }
 
-func (w *World) GetComponentType(id ComponentTypeID) (*ComponentType[IComponent], bool) {
+func (w *World) GetComponentType(id ComponentTypeID) (IComponentType, bool) {
 	ct, ok := w.componentTypes[id]
 
 	return ct, ok

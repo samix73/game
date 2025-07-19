@@ -8,6 +8,16 @@ import (
 
 type ComponentTypeID uint64
 
+type IComponentType interface {
+	ID() ComponentTypeID
+	SetID(id ComponentTypeID)
+	New() IComponent
+	ReflectType() reflect.Type
+	RemoveComponent(id ComponentID)
+}
+
+var _ IComponentType = (*ComponentType[IComponent])(nil)
+
 type ComponentType[T IComponent] struct {
 	id              ComponentTypeID
 	name            string
@@ -57,6 +67,10 @@ func (c *ComponentType[T]) getNextComponentID() ComponentID {
 	return id
 }
 
+func (c *ComponentType[T]) ReflectType() reflect.Type {
+	return c.reflectType
+}
+
 func (c *ComponentType[T]) New() IComponent {
 	var v T
 
@@ -70,6 +84,7 @@ func (c *ComponentType[T]) New() IComponent {
 
 func (c *ComponentType[T]) GetComponentByID(id ComponentID) (T, bool) {
 	value, exists := c.values[id]
+
 	return value, exists
 }
 
