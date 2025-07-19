@@ -81,3 +81,11 @@ func (c *ComponentType[T]) GetAll() map[ComponentID]T {
 
 	return result
 }
+
+func (c *ComponentType[T]) RemoveComponent(id ComponentID) {
+	if _, exists := c.values[id]; !exists {
+		return
+	}
+
+	delete(c.values, id)
+}

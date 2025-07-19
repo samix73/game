@@ -102,3 +102,26 @@ func (w *World) GetComponentType(id ComponentTypeID) (*ComponentType[IComponent]
 
 	return ct, ok
 }
+
+func (w *World) RemoveEntity(id EntityID) {
+	entity, exists := w.entities[id]
+	if !exists {
+		return
+	}
+
+	// Remove all components associated with this entity
+	for componentTypeID, componentID := range entity.GetAllComponentIDs() {
+		if ct, ok := w.componentTypes[componentTypeID]; ok {
+			// You'll need to add RemoveComponent method to ComponentType
+			ct.RemoveComponent(componentID)
+		}
+	}
+
+	delete(w.entities, id)
+}
+
+func (w *World) RemoveComponent(componentTypeID ComponentTypeID, componentID ComponentID) {
+	if ct, exists := w.componentTypes[componentTypeID]; exists {
+		ct.RemoveComponent(componentID)
+	}
+}

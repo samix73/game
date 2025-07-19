@@ -10,14 +10,14 @@ type Entity struct {
 	components map[ComponentTypeID]ComponentID
 }
 
-func NewEntity(world *World, componentTypes ...*ComponentType[IComponent]) *Entity {
+func NewEntity(world *World, componentTypeIDs ...ComponentTypeID) *Entity {
 	entity := &Entity{
 		world:      world,
 		components: make(map[ComponentTypeID]ComponentID),
 	}
 
-	for _, componentType := range componentTypes {
-		entity.AddComponent(componentType)
+	for _, componentTypeID := range componentTypeIDs {
+		entity.AddComponent(componentTypeID)
 	}
 
 	world.registerEntity(entity)
@@ -37,16 +37,17 @@ func (e *Entity) SetID(id EntityID) {
 	e.id = id
 }
 
-func (e *Entity) AddComponent(componentType *ComponentType[IComponent]) {
-	if componentType == nil {
-		panic("Cannot add nil component type")
-	}
-
-	if _, exists := e.components[componentType.ID()]; exists {
+func (e *Entity) AddComponent(componentTypeID ComponentTypeID) {
+	if _, exists := e.components[componentTypeID]; exists {
 		panic("Component already added to entity")
 	}
 
-	e.components[componentType.ID()] = componentType.New().ID()
+	componentType, ok := e.world.GetComponentType(componentTypeID)
+	if !ok {
+		panic("ComponentType not found in world")
+	}
+
+	e.components[componentTypeID] = componentType.New().ID()
 }
 
 // HasComponent checks if the entity has a component of the given type
@@ -62,6 +63,7 @@ func (e *Entity) GetComponentID(componentTypeID ComponentTypeID) (ComponentID, b
 
 // RemoveComponent removes a component from the entity
 func (e *Entity) RemoveComponent(componentTypeID ComponentTypeID) {
+	e.world.RemoveComponent(componentTypeID, e.components[componentTypeID])
 	delete(e.components, componentTypeID)
 }
 
