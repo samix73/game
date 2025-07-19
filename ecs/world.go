@@ -60,7 +60,7 @@ func (w *World) RemoveSystem(system ISystem) {
 func (w *World) Update() error {
 	// Update all systems in priority order
 	for _, system := range w.systems {
-		if err := system.Update(w); err != nil {
+		if err := system.Update(); err != nil {
 			return fmt.Errorf("error updating system: %w", err)
 		}
 	}
