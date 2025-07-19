@@ -6,17 +6,35 @@ import (
 )
 
 type World struct {
-	componentTypes map[ComponentTypeID]*ComponentType[IComponent]
-	entities       map[EntityID]*Entity
-	systems        []ISystem
+	componentTypes      map[ComponentTypeID]*ComponentType[IComponent]
+	entities            map[EntityID]*Entity
+	nextEntityID        EntityID
+	nextComponentTypeID ComponentTypeID
+	systems             []ISystem
 }
 
 func NewWorld() *World {
 	return &World{
-		componentTypes: make(map[ComponentTypeID]*ComponentType[IComponent]),
-		entities:       make(map[EntityID]*Entity),
-		systems:        make([]ISystem, 0),
+		componentTypes:      make(map[ComponentTypeID]*ComponentType[IComponent]),
+		entities:            make(map[EntityID]*Entity),
+		systems:             make([]ISystem, 0),
+		nextEntityID:        1,
+		nextComponentTypeID: 1,
 	}
+}
+
+func (w *World) getNextEntityID() EntityID {
+	id := w.nextEntityID
+	w.nextEntityID++
+
+	return id
+}
+
+func (w *World) getNextComponentTypeID() ComponentTypeID {
+	id := w.nextComponentTypeID
+	w.nextComponentTypeID++
+
+	return id
 }
 
 // AddSystem adds a system to the world and sorts by priority
@@ -24,7 +42,7 @@ func (w *World) AddSystem(system ISystem) {
 	w.systems = append(w.systems, system)
 
 	// Sort systems by priority (lower numbers run first)
-	sort.Slice(w.systems, func(i, j int) bool {
+	sort.SliceStable(w.systems, func(i, j int) bool {
 		return w.systems[i].Priority() < w.systems[j].Priority()
 	})
 }
@@ -62,16 +80,21 @@ func (w *World) registerComponentType(inputComponentType *ComponentType[ICompone
 		}
 	}
 
-	inputComponentType.SetID(ComponentTypeID(len(w.componentTypes) + 1))
-	w.componentTypes[inputComponentType.ID()] = inputComponentType
+	id := w.getNextComponentTypeID()
+
+	inputComponentType.SetID(ComponentTypeID(id))
+	w.componentTypes[id] = inputComponentType
 }
 
 func (w *World) registerEntity(entity *Entity) {
 	if entity.id != 0 {
 		panic("Entity ID already set")
 	}
-	entity.SetID(EntityID(len(w.entities) + 1))
-	w.entities[entity.ID()] = entity
+
+	id := w.getNextEntityID()
+
+	entity.SetID(id)
+	w.entities[id] = entity
 }
 
 func (w *World) GetComponentType(id ComponentTypeID) (*ComponentType[IComponent], bool) {
