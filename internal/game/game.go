@@ -23,19 +23,14 @@ type Config struct {
 type Game struct {
 	cfg *Config
 
-	world  *ecs.World
-	camera *Camera
+	worldManager  *ecs.WorldManager
 }
 
-func NewGame(cfg *Config) *Game {
+func NewGame(cfg *Config, worldManager *ecs.WorldManager) *Game {
 	return &Game{
 		cfg: cfg,
+		worldManager: worldManager,
 	}
-}
-
-func (g *Game) SetWorld(world *ecs.World) {
-	g.world = world
-	g.camera = NewCamera(world, g.cfg.ScreenWidth, g.cfg.ScreenHeight)
 }
 
 func (g *Game) Start() error {
@@ -85,16 +80,12 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.camera != nil {
-		g.camera.Draw(screen)
-	}
+	g.worldManager.Draw(screen)
 }
 
 func (g *Game) Update() error {
-	if g.world != nil {
-		if err := g.world.Update(); err != nil {
-			return fmt.Errorf("game.Game.Update g.world.Update error: %w", err)
-		}
+	if err := g.worldManager.Update(); err != nil {
+		return fmt.Errorf("game.Game.Update worldManager.Update error: %w", err)
 	}
 
 	return nil
