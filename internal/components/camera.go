@@ -1,5 +1,7 @@
 package components
 
 type Camera struct {
-	Zoom float64
+	Width  int
+	Height int
+	Zoom   float64
 }
