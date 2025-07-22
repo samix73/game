@@ -12,6 +12,10 @@ type Camera struct {
 
 // Init implements ecs.Component.
 func (c *Camera) Init() {
+	if c == nil {
+		c = &Camera{}
+	}
+
 	c.Width = 0
 	c.Height = 0
 	c.Zoom = 1.0
