@@ -25,7 +25,7 @@ func main() {
 		Tracing:      *tracing,
 	})
 
-	g.SetWorld(worlds.NewMainWorld())
+	g.SetWorld(worlds.NewMainWorld(g))
 
 	if err := g.Start(); err != nil {
 		slog.Error(err.Error())

@@ -23,14 +23,21 @@ type Config struct {
 type Game struct {
 	cfg *Config
 
-	worldManager  *ecs.WorldManager
+	activeWorld ecs.World
 }
 
-func NewGame(cfg *Config, worldManager *ecs.WorldManager) *Game {
+func NewGame(cfg *Config) *Game {
 	return &Game{
 		cfg: cfg,
-		worldManager: worldManager,
 	}
+}
+
+func (g *Game) SetWorld(world ecs.World) {
+	if g.activeWorld != nil {
+		g.activeWorld.Teardown()
+	}
+
+	g.activeWorld = world
 }
 
 func (g *Game) Start() error {
@@ -67,7 +74,7 @@ func (g *Game) setupTrace() (func(), error) {
 		}
 
 		return func() {
-			f.Close()
+			_ = f.Close()
 			trace.Stop()
 		}, nil
 	}
@@ -80,12 +87,20 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.worldManager.Draw(screen)
+	if g.activeWorld == nil {
+		return
+	}
+
+	g.activeWorld.Draw(screen)
 }
 
 func (g *Game) Update() error {
-	if err := g.worldManager.Update(); err != nil {
-		return fmt.Errorf("game.Game.Update worldManager.Update error: %w", err)
+	if g.activeWorld == nil {
+		return nil
+	}
+
+	if err := g.activeWorld.Update(); err != nil {
+		return fmt.Errorf("game.Game.Update activeWorld.Update error: %w", err)
 	}
 
 	return nil

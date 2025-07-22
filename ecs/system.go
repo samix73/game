@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,13 +18,13 @@ type System interface {
 }
 
 type SystemManager struct {
-	systems 	[]System
+	systems       []System
 	entityManager *EntityManager
 }
 
 func NewSystemManager(entityManager *EntityManager) *SystemManager {
 	return &SystemManager{
-		systems:       make(map[SystemID]System),
+		systems:       make([]System, 0),
 		entityManager: entityManager,
 	}
 }
@@ -34,8 +35,8 @@ func (sm *SystemManager) Add(system System) {
 	slices.SortFunc(sm.systems, func(a, b System) int {
 		if a.Priority() < b.Priority() {
 			return -1
-		} 
-		
+		}
+
 		if a.Priority() > b.Priority() {
 			return 1
 		}
@@ -45,12 +46,12 @@ func (sm *SystemManager) Add(system System) {
 }
 
 func (sm *SystemManager) Remove(systemID SystemID) {
-	indexToDelete, exists := slices.BinarySearch(sm.systems, systemID, func(s System) int {
-		if s.ID() < systemID {
+	indexToDelete, exists := slices.BinarySearchFunc(sm.systems, systemID, func(s System, id SystemID) int {
+		if s.ID() < id {
 			return -1
-		} 
-		
-		if s.ID() > systemID {
+		}
+
+		if s.ID() > id {
 			return 1
 		}
 
@@ -64,7 +65,6 @@ func (sm *SystemManager) Remove(systemID SystemID) {
 	systemToDelete := sm.systems[indexToDelete]
 	sm.systems[indexToDelete] = sm.systems[len(sm.systems)-1]
 	sm.systems = sm.systems[:len(sm.systems)-1]
-
 
 	systemToDelete.Remove()
 }

@@ -1,10 +1,10 @@
 package ecs_test
 
 import (
-	"sandbox/ecs"
 	"slices"
 	"testing"
 
+	"github.com/samix73/game/ecs"
 	"golang.org/x/image/math/f64"
 )
 

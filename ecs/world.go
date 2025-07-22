@@ -2,89 +2,36 @@ package ecs
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"slices"
 )
-
-type WorldID = ID
-
-const UndefinedWorldID WorldID = -1
 
 type World interface {
 	Update() error
 	Draw(screen *ebiten.Image)
+	Teardown()
+
+	baseWorld() // Force embedding BaseWorld
 }
 
-type WorldManager struct {
-	activeWorld WorldID
-	worlds map[WorldID]World
+type BaseWorld struct {
+	entityManager *EntityManager
+	systemManager *SystemManager
 }
 
-func NewWorldManager() *WorldManager {
-	return &WorldManager{
-		activeWorld:  UndefinedWorldID,
-		worlds:        make(map[WorldID]World, 0),
-	}
+func (bw *BaseWorld) baseWorld() {
+	panic("BaseWorld cannot be used directly, it must be embedded in a concrete World implementation")
 }
 
-func (wm *WorldManager) Add(world World) {
-	if _, exists := wm.worlds[world.ID()]; exists {
-		return
-	}
-
-	wm.worlds[world.ID()] = world
-}
-
-func (wm *WorldManager) SetActive(worldID WorldID) {
-	if _, exists := wm.worlds[worldID]; !exists {
-		return
-	}
-
-	wm.activeWorld = worldID
-}
-
-func (wm *WorldManager) Remove(world World) {
-	if _, exists := wm.worlds[world.ID()]; !exists {
-		return
-	}
-
-	delete(wm.worlds, world.ID())
-	if wm.activeWorld == world.ID() {
-		wm.activeWorld = UndefinedWorldID
+func NewBaseWorld(entityManager *EntityManager, systemManager *SystemManager) *BaseWorld {
+	return &BaseWorld{
+		entityManager: entityManager,
+		systemManager: systemManager,
 	}
 }
 
-func (wm *WorldManager) getActive() (World, bool) {
-	if wm.activeWorld == UndefinedWorldID {
-		return nil, false
-	}
-
-	world, exists := wm.worlds[wm.activeWorld]
-	if !exists {
-		return nil, false
-	}
-
-	return world, true
+func (w *BaseWorld) EntityManager() *EntityManager {
+	return w.entityManager
 }
 
-func (wm *WorldManager) Update() error {
-	world, exists := wm.getActive()
-	if !exists {
-		return nil
-	}
-
-	if err := world.Update(); err != nil {
-		return fmt.Errorf("error updating active world: %w", err)
-	}
-	
-	return nil
+func (w *BaseWorld) SystemManager() *SystemManager {
+	return w.systemManager
 }
-
-func (wm *WorldManager) Draw(screen *ebiten.Image) {
-	world, exists := wm.getActive()
-	if !exists {
-		return
-	}
-
-	world.Draw(screen)
-}
-
