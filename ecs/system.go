@@ -14,7 +14,7 @@ type System interface {
 	Priority() int
 	Update() error
 	Draw(screen *ebiten.Image)
-	Remove()
+	Teardown()
 }
 
 type SystemManager struct {
@@ -66,7 +66,7 @@ func (sm *SystemManager) Remove(systemID SystemID) {
 	sm.systems[indexToDelete] = sm.systems[len(sm.systems)-1]
 	sm.systems = sm.systems[:len(sm.systems)-1]
 
-	systemToDelete.Remove()
+	systemToDelete.Teardown()
 }
 
 func (sm *SystemManager) Update() error {
@@ -83,4 +83,12 @@ func (sm *SystemManager) Draw(screen *ebiten.Image) {
 	for _, system := range sm.systems {
 		system.Draw(screen)
 	}
+}
+
+func (sm *SystemManager) Teardown() {
+	for _, system := range sm.systems {
+		system.Teardown()
+	}
+
+	sm.systems = nil
 }
