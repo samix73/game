@@ -1,27 +1,86 @@
 package ecs
 
-type ISystem interface {
-	Update() error
+import (
+	"slices"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+type SystemID = ID
+
+type System interface {
+	ID() SystemID
 	Priority() int
+	Update() error
+	Draw(screen *ebiten.Image)
+	Remove()
 }
 
-// BaseSystem provides common functionality for systems
-type BaseSystem struct {
-	priority int
-	world    *World
+type SystemManager struct {
+	systems 	[]System
+	entityManager *EntityManager
 }
 
-func NewBaseSystem(world *World, priority int) BaseSystem {
-	return BaseSystem{
-		priority: priority,
-		world:    world,
+func NewSystemManager(entityManager *EntityManager) *SystemManager {
+	return &SystemManager{
+		systems:       make(map[SystemID]System),
+		entityManager: entityManager,
 	}
 }
 
-func (s *BaseSystem) Priority() int {
-	return s.priority
+func (sm *SystemManager) Add(system System) {
+	sm.systems = append(sm.systems, system)
+
+	slices.SortFunc(sm.systems, func(a, b System) int {
+		if a.Priority() < b.Priority() {
+			return -1
+		} 
+		
+		if a.Priority() > b.Priority() {
+			return 1
+		}
+
+		return 0
+	})
 }
 
-func (s *BaseSystem) World() *World {
-	return s.world
+func (sm *SystemManager) Remove(systemID SystemID) {
+	indexToDelete, exists := slices.BinarySearch(sm.systems, systemID, func(s System) int {
+		if s.ID() < systemID {
+			return -1
+		} 
+		
+		if s.ID() > systemID {
+			return 1
+		}
+
+		return 0
+	})
+
+	if !exists {
+		return
+	}
+
+	systemToDelete := sm.systems[indexToDelete]
+	sm.systems[indexToDelete] = sm.systems[len(sm.systems)-1]
+	sm.systems = sm.systems[:len(sm.systems)-1]
+
+
+	systemToDelete.Remove()
+}
+
+func (sm *SystemManager) Update() error {
+	for _, system := range sm.systems {
+		if err := system.Update(); err != nil {
+			return fmt.Errorf("error updating system %s: %w", system.ID(), err)
+		}
+	}
+
+	return nil
+}
+
+func (sm *SystemManager) Draw(screen *ebiten.Image) {
+	for _, system := range sm.systems {
+		system.Draw(screen)
+	}
 }

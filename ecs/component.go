@@ -1,22 +1,93 @@
 package ecs
 
-type ComponentID uint64
+import (
+	"iter"
+)
 
-type IComponent interface {
-	ID() ComponentID
-	Init(id ComponentID)
+type ComponentContainer struct {
+	components []any
+	entityIDs  []EntityID
+
+	componentLookupMap map[EntityID]int
 }
 
-type BaseComponent struct {
-	id ComponentID
-}
-
-func NewBaseComponent(id ComponentID) BaseComponent {
-	return BaseComponent{
-		id: id,
+func NewComponentContainer() *ComponentContainer {
+	return &ComponentContainer{
+		components:         make([]any, 0, 1024),
+		entityIDs:          make([]EntityID, 0, 1024),
+		componentLookupMap: make(map[EntityID]int),
 	}
 }
 
-func (c *BaseComponent) ID() ComponentID {
-	return c.id
+func (c *ComponentContainer) Add(entityID EntityID, component any) {
+	if _, ok := c.componentLookupMap[entityID]; ok {
+		return
+	}
+
+	c.components = append(c.components, component)
+	c.entityIDs = append(c.entityIDs, entityID)
+	c.componentLookupMap[entityID] = len(c.components) - 1
+}
+
+func (c *ComponentContainer) Remove(entityID EntityID) {
+	indexToRemove, ok := c.componentLookupMap[entityID]
+	if !ok {
+		return
+	}
+
+	lastIndex := len(c.entityIDs) - 1
+	if lastIndex != indexToRemove {
+		c.components[indexToRemove] = c.components[lastIndex]
+		c.entityIDs[indexToRemove] = c.entityIDs[lastIndex]
+
+		c.componentLookupMap[c.entityIDs[indexToRemove]] = indexToRemove
+	}
+
+	c.components = c.components[:lastIndex]
+	c.entityIDs = c.entityIDs[:lastIndex]
+
+	delete(c.componentLookupMap, entityID)
+}
+
+func (c *ComponentContainer) All() iter.Seq2[EntityID, any] {
+	return func(yield func(EntityID, any) bool) {
+		for i, entityID := range c.entityIDs {
+			if !yield(entityID, c.components[i]) {
+				break
+			}
+		}
+	}
+}
+
+func (c *ComponentContainer) Get(entityID EntityID) (any, bool) {
+	index, ok := c.componentLookupMap[entityID]
+	if !ok {
+		return nil, false
+	}
+
+	return c.components[index], true
+}
+
+func (c *ComponentContainer) Count() int {
+	return len(c.components)
+}
+
+func (c *ComponentContainer) Entities() iter.Seq[EntityID] {
+	return func(yield func(EntityID) bool) {
+		for _, entityID := range c.entityIDs {
+			if !yield(entityID) {
+				break
+			}
+		}
+	}
+}
+
+func (c *ComponentContainer) Components() iter.Seq[any] {
+	return func(yield func(any) bool) {
+		for _, component := range c.components {
+			if !yield(component) {
+				break
+			}
+		}
+	}
 }
