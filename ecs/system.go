@@ -72,7 +72,7 @@ func (sm *SystemManager) Remove(systemID SystemID) {
 func (sm *SystemManager) Update() error {
 	for _, system := range sm.systems {
 		if err := system.Update(); err != nil {
-			return fmt.Errorf("error updating system %s: %w", system.ID(), err)
+			return fmt.Errorf("error updating system %d: %w", system.ID(), err)
 		}
 	}
 

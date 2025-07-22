@@ -13,8 +13,34 @@ type TransformComponent struct {
 	Rotation float64
 }
 
+func (t *TransformComponent) Init() {
+	if t == nil {
+		t = new(TransformComponent)
+	}
+
+	t.Position = f64.Vec2{0, 0}
+	t.Rotation = 0
+}
+
+func (t *TransformComponent) Reset() {
+	t.Position = f64.Vec2{0, 0}
+	t.Rotation = 0
+}
+
 type CameraComponent struct {
 	Zoom float64
+}
+
+func (c *CameraComponent) Init() {
+	if c == nil {
+		c = new(CameraComponent)
+	}
+
+	c.Zoom = 1.0
+}
+
+func (c *CameraComponent) Reset() {
+	c.Zoom = 1.0
 }
 
 func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
@@ -22,12 +48,7 @@ func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 
 	entityID := em.NewEntity()
 
-	transform := &TransformComponent{
-		Position: f64.Vec2{10, 20},
-		Rotation: 0,
-	}
-
-	em.AddComponent(entityID, transform)
+	ecs.AddComponent[*TransformComponent](em, entityID)
 
 	return entityID
 }
@@ -37,17 +58,8 @@ func NewCameraEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 
 	entityID := em.NewEntity()
 
-	camera := &CameraComponent{
-		Zoom: 1.0,
-	}
-
-	transform := &TransformComponent{
-		Position: f64.Vec2{0, 0},
-		Rotation: 0,
-	}
-
-	em.AddComponent(entityID, transform)
-	em.AddComponent(entityID, camera)
+	ecs.AddComponent[*TransformComponent](em, entityID)
+	ecs.AddComponent[*CameraComponent](em, entityID)
 
 	return entityID
 }
@@ -94,7 +106,7 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("Query Only", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query[TransformComponent](em) {
+			for entityID := range ecs.Query[*TransformComponent](em) {
 				_ = entityID // Just consume the entityID
 			}
 		}
@@ -102,20 +114,20 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("GetComponent Only", func(b *testing.B) {
 		// Pre-collect entity IDs
-		entityIDs := slices.Collect(ecs.Query[TransformComponent](em))
+		entityIDs := slices.Collect(ecs.Query[*TransformComponent](em))
 
 		b.ResetTimer()
 		for b.Loop() {
 			for _, entityID := range entityIDs {
-				ecs.GetComponent[TransformComponent](em, entityID)
+				ecs.GetComponent[*TransformComponent](em, entityID)
 			}
 		}
 	})
 
 	b.Run("Query + GetComponent", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query[TransformComponent](em) {
-				ecs.GetComponent[TransformComponent](em, entityID)
+			for entityID := range ecs.Query[*TransformComponent](em) {
+				ecs.GetComponent[*TransformComponent](em, entityID)
 			}
 		}
 	})

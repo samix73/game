@@ -2,31 +2,46 @@ package ecs
 
 import (
 	"iter"
+	"sync"
 )
 
+type Component interface {
+	Init()
+	Reset()
+}
+
 type ComponentContainer struct {
-	components []any
+	pool sync.Pool
+
+	components []Component
 	entityIDs  []EntityID
 
 	componentLookupMap map[EntityID]int
 }
 
-func NewComponentContainer() *ComponentContainer {
+func NewComponentContainer(newFn func() Component) *ComponentContainer {
 	return &ComponentContainer{
-		components:         make([]any, 0, 1024),
+		pool: sync.Pool{New: func() any { return newFn() }},
+
+		components:         make([]Component, 0, 1024),
 		entityIDs:          make([]EntityID, 0, 1024),
 		componentLookupMap: make(map[EntityID]int),
 	}
 }
 
-func (c *ComponentContainer) Add(entityID EntityID, component any) {
+func (c *ComponentContainer) Add(entityID EntityID) Component {
 	if _, ok := c.componentLookupMap[entityID]; ok {
-		return
+		return nil
 	}
+
+	component := c.pool.Get().(Component)
+	component.Init()
 
 	c.components = append(c.components, component)
 	c.entityIDs = append(c.entityIDs, entityID)
 	c.componentLookupMap[entityID] = len(c.components) - 1
+
+	return component
 }
 
 func (c *ComponentContainer) Remove(entityID EntityID) {
@@ -34,6 +49,8 @@ func (c *ComponentContainer) Remove(entityID EntityID) {
 	if !ok {
 		return
 	}
+
+	componentToRemove := c.components[indexToRemove]
 
 	lastIndex := len(c.entityIDs) - 1
 	if lastIndex != indexToRemove {
@@ -47,10 +64,13 @@ func (c *ComponentContainer) Remove(entityID EntityID) {
 	c.entityIDs = c.entityIDs[:lastIndex]
 
 	delete(c.componentLookupMap, entityID)
+
+	componentToRemove.Reset()
+	c.pool.Put(componentToRemove)
 }
 
-func (c *ComponentContainer) All() iter.Seq2[EntityID, any] {
-	return func(yield func(EntityID, any) bool) {
+func (c *ComponentContainer) All() iter.Seq2[EntityID, Component] {
+	return func(yield func(EntityID, Component) bool) {
 		for i, entityID := range c.entityIDs {
 			if !yield(entityID, c.components[i]) {
 				break
@@ -59,7 +79,7 @@ func (c *ComponentContainer) All() iter.Seq2[EntityID, any] {
 	}
 }
 
-func (c *ComponentContainer) Get(entityID EntityID) (any, bool) {
+func (c *ComponentContainer) Get(entityID EntityID) (Component, bool) {
 	index, ok := c.componentLookupMap[entityID]
 	if !ok {
 		return nil, false
@@ -82,8 +102,8 @@ func (c *ComponentContainer) Entities() iter.Seq[EntityID] {
 	}
 }
 
-func (c *ComponentContainer) Components() iter.Seq[any] {
-	return func(yield func(any) bool) {
+func (c *ComponentContainer) Components() iter.Seq[Component] {
+	return func(yield func(Component) bool) {
 		for _, component := range c.components {
 			if !yield(component) {
 				break

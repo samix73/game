@@ -29,28 +29,6 @@ func (em *EntityManager) NewEntity() EntityID {
 	return id
 }
 
-func (em *EntityManager) AddComponent(entityID EntityID, component any) {
-	// Check if the entity exists
-	if _, exists := em.entities[entityID]; !exists {
-		return
-	}
-
-	// Check if the component type is already registered for this entity
-	componentType := reflect.TypeOf(component)
-	if _, exists := em.entityComponentSignatures[entityID][componentType]; exists {
-		return
-	}
-
-	container, exists := em.componentContainers[componentType]
-	if !exists {
-		container = NewComponentContainer()
-		em.componentContainers[componentType] = container
-	}
-
-	container.Add(entityID, component)
-	em.entityComponentSignatures[entityID][componentType] = struct{}{}
-}
-
 func (em *EntityManager) GetComponent(entityID EntityID, componentType reflect.Type) (any, bool) {
 	if _, exists := em.entities[entityID]; !exists {
 		return nil, false
@@ -178,26 +156,64 @@ func (em *EntityManager) Query(componentTypes ...reflect.Type) iter.Seq[EntityID
 	}
 }
 
-func Query[C any](em *EntityManager) iter.Seq[EntityID] {
-	return em.Query(reflect.TypeOf((*C)(nil)))
-}
-
-func Query2[C1, C2 any](em *EntityManager) iter.Seq[EntityID] {
-	return em.Query(reflect.TypeOf((*C1)(nil)), reflect.TypeOf((*C2)(nil)))
-}
-
-func Query3[C1, C2, C3 any](em *EntityManager) iter.Seq[EntityID] {
-	return em.Query(reflect.TypeOf((*C1)(nil)), reflect.TypeOf((*C2)(nil)), reflect.TypeOf((*C3)(nil)))
-}
-
-func HasComponent[C any](em *EntityManager, entityID EntityID) bool {
-	return em.HasComponent(entityID, reflect.TypeOf((*C)(nil)))
-}
-
-func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
-	component, exists := em.GetComponent(entityID, reflect.TypeOf((*C)(nil)))
-	if !exists {
-		return nil, false
+func AddComponent[C Component](em *EntityManager, entityID EntityID) Component {
+	// Check if the entity exists
+	if _, exists := em.entities[entityID]; !exists {
+		return nil
 	}
-	return component.(*C), true
+
+	var zero C
+	// Check if the component type is already registered for this entity
+	componentType := reflect.TypeOf(zero)
+	if _, exists := em.entityComponentSignatures[entityID][componentType]; exists {
+		component, _ := GetComponent[C](em, entityID)
+
+		return component
+	}
+
+	container, exists := em.componentContainers[componentType]
+	if !exists {
+		container = NewComponentContainer(func() Component {
+			var c C
+			return c
+		})
+		em.componentContainers[componentType] = container
+	}
+
+	component := container.Add(entityID)
+	em.entityComponentSignatures[entityID][componentType] = struct{}{}
+
+	return component
+}
+
+func Query[C Component](em *EntityManager) iter.Seq[EntityID] {
+	var zero C
+	return em.Query(reflect.TypeOf(zero))
+}
+
+func Query2[C1, C2 Component](em *EntityManager) iter.Seq[EntityID] {
+	var zero1 C1
+	var zero2 C2
+	return em.Query(reflect.TypeOf(zero1), reflect.TypeOf(zero2))
+}
+
+func Query3[C1, C2, C3 Component](em *EntityManager) iter.Seq[EntityID] {
+	var zero1 C1
+	var zero2 C2
+	var zero3 C3
+	return em.Query(reflect.TypeOf(zero1), reflect.TypeOf(zero2), reflect.TypeOf(zero3))
+}
+
+func HasComponent[C Component](em *EntityManager, entityID EntityID) bool {
+	var zero C
+	return em.HasComponent(entityID, reflect.TypeOf(zero))
+}
+
+func GetComponent[C Component](em *EntityManager, entityID EntityID) (C, bool) {
+	var zero C
+	component, exists := em.GetComponent(entityID, reflect.TypeOf(zero))
+	if !exists {
+		return zero, false
+	}
+	return component.(C), true
 }
