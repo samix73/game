@@ -78,6 +78,24 @@ func (em *EntityManager) Remove(entityID EntityID) {
 	delete(em.entities, entityID)
 }
 
+func (em *EntityManager) RemoveComponent(entityID EntityID, componentType reflect.Type) {
+	if _, exists := em.entities[entityID]; !exists {
+		return
+	}
+
+	if _, exists := em.entityComponentSignatures[entityID][componentType]; !exists {
+		return
+	}
+
+	container, exists := em.componentContainers[componentType]
+	if !exists {
+		return
+	}
+
+	container.Remove(entityID)
+	delete(em.entityComponentSignatures[entityID], componentType)
+}
+
 // Query returns a sequence of EntityIDs that match the specified component types.
 func (em *EntityManager) Query(componentTypes ...reflect.Type) iter.Seq[EntityID] {
 	zeroIter := func(yield func(EntityID) bool) {}
