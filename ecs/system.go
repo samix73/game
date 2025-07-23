@@ -14,12 +14,41 @@ type System interface {
 	Priority() int
 	Update() error
 	Teardown()
+	baseSystem()
 }
 
 type RendererSystem interface {
 	System
 	Draw(screen *ebiten.Image)
 }
+
+type BaseSystem struct {
+	id       SystemID
+	priority int
+	entityManager *EntityManager
+}
+
+func NewBaseSystem(id SystemID, priority int, entityManager *EntityManager) *BaseSystem {
+	return &BaseSystem{
+		id:            id,
+		priority:      priority,
+		entityManager: entityManager,
+	}
+}
+
+func (s *BaseSystem) ID() SystemID {
+	return s.id
+}
+
+func (s *BaseSystem) Priority() int {
+	return s.priority
+}
+
+func (s *BaseSystem) EntityManager() *EntityManager {
+	return s.entityManager
+}
+
+func (s *BaseSystem) baseSystem() {}
 
 type SystemManager struct {
 	systems       []System
@@ -33,9 +62,7 @@ func NewSystemManager(entityManager *EntityManager) *SystemManager {
 	}
 }
 
-func (sm *SystemManager) Add(system System) {
-	sm.systems = append(sm.systems, system)
-
+func (sm *SystemManager) sortSystems() {
 	slices.SortFunc(sm.systems, func(a, b System) int {
 		if a.Priority() < b.Priority() {
 			return -1
@@ -47,6 +74,16 @@ func (sm *SystemManager) Add(system System) {
 
 		return 0
 	})
+}
+
+func (sm *SystemManager) Add(systems ...System) {
+	if len(systems) == 0 {
+		return
+	}
+
+	sm.systems = append(sm.systems, ...system)
+
+	sm.sortSystems()
 }
 
 func (sm *SystemManager) Remove(systemID SystemID) {
