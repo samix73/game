@@ -10,7 +10,6 @@ type Camera struct {
 	Zoom   float64
 }
 
-// Init implements ecs.Component.
 func (c *Camera) Init() {
 	if c == nil {
 		c = &Camera{}
@@ -26,3 +25,10 @@ func (c *Camera) Reset() {
 	c.Height = 0
 	c.Zoom = 1.0
 }
+
+var _ ecs.Component = (*ActiveCamera)(nil)
+
+type ActiveCamera struct {}
+
+func (*ActiveCamera) Init() {}
+func (*ActiveCamera) Reset() {}
