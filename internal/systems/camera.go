@@ -3,23 +3,13 @@ package systems
 var _ ecs.System = (*Camera)(nil)
 
 type Camera struct {
-	id ecs.SystemID
-	priority int
+	*ecs.BaseSystem
 }
 
-func NewCameraSystem(priority int) *Camera {
+func NewCameraSystem(priority int, entityManager *ecs.EntityManager) *Camera {
 	return &Camera{
-		id: ecs.NextID(),
-		priority: priority,
+		BaseSystem: esc.NewBaseSystem(ecs.NextID(), priority, entityManager),
 	}
-}
-
-func (c *Camera) ID() SystemID {
-	return c.id
-}
-
-func (c *Camera) Priority() int {
-	return c.priority
 }
 
 func (c *Camera) Update() error {
@@ -27,5 +17,4 @@ func (c *Camera) Update() error {
 }
 
 func (c *Camera) Teardown() {
-
 }

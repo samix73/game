@@ -20,10 +20,20 @@ func NewMainWorld(g *game.Game) *MainWorld {
 	entityManager := ecs.NewEntityManager()
 	systemManager := ecs.NewSystemManager(entityManager)
 
-	return &MainWorld{
+	w := &MainWorld{
 		BaseWorld: ecs.NewBaseWorld(entityManager, systemManager),
 		g:         g,
 	}
+
+	w.registerSystems()
+
+	return w
+}
+
+func (m *MainWorld) registerSystems() {
+	m.SystemManager().Add(
+		systems.NewCameraSystem(0, m.EntityManager()),
+	)
 }
 
 func (m *MainWorld) Draw(screen *ebiten.Image) {
