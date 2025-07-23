@@ -204,6 +204,11 @@ func AddComponent[C Component](em *EntityManager, entityID EntityID) Component {
 	return component
 }
 
+func RemoveComponent[C Component](em *EntityManager, entityID EntityID) {
+	var zero C
+	em.RemoveComponent(entityID, reflect.TypeOf(zero))
+}
+
 func Query[C Component](em *EntityManager) iter.Seq[EntityID] {
 	var zero C
 	return em.Query(reflect.TypeOf(zero))
