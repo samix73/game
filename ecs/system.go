@@ -13,8 +13,12 @@ type System interface {
 	ID() SystemID
 	Priority() int
 	Update() error
-	Draw(screen *ebiten.Image)
 	Teardown()
+}
+
+type RendererSystem interface {
+	System
+	Draw(screen *ebiten.Image)
 }
 
 type SystemManager struct {
@@ -81,7 +85,9 @@ func (sm *SystemManager) Update() error {
 
 func (sm *SystemManager) Draw(screen *ebiten.Image) {
 	for _, system := range sm.systems {
-		system.Draw(screen)
+		if system, ok := system.(RendererSystem); ok {
+			system.Draw(screen)
+		}
 	}
 }
 
