@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/samix73/game/internal/game"
-	"github.com/samix73/game/internal/worlds"
+	"github.com/samix73/game/game"
+	"github.com/samix73/game/worlds"
 )
 
 var (

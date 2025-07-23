@@ -14,10 +14,6 @@ type Transform struct {
 
 // Init implements ecs.Component.
 func (t *Transform) Init() {
-	if t == nil {
-		t = &Transform{}
-	}
-
 	t.Vec[0] = 0
 	t.Vec[1] = 0
 	t.Rot = 0

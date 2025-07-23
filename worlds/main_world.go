@@ -5,7 +5,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/internal/game"
+	"github.com/samix73/game/game"
+	"github.com/samix73/game/systems"
 )
 
 var _ ecs.World = (*MainWorld)(nil)

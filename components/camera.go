@@ -11,10 +11,6 @@ type Camera struct {
 }
 
 func (c *Camera) Init() {
-	if c == nil {
-		c = &Camera{}
-	}
-
 	c.Width = 0
 	c.Height = 0
 	c.Zoom = 1.0
@@ -28,7 +24,7 @@ func (c *Camera) Reset() {
 
 var _ ecs.Component = (*ActiveCamera)(nil)
 
-type ActiveCamera struct {}
+type ActiveCamera struct{}
 
-func (*ActiveCamera) Init() {}
+func (*ActiveCamera) Init()  {}
 func (*ActiveCamera) Reset() {}
