@@ -56,10 +56,9 @@ func (c *Camera) activeCamera() ecs.EntityID {
 }
 
 func (c *Camera) Update() error {
-	activeCamera := c.activeCamera()
-	
+	_ = c.activeCamera()
+
 	return nil
 }
 
-func (c *Camera) Teardown() {
-}
+func (c *Camera) Teardown() {}
