@@ -23,8 +23,8 @@ type RendererSystem interface {
 }
 
 type BaseSystem struct {
-	id       SystemID
-	priority int
+	id            SystemID
+	priority      int
 	entityManager *EntityManager
 }
 
@@ -81,7 +81,7 @@ func (sm *SystemManager) Add(systems ...System) {
 		return
 	}
 
-	sm.systems = append(sm.systems, ...system)
+	sm.systems = append(sm.systems, systems...)
 
 	sm.sortSystems()
 }
