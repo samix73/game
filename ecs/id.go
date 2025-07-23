@@ -9,3 +9,5 @@ func NextID() ID {
 }
 
 type ID uint64
+
+const UndefinedID ID = 0
