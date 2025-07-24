@@ -1,16 +1,17 @@
 package components
 
 import (
-	"golang.org/x/image/math/f64"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Renderable struct{}
-
-type Render struct {
-	OnScreenPosition f64.Vec2
+type Renderable struct {
+	Sprite *ebiten.Image
+	GeoM   ebiten.GeoM
 }
 
-func (r *Render) Reset() {
-	r.OnScreenPosition[0] = 0
-	r.OnScreenPosition[1] = 0
+func (r *Renderable) Reset() {
+	r.Sprite = new(ebiten.Image)
+	r.GeoM.Reset()
 }
+
+type Render struct{}
