@@ -10,16 +10,22 @@ var _ ecs.System = (*Camera)(nil)
 
 type Camera struct {
 	*ecs.BaseSystem
+
+	screenWidth  int
+	screenHeight int
 }
 
-func NewCameraSystem(priority int, entityManager *ecs.EntityManager) *Camera {
+func NewCameraSystem(priority int, entityManager *ecs.EntityManager, screenWidth, screenHeight int) *Camera {
 	return &Camera{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+
+		screenWidth:  screenWidth,
+		screenHeight: screenHeight,
 	}
 }
 
 func (c *Camera) createDefaultCamera() ecs.EntityID {
-	return entities.NewCameraEntity(c.EntityManager(), true, 800, 600)
+	return entities.NewCameraEntity(c.EntityManager(), true)
 }
 
 func (c *Camera) activeCamera() ecs.EntityID {
@@ -46,8 +52,23 @@ func (c *Camera) activeCamera() ecs.EntityID {
 	return c.createDefaultCamera()
 }
 
+func (c *Camera) entitiesInView(cameraCenter *components.Transform) []ecs.EntityID {
+	return nil
+}
+
+func (c *Camera) makeRenderable(entities []ecs.EntityID) {
+	for _, entity := range entities {
+		ecs.AddComponent[components.Renderable](c.EntityManager(), entity)
+	}
+}
+
 func (c *Camera) Update() error {
-	_ = c.activeCamera()
+	camera := c.activeCamera()
+	cameraTransform := ecs.MustGetComponent[components.Transform](c.EntityManager(), camera)
+
+	entitiesInView := c.entitiesInView(cameraTransform)
+
+	c.makeRenderable(entitiesInView)
 
 	return nil
 }

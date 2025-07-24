@@ -32,6 +32,10 @@ func NewGame(cfg *Config) *Game {
 	}
 }
 
+func (g *Game) Config() *Config {
+	return g.cfg
+}
+
 func (g *Game) SetWorld(world ecs.World) {
 	if g.activeWorld != nil {
 		g.activeWorld.Teardown()

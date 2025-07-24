@@ -7,7 +7,6 @@ import (
 
 type Component interface {
 	Reset()
-	Init()
 }
 
 type ComponentContainer struct {
@@ -35,9 +34,6 @@ func (c *ComponentContainer) Add(entityID EntityID) any {
 	}
 
 	component := c.pool.Get()
-	if typedComponent, ok := component.(Component); ok {
-		typedComponent.Init()
-	}
 
 	c.components = append(c.components, component)
 	c.entityIDs = append(c.entityIDs, entityID)

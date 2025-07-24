@@ -33,7 +33,7 @@ func NewMainWorld(g *game.Game) *MainWorld {
 
 func (m *MainWorld) registerSystems() {
 	m.SystemManager().Add(
-		systems.NewCameraSystem(0, m.EntityManager()),
+		systems.NewCameraSystem(0, m.EntityManager(), m.g.Config().ScreenWidth, m.g.Config().ScreenHeight),
 	)
 }
 
