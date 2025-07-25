@@ -1,6 +1,9 @@
 package systems
 
 import (
+	"fmt"
+	"log/slog"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
@@ -92,6 +95,12 @@ func (c *Camera) Update() error {
 		}
 
 		onScreenPos, ok := c.inView(cameraComp, cameraTransform, entityTransform)
+		slog.Debug("Camera.Update",
+			slog.Bool("in_view", ok),
+			slog.Uint64("entity", uint64(entity)),
+			slog.String("position", fmt.Sprintf("(%.2f, %.2f)",
+				entityTransform.Vec2[0], entityTransform.Vec2[1])),
+		)
 		if !ok {
 			ecs.RemoveComponent[components.Render](em, entity)
 
@@ -117,6 +126,7 @@ func (c *Camera) Draw(screen *ebiten.Image) {
 			continue
 		}
 
+		slog.Debug("Camera.Draw", slog.Uint64("entity", uint64(entity)))
 		screen.DrawImage(renderable.Sprite, &ebiten.DrawImageOptions{
 			GeoM: renderable.GeoM,
 		})
