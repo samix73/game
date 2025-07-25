@@ -25,7 +25,13 @@ func main() {
 		Tracing:      *tracing,
 	})
 
-	g.SetWorld(worlds.NewMainWorld(g))
+	mainWorld, err := worlds.NewMainWorld(g)
+	if err != nil {
+		slog.Error("error creating main world", "error", err)
+		os.Exit(1)
+	}
+
+	g.SetWorld(mainWorld)
 
 	if err := g.Start(); err != nil {
 		slog.Error(err.Error())

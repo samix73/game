@@ -5,6 +5,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/entities"
 	"github.com/samix73/game/game"
 	"github.com/samix73/game/systems"
 )
@@ -17,9 +18,13 @@ type MainWorld struct {
 	g *game.Game
 }
 
-func NewMainWorld(g *game.Game) *MainWorld {
+func NewMainWorld(g *game.Game) (*MainWorld, error) {
 	entityManager := ecs.NewEntityManager()
 	systemManager := ecs.NewSystemManager(entityManager)
+
+	if _, err := entities.NewDrawMeEntity(entityManager); err != nil {
+		return nil, fmt.Errorf("error creating draw me entity: %w", err)
+	}
 
 	w := &MainWorld{
 		BaseWorld: ecs.NewBaseWorld(entityManager, systemManager),
@@ -28,7 +33,7 @@ func NewMainWorld(g *game.Game) *MainWorld {
 
 	w.registerSystems()
 
-	return w
+	return w, nil
 }
 
 func (m *MainWorld) registerSystems() {

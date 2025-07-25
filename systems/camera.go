@@ -30,9 +30,7 @@ func (c *Camera) createDefaultCamera() ecs.EntityID {
 	return entities.NewCameraEntity(c.EntityManager(), true)
 }
 
-func (c *Camera) activeCamera() ecs.EntityID {
-	em := c.EntityManager()
-
+func (c *Camera) activeCamera(em *ecs.EntityManager) ecs.EntityID {
 	for camera := range ecs.Query2[components.Camera, components.ActiveCamera](em) {
 		return camera
 	}
@@ -60,10 +58,10 @@ func (c *Camera) inView(camera *components.Camera, cameraTransform *components.T
 	entityPos := entityTransform.Vec2
 
 	// Calculate the camera's view bounds
-	left := (cameraPos[0] - float64(c.screenWidth)/2.0) * camera.Zoom
-	right := (cameraPos[0] + float64(c.screenWidth)/2.0) * camera.Zoom
-	top := (cameraPos[1] - float64(c.screenHeight)/2.0) * camera.Zoom
-	bottom := (cameraPos[1] + float64(c.screenHeight)/2.0) * camera.Zoom
+	left := cameraPos[0] - float64(c.screenWidth)/2.0
+	right := cameraPos[0] + float64(c.screenWidth)/2.0
+	top := cameraPos[1] - float64(c.screenHeight)/2.0
+	bottom := cameraPos[1] + float64(c.screenHeight)/2.0
 
 	if entityPos[0] < left || entityPos[0] > right {
 		return f64.Vec2{}, false
@@ -74,32 +72,36 @@ func (c *Camera) inView(camera *components.Camera, cameraTransform *components.T
 	}
 
 	return f64.Vec2{
-		(entityPos[0] - left) / camera.Zoom,
-		(entityPos[1] - top) / camera.Zoom,
+		entityPos[0] - left,
+		entityPos[1] - top,
 	}, true
 }
 
 func (c *Camera) Update() error {
-	camera := c.activeCamera()
-	cameraTransform := ecs.MustGetComponent[components.Transform](c.EntityManager(), camera)
-	cameraComp := ecs.MustGetComponent[components.Camera](c.EntityManager(), camera)
-
-	renderableEntities := ecs.Query2[components.Transform, components.Renderable](c.EntityManager())
-
 	em := c.EntityManager()
 
-	for entity := range renderableEntities {
-		entityTransform := ecs.MustGetComponent[components.Transform](em, entity)
+	camera := c.activeCamera(em)
+	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
+	cameraComp := ecs.MustGetComponent[components.Camera](em, camera)
 
-		onscreenPos, ok := c.inView(cameraComp, cameraTransform, entityTransform)
+	for entity := range ecs.Query2[components.Transform, components.Renderable](em) {
+		entityTransform := ecs.MustGetComponent[components.Transform](em, entity)
+		render := ecs.MustGetComponent[components.Renderable](em, entity)
+		if render.Sprite == nil {
+			continue
+		}
+
+		onScreenPos, ok := c.inView(cameraComp, cameraTransform, entityTransform)
 		if !ok {
 			ecs.RemoveComponent[components.Render](em, entity)
 
 			continue
 		}
 
-		render := ecs.AddComponent[components.Renderable](em, entity)
-		render.GeoM.Translate(onscreenPos[0], onscreenPos[1])
+		ecs.AddComponent[components.Render](em, entity)
+
+		render.GeoM.SetElement(0, 2, onScreenPos[0])
+		render.GeoM.SetElement(1, 2, onScreenPos[1])
 	}
 
 	return nil
@@ -110,6 +112,10 @@ func (c *Camera) Draw(screen *ebiten.Image) {
 
 	for entity := range ecs.Query2[components.Render, components.Renderable](em) {
 		renderable := ecs.MustGetComponent[components.Renderable](em, entity)
+
+		if renderable.Sprite == nil {
+			continue
+		}
 
 		screen.DrawImage(renderable.Sprite, &ebiten.DrawImageOptions{
 			GeoM: renderable.GeoM,

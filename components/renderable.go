@@ -10,7 +10,7 @@ type Renderable struct {
 }
 
 func (r *Renderable) Reset() {
-	r.Sprite = new(ebiten.Image)
+	r.Sprite.Deallocate()
 	r.GeoM.Reset()
 }
 
