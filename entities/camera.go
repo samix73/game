@@ -11,7 +11,8 @@ func NewCameraEntity(em *ecs.EntityManager, active bool) ecs.EntityID {
 		ecs.AddComponent[components.ActiveCamera](em, entity)
 	}
 	ecs.AddComponent[components.Transform](em, entity)
-	ecs.AddComponent[components.Camera](em, entity)
+	camera := ecs.AddComponent[components.Camera](em, entity)
+	camera.Zoom = 1.0
 
 	return entity
 }

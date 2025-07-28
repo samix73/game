@@ -56,15 +56,15 @@ func (c *Camera) activeCamera(em *ecs.EntityManager) ecs.EntityID {
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
-func (c *Camera) inView(camera *components.Camera, cameraTransform *components.Transform, entityTransform *components.Transform) (f64.Vec2, bool) {
+func (c *Camera) inView(camera *components.Camera, cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
 	cameraPos := cameraTransform.Vec2
 	entityPos := entityTransform.Vec2
 
 	// Calculate the camera's view bounds
-	left := cameraPos[0] - float64(c.screenWidth)/2.0
-	right := cameraPos[0] + float64(c.screenWidth)/2.0
-	top := cameraPos[1] - float64(c.screenHeight)/2.0
-	bottom := cameraPos[1] + float64(c.screenHeight)/2.0
+	left := (cameraPos[0] - float64(c.screenWidth)/2.0) / camera.Zoom
+	right := (cameraPos[0] + float64(c.screenWidth)/2.0) / camera.Zoom
+	top := (cameraPos[1] - float64(c.screenHeight)/2.0) / camera.Zoom
+	bottom := (cameraPos[1] + float64(c.screenHeight)/2.0) / camera.Zoom
 
 	if entityPos[0] < left || entityPos[0] > right {
 		return f64.Vec2{}, false
@@ -74,9 +74,13 @@ func (c *Camera) inView(camera *components.Camera, cameraTransform *components.T
 		return f64.Vec2{}, false
 	}
 
+	// Calculate the on-screen position of the entity
+	spriteWidth := sprite.Bounds().Dx()
+	spriteHeight := sprite.Bounds().Dy()
+
 	return f64.Vec2{
-		entityPos[0] - left,
-		entityPos[1] - top,
+		(entityPos[0] - float64(spriteWidth/2)) - left,
+		(entityPos[1] - float64(spriteHeight/2)) - top,
 	}, true
 }
 
@@ -94,7 +98,7 @@ func (c *Camera) Update() error {
 			continue
 		}
 
-		onScreenPos, ok := c.inView(cameraComp, cameraTransform, entityTransform)
+		onScreenPos, ok := c.inView(cameraComp, cameraTransform, entityTransform, render.Sprite)
 		slog.Debug("Camera.Update",
 			slog.Bool("in_view", ok),
 			slog.Uint64("entity", uint64(entity)),

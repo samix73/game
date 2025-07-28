@@ -7,13 +7,18 @@ import (
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
+	"github.com/samix73/game/assets"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 )
 
 func NewDrawMeEntity(em *ecs.EntityManager) (ecs.EntityID, error) {
-	img, _, err := image.Decode(bytes.NewReader(images.Ebiten_png))
+	f, err := assets.GetSprite("warja")
+	if err != nil {
+		return ecs.UndefinedID, fmt.Errorf("error getting sprite: %v", err)
+	}
+
+	img, _, err := image.Decode(bytes.NewReader(f))
 	if err != nil {
 		return ecs.UndefinedID, fmt.Errorf("error decoding image: %v", err)
 	}
