@@ -7,6 +7,7 @@ import (
 
 	"github.com/samix73/game/game"
 	"github.com/samix73/game/worlds"
+	"golang.org/x/image/math/f64"
 )
 
 var (
@@ -45,6 +46,7 @@ func main() {
 		Title:        "Game",
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
+		Gravity:      f64.Vec2{0, 9.81},
 		Fullscreen:   *fullscreen,
 		Tracing:      *tracing,
 	})

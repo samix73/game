@@ -8,12 +8,14 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/ecs"
+	"golang.org/x/image/math/f64"
 )
 
 var _ ebiten.Game = (*Game)(nil)
 
 type Config struct {
 	Title                     string
+	Gravity                   f64.Vec2
 	ScreenWidth, ScreenHeight int
 	Fullscreen                bool
 	Tracing                   bool
