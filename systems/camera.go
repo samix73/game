@@ -18,8 +18,10 @@ var _ ecs.RendererSystem = (*Camera)(nil)
 type Camera struct {
 	*ecs.BaseSystem
 
-	screenWidth  int
-	screenHeight int
+	screenWidth      float64
+	halfScreenWidth  float64
+	screenHeight     float64
+	halfScreenHeight float64
 }
 
 func NewCameraSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager, screenWidth, screenHeight int) *Camera {
@@ -29,8 +31,10 @@ func NewCameraSystem(ctx context.Context, priority int, entityManager *ecs.Entit
 	return &Camera{
 		BaseSystem: ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
 
-		screenWidth:  screenWidth,
-		screenHeight: screenHeight,
+		screenWidth:      float64(screenWidth),
+		halfScreenWidth:  float64(screenWidth) * 0.5,
+		screenHeight:     float64(screenHeight),
+		halfScreenHeight: float64(screenHeight) * 0.5,
 	}
 }
 
@@ -68,34 +72,34 @@ func (c *Camera) activeCamera(ctx context.Context, em *ecs.EntityManager) ecs.En
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
 func (c *Camera) inView(ctx context.Context, camera *components.Camera, cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
-	ctx, task := trace.NewTask(ctx, "systems.Camera.inView")
-	defer task.End()
+	region := trace.StartRegion(ctx, "systems.Camera.inView")
+	defer region.End()
 
-	cameraPos := cameraTransform.Vec2
-	entityPos := entityTransform.Vec2
-
-	// Calculate the camera's view bounds
-	left := (cameraPos[0] - float64(c.screenWidth)/2.0) / camera.Zoom
-	right := (cameraPos[0] + float64(c.screenWidth)/2.0) / camera.Zoom
-	top := (cameraPos[1] - float64(c.screenHeight)/2.0) / camera.Zoom
-	bottom := (cameraPos[1] + float64(c.screenHeight)/2.0) / camera.Zoom
-
-	if entityPos[0] < left || entityPos[0] > right {
+	if sprite == nil {
 		return f64.Vec2{}, false
 	}
 
-	if entityPos[1] < top || entityPos[1] > bottom {
+	camX, camY := cameraTransform.Vec2[0], cameraTransform.Vec2[1]
+	entX, entY := entityTransform.Vec2[0], entityTransform.Vec2[1]
+
+	zoom := camera.Zoom
+	if zoom <= 0 {
+		zoom = 1
+	}
+
+	sw := float64(sprite.Bounds().Dx())
+	sh := float64(sprite.Bounds().Dy())
+
+	// Compute sprite top-left in screen space.
+	screenX := (entX-camX)*zoom + c.halfScreenWidth - sw*0.5
+	screenY := (entY-camY)*zoom + c.halfScreenHeight - sh*0.5
+
+	// AABB vs screen rect
+	if screenX+sw <= 0 || screenY+sh <= 0 || screenX >= c.screenWidth || screenY >= c.screenHeight {
 		return f64.Vec2{}, false
 	}
 
-	// Calculate the on-screen position of the entity
-	spriteWidth := sprite.Bounds().Dx()
-	spriteHeight := sprite.Bounds().Dy()
-
-	return f64.Vec2{
-		(entityPos[0] - float64(spriteWidth/2)) - left,
-		(entityPos[1] - float64(spriteHeight/2)) - top,
-	}, true
+	return f64.Vec2{screenX, screenY}, true
 }
 
 func (c *Camera) Update(ctx context.Context) error {
