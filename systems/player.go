@@ -35,7 +35,7 @@ func NewPlayerSystem(ctx context.Context, priority int, entityManager *ecs.Entit
 		BaseSystem:          ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
 		jumpKey:             jumpKey,
 		jumpForce:           jumpForce,
-		forwardAcceleration: forwardAcceleration,
+		forwardAcceleration: forwardAcceleration * helpers.DeltaTime,
 	}
 }
 
