@@ -40,7 +40,8 @@ func (m *MainWorld) registerSystems() {
 	gameCfg := m.g.Config()
 	m.SystemManager().Add(
 		systems.NewCameraSystem(0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
-		systems.NewGravitySystem(1, m.EntityManager(), gameCfg.Gravity),
+		systems.NewPhysicsSystem(1, m.EntityManager()),
+		systems.NewGravitySystem(2, m.EntityManager(), gameCfg.Gravity),
 	)
 }
 
