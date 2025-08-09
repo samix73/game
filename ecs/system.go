@@ -63,7 +63,7 @@ func NewSystemManager(entityManager *EntityManager) *SystemManager {
 }
 
 func (sm *SystemManager) sortSystems() {
-	slices.SortFunc(sm.systems, func(a, b System) int {
+	slices.SortStableFunc(sm.systems, func(a, b System) int {
 		if a.Priority() < b.Priority() {
 			return -1
 		}
