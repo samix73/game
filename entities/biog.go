@@ -30,12 +30,12 @@ func NewBiogEntity(ctx context.Context, em *ecs.EntityManager) (ecs.EntityID, er
 
 	entity := em.NewEntity(ctx)
 	ecs.AddComponent[components.Transform](ctx, em, entity)
+
 	rigidbody := ecs.AddComponent[components.RigidBody](ctx, em, entity)
 	rigidbody.Gravity = false
 
 	renderable := ecs.AddComponent[components.Renderable](ctx, em, entity)
 	renderable.Sprite = ebiten.NewImageFromImage(img)
-	// renderable.GeoM.Scale(0.5, 0.5)
 
 	return entity, nil
 }
