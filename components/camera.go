@@ -1,5 +1,6 @@
 package components
 
+// Camera represents the viewable area of the game world.
 type Camera struct {
 	Zoom float64
 }

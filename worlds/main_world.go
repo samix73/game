@@ -1,9 +1,10 @@
 package worlds
 
 import (
+	"context"
 	"fmt"
+	"runtime/trace"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
 	"github.com/samix73/game/game"
@@ -18,12 +19,15 @@ type MainWorld struct {
 	g *game.Game
 }
 
-func NewMainWorld(g *game.Game) (*MainWorld, error) {
-	entityManager := ecs.NewEntityManager()
-	systemManager := ecs.NewSystemManager(entityManager)
+func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
+	ctx, task := trace.NewTask(ctx, "worlds.NewMainWorld")
+	defer task.End()
 
-	if _, err := entities.NewDrawMeEntity(entityManager); err != nil {
-		return nil, fmt.Errorf("error creating draw me entity: %w", err)
+	entityManager := ecs.NewEntityManager()
+	systemManager := ecs.NewSystemManager(ctx, entityManager)
+
+	if _, err := entities.NewBiogEntity(ctx, entityManager); err != nil {
+		return nil, fmt.Errorf("error creating biog entity: %w", err)
 	}
 
 	w := &MainWorld{
@@ -31,30 +35,21 @@ func NewMainWorld(g *game.Game) (*MainWorld, error) {
 		g:         g,
 	}
 
-	w.registerSystems()
+	w.registerSystems(ctx)
 
 	return w, nil
 }
 
-func (m *MainWorld) registerSystems() {
+func (m *MainWorld) registerSystems(ctx context.Context) {
+	ctx, task := trace.NewTask(ctx, "worlds.MainWorld.registerSystems")
+	defer task.End()
+
 	gameCfg := m.g.Config()
-	m.SystemManager().Add(
-		systems.NewCameraSystem(0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
-		systems.NewPhysicsSystem(1, m.EntityManager()),
-		systems.NewGravitySystem(2, m.EntityManager(), gameCfg.Gravity),
+	m.SystemManager().Add(ctx,
+		systems.NewCameraSystem(ctx, 0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
+		systems.NewPhysicsSystem(ctx, 1, m.EntityManager()),
+		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
 	)
-}
-
-func (m *MainWorld) Draw(screen *ebiten.Image) {
-	m.SystemManager().Draw(screen)
-}
-
-func (m *MainWorld) Update() error {
-	if err := m.SystemManager().Update(); err != nil {
-		return fmt.Errorf("error updating systems: %w", err)
-	}
-
-	return nil
 }
 
 func (m *MainWorld) Teardown() {

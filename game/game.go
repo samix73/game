@@ -1,6 +1,7 @@
 package game
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime/trace"
@@ -24,13 +25,15 @@ type Config struct {
 
 type Game struct {
 	cfg *Config
+	ctx context.Context
 
 	activeWorld ecs.World
 }
 
-func NewGame(cfg *Config) *Game {
+func NewGame(ctx context.Context, cfg *Config) *Game {
 	return &Game{
 		cfg: cfg,
+		ctx: ctx,
 	}
 }
 
@@ -93,19 +96,25 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	ctx, task := trace.NewTask(g.ctx, "game.Game.Draw")
+	defer task.End()
+
 	if g.activeWorld == nil {
 		return
 	}
 
-	g.activeWorld.Draw(screen)
+	g.activeWorld.Draw(ctx, screen)
 }
 
 func (g *Game) Update() error {
+	ctx, task := trace.NewTask(g.ctx, "game.Game.Update")
+	defer task.End()
+
 	if g.activeWorld == nil {
 		return nil
 	}
 
-	if err := g.activeWorld.Update(); err != nil {
+	if err := g.activeWorld.Update(ctx); err != nil {
 		return fmt.Errorf("game.Game.Update activeWorld.Update error: %w", err)
 	}
 

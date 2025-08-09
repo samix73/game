@@ -1,8 +1,10 @@
 package systems
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"runtime/trace"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/components"
@@ -20,31 +22,40 @@ type Camera struct {
 	screenHeight int
 }
 
-func NewCameraSystem(priority int, entityManager *ecs.EntityManager, screenWidth, screenHeight int) *Camera {
+func NewCameraSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager, screenWidth, screenHeight int) *Camera {
+	ctx, task := trace.NewTask(ctx, "systems.NewCameraSystem")
+	defer task.End()
+
 	return &Camera{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
 
 		screenWidth:  screenWidth,
 		screenHeight: screenHeight,
 	}
 }
 
-func (c *Camera) createDefaultCamera() ecs.EntityID {
-	return entities.NewCameraEntity(c.EntityManager(), true)
+func (c *Camera) createDefaultCamera(ctx context.Context) ecs.EntityID {
+	_, task := trace.NewTask(ctx, "systems.Camera.createDefaultCamera")
+	defer task.End()
+
+	return entities.NewCameraEntity(ctx, c.EntityManager(), true)
 }
 
-func (c *Camera) activeCamera(em *ecs.EntityManager) ecs.EntityID {
-	for camera := range ecs.Query2[components.Camera, components.ActiveCamera](em) {
+func (c *Camera) activeCamera(ctx context.Context, em *ecs.EntityManager) ecs.EntityID {
+	ctx, task := trace.NewTask(ctx, "systems.Camera.activeCamera")
+	defer task.End()
+
+	for camera := range ecs.Query2[components.Camera, components.ActiveCamera](ctx, em) {
 		return camera
 	}
 
 	activeCamera := ecs.UndefinedID
-	for camera := range ecs.Query[components.Camera](em) {
+	for camera := range ecs.Query[components.Camera](ctx, em) {
 		if activeCamera == ecs.UndefinedID {
-			ecs.AddComponent[components.ActiveCamera](em, camera)
+			ecs.AddComponent[components.ActiveCamera](ctx, em, camera)
 			activeCamera = camera
 		} else {
-			ecs.RemoveComponent[components.ActiveCamera](em, camera)
+			ecs.RemoveComponent[components.ActiveCamera](ctx, em, camera)
 		}
 	}
 
@@ -52,11 +63,14 @@ func (c *Camera) activeCamera(em *ecs.EntityManager) ecs.EntityID {
 		return activeCamera
 	}
 
-	return c.createDefaultCamera()
+	return c.createDefaultCamera(ctx)
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
-func (c *Camera) inView(camera *components.Camera, cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
+func (c *Camera) inView(ctx context.Context, camera *components.Camera, cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
+	ctx, task := trace.NewTask(ctx, "systems.Camera.inView")
+	defer task.End()
+
 	cameraPos := cameraTransform.Vec2
 	entityPos := entityTransform.Vec2
 
@@ -84,21 +98,24 @@ func (c *Camera) inView(camera *components.Camera, cameraTransform *components.T
 	}, true
 }
 
-func (c *Camera) Update() error {
+func (c *Camera) Update(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "systems.Camera.Update")
+	defer task.End()
+
 	em := c.EntityManager()
 
-	camera := c.activeCamera(em)
-	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
-	cameraComp := ecs.MustGetComponent[components.Camera](em, camera)
+	camera := c.activeCamera(ctx, em)
+	cameraTransform := ecs.MustGetComponent[components.Transform](ctx, em, camera)
+	cameraComp := ecs.MustGetComponent[components.Camera](ctx, em, camera)
 
-	for entity := range ecs.Query2[components.Transform, components.Renderable](em) {
-		entityTransform := ecs.MustGetComponent[components.Transform](em, entity)
-		render := ecs.MustGetComponent[components.Renderable](em, entity)
+	for entity := range ecs.Query2[components.Transform, components.Renderable](ctx, em) {
+		entityTransform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
+		render := ecs.MustGetComponent[components.Renderable](ctx, em, entity)
 		if render.Sprite == nil {
 			continue
 		}
 
-		onScreenPos, ok := c.inView(cameraComp, cameraTransform, entityTransform, render.Sprite)
+		onScreenPos, ok := c.inView(ctx, cameraComp, cameraTransform, entityTransform, render.Sprite)
 		slog.Debug("Camera.Update",
 			slog.Bool("in_view", ok),
 			slog.Uint64("entity", uint64(entity)),
@@ -106,12 +123,12 @@ func (c *Camera) Update() error {
 				entityTransform.Vec2[0], entityTransform.Vec2[1])),
 		)
 		if !ok {
-			ecs.RemoveComponent[components.Render](em, entity)
+			ecs.RemoveComponent[components.Render](ctx, em, entity)
 
 			continue
 		}
 
-		ecs.AddComponent[components.Render](em, entity)
+		ecs.AddComponent[components.Render](ctx, em, entity)
 
 		render.GeoM.SetElement(0, 2, onScreenPos[0])
 		render.GeoM.SetElement(1, 2, onScreenPos[1])
@@ -120,11 +137,14 @@ func (c *Camera) Update() error {
 	return nil
 }
 
-func (c *Camera) Draw(screen *ebiten.Image) {
+func (c *Camera) Draw(ctx context.Context, screen *ebiten.Image) {
+	ctx, task := trace.NewTask(ctx, "systems.Camera.Draw")
+	defer task.End()
+
 	em := c.EntityManager()
 
-	for entity := range ecs.Query2[components.Render, components.Renderable](em) {
-		renderable := ecs.MustGetComponent[components.Renderable](em, entity)
+	for entity := range ecs.Query2[components.Render, components.Renderable](ctx, em) {
+		renderable := ecs.MustGetComponent[components.Renderable](ctx, em, entity)
 
 		if renderable.Sprite == nil {
 			continue

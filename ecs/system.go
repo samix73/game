@@ -1,7 +1,9 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
+	"runtime/trace"
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -12,14 +14,14 @@ type SystemID = ID
 type System interface {
 	ID() SystemID
 	Priority() int
-	Update() error
+	Update(ctx context.Context) error
 	Teardown()
 	baseSystem()
 }
 
 type RendererSystem interface {
 	System
-	Draw(screen *ebiten.Image)
+	Draw(ctx context.Context, screen *ebiten.Image)
 }
 
 type BaseSystem struct {
@@ -28,7 +30,10 @@ type BaseSystem struct {
 	entityManager *EntityManager
 }
 
-func NewBaseSystem(id SystemID, priority int, entityManager *EntityManager) *BaseSystem {
+func NewBaseSystem(ctx context.Context, id SystemID, priority int, entityManager *EntityManager) *BaseSystem {
+	ctx, task := trace.NewTask(ctx, "ecs.NewBaseSystem")
+	defer task.End()
+
 	return &BaseSystem{
 		id:            id,
 		priority:      priority,
@@ -55,14 +60,20 @@ type SystemManager struct {
 	entityManager *EntityManager
 }
 
-func NewSystemManager(entityManager *EntityManager) *SystemManager {
+func NewSystemManager(ctx context.Context, entityManager *EntityManager) *SystemManager {
+	ctx, task := trace.NewTask(ctx, "ecs.NewSystemManager")
+	defer task.End()
+
 	return &SystemManager{
 		systems:       make([]System, 0),
 		entityManager: entityManager,
 	}
 }
 
-func (sm *SystemManager) sortSystems() {
+func (sm *SystemManager) sortSystems(ctx context.Context) {
+	ctx, task := trace.NewTask(ctx, "ecs.SystemManager.sortSystems")
+	defer task.End()
+
 	slices.SortStableFunc(sm.systems, func(a, b System) int {
 		if a.Priority() < b.Priority() {
 			return -1
@@ -76,17 +87,23 @@ func (sm *SystemManager) sortSystems() {
 	})
 }
 
-func (sm *SystemManager) Add(systems ...System) {
+func (sm *SystemManager) Add(ctx context.Context, systems ...System) {
+	ctx, task := trace.NewTask(ctx, "ecs.SystemManager.Add")
+	defer task.End()
+
 	if len(systems) == 0 {
 		return
 	}
 
 	sm.systems = append(sm.systems, systems...)
 
-	sm.sortSystems()
+	sm.sortSystems(ctx)
 }
 
-func (sm *SystemManager) Remove(systemID SystemID) {
+func (sm *SystemManager) Remove(ctx context.Context, systemID SystemID) {
+	ctx, task := trace.NewTask(ctx, "ecs.SystemManager.Remove")
+	defer task.End()
+
 	indexToDelete, exists := slices.BinarySearchFunc(sm.systems, systemID, func(s System, id SystemID) int {
 		if s.ID() < id {
 			return -1
@@ -110,9 +127,9 @@ func (sm *SystemManager) Remove(systemID SystemID) {
 	systemToDelete.Teardown()
 }
 
-func (sm *SystemManager) Update() error {
+func (sm *SystemManager) Update(ctx context.Context) error {
 	for _, system := range sm.systems {
-		if err := system.Update(); err != nil {
+		if err := system.Update(ctx); err != nil {
 			return fmt.Errorf("error updating system %d: %w", system.ID(), err)
 		}
 	}
@@ -120,10 +137,10 @@ func (sm *SystemManager) Update() error {
 	return nil
 }
 
-func (sm *SystemManager) Draw(screen *ebiten.Image) {
+func (sm *SystemManager) Draw(ctx context.Context, screen *ebiten.Image) {
 	for _, system := range sm.systems {
 		if system, ok := system.(RendererSystem); ok {
-			system.Draw(screen)
+			system.Draw(ctx, screen)
 		}
 	}
 }

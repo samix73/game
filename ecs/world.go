@@ -1,12 +1,15 @@
 package ecs
 
 import (
+	"context"
+	"runtime/trace"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type World interface {
-	Update() error
-	Draw(screen *ebiten.Image)
+	Update(ctx context.Context) error
+	Draw(ctx context.Context, screen *ebiten.Image)
 	Teardown()
 
 	baseWorld() // Force embedding BaseWorld
@@ -26,6 +29,23 @@ func NewBaseWorld(entityManager *EntityManager, systemManager *SystemManager) *B
 		entityManager: entityManager,
 		systemManager: systemManager,
 	}
+}
+
+func (w *BaseWorld) Update(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "ecs.BaseWorld.Update")
+	defer task.End()
+
+	if err := w.SystemManager().Update(ctx); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (w *BaseWorld) Draw(ctx context.Context, screen *ebiten.Image) {
+	ctx, task := trace.NewTask(ctx, "ecs.BaseWorld.Draw")
+	defer task.End()
+
+	w.SystemManager().Draw(ctx, screen)
 }
 
 func (w *BaseWorld) EntityManager() *EntityManager {

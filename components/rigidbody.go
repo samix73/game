@@ -2,6 +2,7 @@ package components
 
 import "golang.org/x/image/math/f64"
 
+// RigidBody represents a physics body with mass, velocity, and gravity.
 type RigidBody struct {
 	Mass     float64
 	Velocity f64.Vec2

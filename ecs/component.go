@@ -1,7 +1,9 @@
 package ecs
 
 import (
+	"context"
 	"iter"
+	"runtime/trace"
 	"sync"
 )
 
@@ -18,7 +20,10 @@ type ComponentContainer struct {
 	componentLookupMap map[EntityID]int
 }
 
-func NewComponentContainer(newFn func() any) *ComponentContainer {
+func NewComponentContainer(ctx context.Context, newFn func() any) *ComponentContainer {
+	ctx, task := trace.NewTask(ctx, "ecs.NewComponentContainer")
+	defer task.End()
+
 	return &ComponentContainer{
 		pool: sync.Pool{New: func() any { return newFn() }},
 
@@ -28,7 +33,10 @@ func NewComponentContainer(newFn func() any) *ComponentContainer {
 	}
 }
 
-func (c *ComponentContainer) Add(entityID EntityID) any {
+func (c *ComponentContainer) Add(ctx context.Context, entityID EntityID) any {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.Add")
+	defer task.End()
+
 	if _, ok := c.componentLookupMap[entityID]; ok {
 		return nil
 	}
@@ -42,7 +50,10 @@ func (c *ComponentContainer) Add(entityID EntityID) any {
 	return component
 }
 
-func (c *ComponentContainer) Remove(entityID EntityID) {
+func (c *ComponentContainer) Remove(ctx context.Context, entityID EntityID) {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.Remove")
+	defer task.End()
+
 	indexToRemove, ok := c.componentLookupMap[entityID]
 	if !ok {
 		return
@@ -69,7 +80,10 @@ func (c *ComponentContainer) Remove(entityID EntityID) {
 	c.pool.Put(componentToRemove)
 }
 
-func (c *ComponentContainer) All() iter.Seq2[EntityID, any] {
+func (c *ComponentContainer) All(ctx context.Context) iter.Seq2[EntityID, any] {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.All")
+	defer task.End()
+
 	return func(yield func(EntityID, any) bool) {
 		for i, entityID := range c.entityIDs {
 			if !yield(entityID, c.components[i]) {
@@ -79,7 +93,10 @@ func (c *ComponentContainer) All() iter.Seq2[EntityID, any] {
 	}
 }
 
-func (c *ComponentContainer) Get(entityID EntityID) (any, bool) {
+func (c *ComponentContainer) Get(ctx context.Context, entityID EntityID) (any, bool) {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.Get")
+	defer task.End()
+
 	index, ok := c.componentLookupMap[entityID]
 	if !ok {
 		return nil, false
@@ -88,11 +105,17 @@ func (c *ComponentContainer) Get(entityID EntityID) (any, bool) {
 	return c.components[index], true
 }
 
-func (c *ComponentContainer) Count() int {
+func (c *ComponentContainer) Count(ctx context.Context) int {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.Count")
+	defer task.End()
+
 	return len(c.components)
 }
 
-func (c *ComponentContainer) Entities() iter.Seq[EntityID] {
+func (c *ComponentContainer) Entities(ctx context.Context) iter.Seq[EntityID] {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.Entities")
+	defer task.End()
+
 	return func(yield func(EntityID) bool) {
 		for _, entityID := range c.entityIDs {
 			if !yield(entityID) {
@@ -102,7 +125,10 @@ func (c *ComponentContainer) Entities() iter.Seq[EntityID] {
 	}
 }
 
-func (c *ComponentContainer) Components() iter.Seq[any] {
+func (c *ComponentContainer) Components(ctx context.Context) iter.Seq[any] {
+	ctx, task := trace.NewTask(ctx, "ecs.ComponentContainer.Components")
+	defer task.End()
+
 	return func(yield func(any) bool) {
 		for _, component := range c.components {
 			if !yield(component) {

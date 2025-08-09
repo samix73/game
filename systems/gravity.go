@@ -1,6 +1,9 @@
 package systems
 
 import (
+	"context"
+	"runtime/trace"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
@@ -14,21 +17,27 @@ type Gravity struct {
 	Acceleration f64.Vec2
 }
 
-func NewGravitySystem(priority int, entityManager *ecs.EntityManager, acceleration f64.Vec2) *Gravity {
+func NewGravitySystem(ctx context.Context, priority int, entityManager *ecs.EntityManager, acceleration f64.Vec2) *Gravity {
+	ctx, task := trace.NewTask(ctx, "systems.NewGravitySystem")
+	defer task.End()
+
 	return &Gravity{
-		BaseSystem:   ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem:   ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
 		Acceleration: acceleration,
 	}
 }
 
 func (g *Gravity) Teardown() {}
 
-func (g *Gravity) Update() error {
+func (g *Gravity) Update(ctx context.Context) error {
+	ctx, task := trace.NewTask(ctx, "systems.Gravity.Update")
+	defer task.End()
+
 	deltaTime := 1.0 / ebiten.ActualTPS()
 
 	em := g.EntityManager()
-	for entity := range ecs.Query[components.RigidBody](em) {
-		rigidBody := ecs.MustGetComponent[components.RigidBody](em, entity)
+	for entity := range ecs.Query[components.RigidBody](ctx, em) {
+		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
 		if rigidBody == nil {
 			continue
 		}

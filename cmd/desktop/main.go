@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log/slog"
 	"os"
@@ -42,7 +43,9 @@ func main() {
 
 	setupLogger(*logLevel)
 
-	g := game.NewGame(&game.Config{
+	ctx, _ := context.WithCancel(context.Background())
+
+	g := game.NewGame(ctx, &game.Config{
 		Title:        "Game",
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
@@ -51,7 +54,7 @@ func main() {
 		Tracing:      *tracing,
 	})
 
-	mainWorld, err := worlds.NewMainWorld(g)
+	mainWorld, err := worlds.NewMainWorld(ctx, g)
 	if err != nil {
 		slog.Error("error creating main world", "error", err)
 		os.Exit(1)
