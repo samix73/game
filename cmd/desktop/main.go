@@ -58,7 +58,7 @@ func setupLogger(level string) {
 		logLevel = slog.LevelInfo // Default to info if an invalid level is provided
 	}
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: logLevel,
 	}))
 	slog.SetDefault(logger)
