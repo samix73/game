@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"runtime/trace"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/helpers"
 )
 
 type Physics struct {
@@ -30,16 +30,14 @@ func (p *Physics) Update(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "systems.Physics.Update")
 	defer task.End()
 
-	deltaTime := 1.0 / float64(ebiten.TPS())
-
 	em := p.EntityManager()
 
 	for entity := range ecs.Query2[components.RigidBody, components.Transform](ctx, em) {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
 		transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
 
-		transform.Vec2[0] += rigidBody.Velocity[0] * deltaTime
-		transform.Vec2[1] += rigidBody.Velocity[1] * deltaTime
+		transform.Vec2[0] += rigidBody.Velocity[0] * helpers.DeltaTime
+		transform.Vec2[1] += rigidBody.Velocity[1] * helpers.DeltaTime
 
 		slog.Debug("Physics.Update",
 			slog.Uint64("entity", uint64(entity)),
