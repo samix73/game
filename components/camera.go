@@ -5,8 +5,12 @@ type Camera struct {
 	Zoom float64
 }
 
-func (c *Camera) Reset() {
+func (c *Camera) Init() {
 	c.Zoom = 1.0
+}
+
+func (c *Camera) Reset() {
+	c.Zoom = 0
 }
 
 type ActiveCamera struct{}

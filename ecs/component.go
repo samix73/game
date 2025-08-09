@@ -43,6 +43,10 @@ func (c *ComponentContainer) Add(ctx context.Context, entityID EntityID) any {
 
 	component := c.pool.Get()
 
+	if initable, ok := component.(interface{ Init() }); ok {
+		initable.Init()
+	}
+
 	c.components = append(c.components, component)
 	c.entityIDs = append(c.entityIDs, entityID)
 	c.componentLookupMap[entityID] = len(c.components) - 1

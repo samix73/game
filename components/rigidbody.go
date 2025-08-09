@@ -9,6 +9,23 @@ type RigidBody struct {
 	Gravity  bool
 }
 
+// ApplyImpulse applies an impulse to the rigid body.
+func (r *RigidBody) ApplyImpulse(impulse f64.Vec2) {
+	if r.Mass <= 0 {
+		return
+	}
+
+	r.Velocity[0] += impulse[0] / r.Mass
+	r.Velocity[1] += impulse[1] / r.Mass
+}
+
+func (r *RigidBody) Init() {
+	r.Mass = 1.0
+	r.Velocity[0] = 0
+	r.Velocity[1] = 0
+	r.Gravity = true
+}
+
 func (r *RigidBody) Reset() {
 	r.Mass = 1.0
 	r.Velocity[0] = 0
