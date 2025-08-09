@@ -88,7 +88,7 @@ func main() {
 		Title:        "Game",
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
-		Gravity:      f64.Vec2{0, 9.81},
+		Gravity:      f64.Vec2{0, 981},
 		Fullscreen:   *fullscreen,
 	})
 
