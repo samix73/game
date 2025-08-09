@@ -2,6 +2,8 @@ package systems
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"runtime/trace"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -28,7 +30,7 @@ func (p *Physics) Update(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "systems.Physics.Update")
 	defer task.End()
 
-	deltaTime := 1.0 / ebiten.ActualTPS()
+	deltaTime := 1.0 / float64(ebiten.TPS())
 
 	em := p.EntityManager()
 
@@ -36,11 +38,14 @@ func (p *Physics) Update(ctx context.Context) error {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
 		transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
 
-		newX := transform.Vec2[0] + rigidBody.Velocity[0]*deltaTime
-		newY := transform.Vec2[1] + rigidBody.Velocity[1]*deltaTime
+		transform.Vec2[0] += rigidBody.Velocity[0] * deltaTime
+		transform.Vec2[1] += rigidBody.Velocity[1] * deltaTime
 
-		transform.Vec2[0] = newX
-		transform.Vec2[1] = newY
+		slog.Debug("Physics.Update",
+			slog.Uint64("entity", uint64(entity)),
+			slog.String("position", fmt.Sprintf("(%.2f, %.2f)", transform.Vec2[0], transform.Vec2[1])),
+			slog.String("velocity", fmt.Sprintf("(%.2f, %.2f)", rigidBody.Velocity[0], rigidBody.Velocity[1])),
+		)
 	}
 
 	return nil

@@ -33,7 +33,7 @@ func (g *Gravity) Update(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "systems.Gravity.Update")
 	defer task.End()
 
-	deltaTime := 1.0 / ebiten.ActualTPS()
+	deltaTime := 1.0 / float64(ebiten.TPS())
 
 	em := g.EntityManager()
 	for entity := range ecs.Query[components.RigidBody](ctx, em) {
