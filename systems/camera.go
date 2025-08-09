@@ -71,7 +71,7 @@ func (c *Camera) activeCamera(ctx context.Context, em *ecs.EntityManager) ecs.En
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
-func (c *Camera) inView(ctx context.Context, camera *components.Camera, cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
+func (c *Camera) inView(ctx context.Context, cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
 	region := trace.StartRegion(ctx, "systems.Camera.inView")
 	defer region.End()
 
@@ -82,17 +82,12 @@ func (c *Camera) inView(ctx context.Context, camera *components.Camera, cameraTr
 	camX, camY := cameraTransform.Vec2[0], cameraTransform.Vec2[1]
 	entX, entY := entityTransform.Vec2[0], entityTransform.Vec2[1]
 
-	zoom := camera.Zoom
-	if zoom <= 0 {
-		zoom = 1
-	}
-
 	sw := float64(sprite.Bounds().Dx())
 	sh := float64(sprite.Bounds().Dy())
 
 	// Compute sprite top-left in screen space.
-	screenX := (entX-camX)*zoom + c.halfScreenWidth - sw*0.5
-	screenY := (entY-camY)*zoom + c.halfScreenHeight - sh*0.5
+	screenX := (entX - camX) + c.halfScreenWidth - sw*0.5
+	screenY := (entY - camY) + c.halfScreenHeight - sh*0.5
 
 	// AABB vs screen rect
 	if screenX+sw <= 0 || screenY+sh <= 0 || screenX >= c.screenWidth || screenY >= c.screenHeight {
@@ -110,7 +105,6 @@ func (c *Camera) Update(ctx context.Context) error {
 
 	camera := c.activeCamera(ctx, em)
 	cameraTransform := ecs.MustGetComponent[components.Transform](ctx, em, camera)
-	cameraComp := ecs.MustGetComponent[components.Camera](ctx, em, camera)
 
 	for entity := range ecs.Query2[components.Transform, components.Renderable](ctx, em) {
 		entityTransform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
@@ -119,12 +113,16 @@ func (c *Camera) Update(ctx context.Context) error {
 			continue
 		}
 
-		onScreenPos, ok := c.inView(ctx, cameraComp, cameraTransform, entityTransform, render.Sprite)
+		onScreenPos, ok := c.inView(ctx, cameraTransform, entityTransform, render.Sprite)
 		slog.Debug("Camera.Update",
 			slog.Bool("in_view", ok),
 			slog.Uint64("entity", uint64(entity)),
 			slog.String("position", fmt.Sprintf("(%.2f, %.2f)",
 				entityTransform.Vec2[0], entityTransform.Vec2[1])),
+			slog.String("on_screen_position", fmt.Sprintf("(%.2f, %.2f)",
+				onScreenPos[0], onScreenPos[1])),
+			slog.String("camera_position", fmt.Sprintf("(%.2f, %.2f)",
+				cameraTransform.Vec2[0], cameraTransform.Vec2[1])),
 		)
 		if !ok {
 			ecs.RemoveComponent[components.Render](ctx, em, entity)
@@ -154,7 +152,6 @@ func (c *Camera) Draw(ctx context.Context, screen *ebiten.Image) {
 			continue
 		}
 
-		slog.Debug("Camera.Draw", slog.Uint64("entity", uint64(entity)))
 		screen.DrawImage(renderable.Sprite, &ebiten.DrawImageOptions{
 			GeoM: renderable.GeoM,
 		})
