@@ -5,7 +5,9 @@ import (
 	"fmt"
 )
 
-//go:embed sprites/*
+const SpritesDir = "Sprites/"
+
+//go:embed Sprites/*
 var sprites embed.FS
 
 func GetSprite(name string) ([]byte, error) {
@@ -15,13 +17,13 @@ func GetSprite(name string) ([]byte, error) {
 		".jpeg",
 	}
 
-	data, err := sprites.ReadFile("sprites/" + name)
+	data, err := sprites.ReadFile(SpritesDir + name)
 	if err == nil {
 		return data, nil
 	}
 
 	for _, ext := range extensions {
-		data, err := sprites.ReadFile("sprites/" + name + ext)
+		data, err := sprites.ReadFile(SpritesDir + name + ext)
 		if err == nil {
 			return data, nil
 		}
