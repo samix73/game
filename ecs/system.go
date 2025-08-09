@@ -31,8 +31,8 @@ type BaseSystem struct {
 }
 
 func NewBaseSystem(ctx context.Context, id SystemID, priority int, entityManager *EntityManager) *BaseSystem {
-	ctx, task := trace.NewTask(ctx, "ecs.NewBaseSystem")
-	defer task.End()
+	region := trace.StartRegion(ctx, "ecs.NewBaseSystem")
+	defer region.End()
 
 	return &BaseSystem{
 		id:            id,
@@ -61,8 +61,8 @@ type SystemManager struct {
 }
 
 func NewSystemManager(ctx context.Context, entityManager *EntityManager) *SystemManager {
-	ctx, task := trace.NewTask(ctx, "ecs.NewSystemManager")
-	defer task.End()
+	region := trace.StartRegion(ctx, "ecs.NewSystemManager")
+	defer region.End()
 
 	return &SystemManager{
 		systems:       make([]System, 0),
@@ -71,8 +71,8 @@ func NewSystemManager(ctx context.Context, entityManager *EntityManager) *System
 }
 
 func (sm *SystemManager) sortSystems(ctx context.Context) {
-	ctx, task := trace.NewTask(ctx, "ecs.SystemManager.sortSystems")
-	defer task.End()
+	region := trace.StartRegion(ctx, "ecs.SystemManager.sortSystems")
+	defer region.End()
 
 	slices.SortStableFunc(sm.systems, func(a, b System) int {
 		if a.Priority() < b.Priority() {
@@ -101,8 +101,8 @@ func (sm *SystemManager) Add(ctx context.Context, systems ...System) {
 }
 
 func (sm *SystemManager) Remove(ctx context.Context, systemID SystemID) {
-	ctx, task := trace.NewTask(ctx, "ecs.SystemManager.Remove")
-	defer task.End()
+	region := trace.StartRegion(ctx, "ecs.SystemManager.Remove")
+	defer region.End()
 
 	indexToDelete, exists := slices.BinarySearchFunc(sm.systems, systemID, func(s System, id SystemID) int {
 		if s.ID() < id {

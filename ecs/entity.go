@@ -36,8 +36,8 @@ func (em *EntityManager) NewEntity(ctx context.Context) EntityID {
 }
 
 func (em *EntityManager) HasComponent(ctx context.Context, entityID EntityID, componentType reflect.Type) bool {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.HasComponent")
-	defer task.End()
+	region := trace.StartRegion(ctx, "ecs.EntityManager.HasComponent")
+	defer region.End()
 
 	if _, exists := em.entities[entityID]; !exists {
 		return false

@@ -48,8 +48,7 @@ func (g *Gravity) Update(ctx context.Context) error {
 			continue
 		}
 
-		rigidBody.Velocity[0] += g.dv[0]
-		rigidBody.Velocity[1] += g.dv[1]
+		rigidBody.ApplyAcceleration(g.dv)
 	}
 
 	return nil

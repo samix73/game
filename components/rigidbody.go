@@ -19,6 +19,11 @@ func (r *RigidBody) ApplyImpulse(impulse f64.Vec2) {
 	r.Velocity[1] += impulse[1] / r.Mass
 }
 
+func (rb *RigidBody) ApplyAcceleration(acceleration f64.Vec2) {
+	rb.Velocity[0] += acceleration[0]
+	rb.Velocity[1] += acceleration[1]
+}
+
 func (r *RigidBody) Init() {
 	r.Mass = 1.0
 	r.Velocity[0] = 0

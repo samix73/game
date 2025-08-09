@@ -17,6 +17,10 @@ type Config struct {
 	Gravity                   f64.Vec2
 	ScreenWidth, ScreenHeight int
 	Fullscreen                bool
+
+	PlayerJumpKey             ebiten.Key
+	PlayerJumpForce           float64
+	PlayerForwardAcceleration float64
 }
 
 type Game struct {

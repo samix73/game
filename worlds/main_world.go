@@ -49,6 +49,8 @@ func (m *MainWorld) registerSystems(ctx context.Context) {
 		systems.NewCameraSystem(ctx, 0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
 		systems.NewPhysicsSystem(ctx, 1, m.EntityManager()),
 		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
+		systems.NewPlayerSystem(ctx, 3, m.EntityManager(),
+			gameCfg.PlayerJumpKey, gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration),
 	)
 }
 

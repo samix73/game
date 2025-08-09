@@ -9,8 +9,8 @@ import (
 var nextID = atomic.Uint64{}
 
 func NextID(ctx context.Context) ID {
-	ctx, task := trace.NewTask(ctx, "ecs.NextID")
-	defer task.End()
+	region := trace.StartRegion(ctx, "ecs.NextID")
+	defer region.End()
 
 	return ID(nextID.Add(1))
 }
