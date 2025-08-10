@@ -2,13 +2,13 @@ package systems
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"runtime/trace"
 
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/helpers"
+	"golang.org/x/image/math/f64"
 )
 
 type Physics struct {
@@ -36,13 +36,15 @@ func (p *Physics) Update(ctx context.Context) error {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
 		transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
 
-		transform.Vec2[0] += rigidBody.Velocity[0] * helpers.DeltaTime
-		transform.Vec2[1] += rigidBody.Velocity[1] * helpers.DeltaTime
+		transform.Translate(f64.Vec2{
+			rigidBody.Velocity[0] * helpers.DeltaTime,
+			rigidBody.Velocity[1] * helpers.DeltaTime,
+		})
 
 		slog.Debug("Physics.Update",
 			slog.Uint64("entity", uint64(entity)),
-			slog.String("position", fmt.Sprintf("(%.2f, %.2f)", transform.Vec2[0], transform.Vec2[1])),
-			slog.String("velocity", fmt.Sprintf("(%.2f, %.2f)", rigidBody.Velocity[0], rigidBody.Velocity[1])),
+			slog.Any("position", transform.Vec2),
+			slog.Any("velocity", rigidBody.Velocity),
 		)
 	}
 

@@ -50,7 +50,7 @@ func (m *MainWorld) registerSystems(ctx context.Context) {
 		systems.NewPhysicsSystem(ctx, 1, m.EntityManager()),
 		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
 		systems.NewPlayerSystem(ctx, 3, m.EntityManager(),
-			gameCfg.PlayerJumpKey, gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration),
+			gameCfg.PlayerJumpKey, gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset),
 	)
 }
 

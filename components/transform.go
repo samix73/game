@@ -10,6 +10,16 @@ type Transform struct {
 	Rot  float64
 }
 
+func (t *Transform) SetPosition(v f64.Vec2) {
+	t.Vec2[0] = v[0]
+	t.Vec2[1] = v[1]
+}
+
+func (t *Transform) Translate(v f64.Vec2) {
+	t.Vec2[0] += v[0]
+	t.Vec2[1] += v[1]
+}
+
 func (t *Transform) Reset() {
 	t.Vec2[0] = 0
 	t.Vec2[1] = 0

@@ -94,7 +94,8 @@ func main() {
 
 		PlayerJumpKey:             ebiten.KeySpace,
 		PlayerJumpForce:           500,
-		PlayerForwardAcceleration: 10,
+		PlayerForwardAcceleration: 35,
+		PlayerCameraOffset:        f64.Vec2{200, 0},
 	})
 
 	mainWorld, err := worlds.NewMainWorld(ctx, g)

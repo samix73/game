@@ -2,7 +2,6 @@ package systems
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"runtime/trace"
 
@@ -117,12 +116,9 @@ func (c *Camera) Update(ctx context.Context) error {
 		slog.Debug("Camera.Update",
 			slog.Bool("in_view", ok),
 			slog.Uint64("entity", uint64(entity)),
-			slog.String("position", fmt.Sprintf("(%.2f, %.2f)",
-				entityTransform.Vec2[0], entityTransform.Vec2[1])),
-			slog.String("on_screen_position", fmt.Sprintf("(%.2f, %.2f)",
-				onScreenPos[0], onScreenPos[1])),
-			slog.String("camera_position", fmt.Sprintf("(%.2f, %.2f)",
-				cameraTransform.Vec2[0], cameraTransform.Vec2[1])),
+			slog.Any("position", entityTransform.Vec2),
+			slog.Any("on_screen_position", onScreenPos),
+			slog.Any("camera_position", cameraTransform.Vec2),
 		)
 		if !ok {
 			ecs.RemoveComponent[components.Render](ctx, em, entity)

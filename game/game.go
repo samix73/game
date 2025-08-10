@@ -21,6 +21,7 @@ type Config struct {
 	PlayerJumpKey             ebiten.Key
 	PlayerJumpForce           float64
 	PlayerForwardAcceleration float64
+	PlayerCameraOffset        f64.Vec2
 }
 
 type Game struct {

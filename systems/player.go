@@ -2,7 +2,6 @@ package systems
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"runtime/trace"
 	"slices"
@@ -24,10 +23,11 @@ type Player struct {
 	jumpKey             ebiten.Key
 	jumpForce           float64
 	forwardAcceleration float64
+	cameraOffset        f64.Vec2
 }
 
 func NewPlayerSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager,
-	jumpKey ebiten.Key, jumpForce float64, forwardAcceleration float64) *Player {
+	jumpKey ebiten.Key, jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2) *Player {
 	ctx, task := trace.NewTask(ctx, "systems.NewPlayerSystem")
 	defer task.End()
 
@@ -36,12 +36,11 @@ func NewPlayerSystem(ctx context.Context, priority int, entityManager *ecs.Entit
 		jumpKey:             jumpKey,
 		jumpForce:           jumpForce,
 		forwardAcceleration: forwardAcceleration * helpers.DeltaTime,
+		cameraOffset:        cameraOffset,
 	}
 }
 
-func (p *Player) Teardown() {
-
-}
+func (p *Player) Teardown() {}
 
 func (p *Player) getPlayerEntity(ctx context.Context) ecs.EntityID {
 	ctx, task := trace.NewTask(ctx, "systems.Player.getPlayerEntity")
@@ -66,8 +65,8 @@ func (p *Player) moveForward(ctx context.Context, rigidBody *components.RigidBod
 	rigidBody.ApplyAcceleration(f64.Vec2{p.forwardAcceleration, 0})
 }
 
-func (p *Player) applyInput(ctx context.Context, rigidBody *components.RigidBody) {
-	region := trace.StartRegion(ctx, "systems.Player.applyInput")
+func (p *Player) jump(ctx context.Context, rigidBody *components.RigidBody) {
+	region := trace.StartRegion(ctx, "systems.Player.jump")
 	defer region.End()
 
 	keys := inpututil.AppendJustPressedKeys([]ebiten.Key{})
@@ -75,10 +74,27 @@ func (p *Player) applyInput(ctx context.Context, rigidBody *components.RigidBody
 		rigidBody.Velocity[1] *= 0.1 // Reset vertical velocity before applying jump force
 		rigidBody.ApplyImpulse(f64.Vec2{0, -p.jumpForce})
 		slog.Debug("Jump!",
-			slog.String("velocity", fmt.Sprintf("(%f, %f)",
-				rigidBody.Velocity[0], rigidBody.Velocity[1])),
+			slog.Any("velocity", rigidBody.Velocity),
 		)
 	}
+}
+
+func (p *Player) cameraFollow(ctx context.Context) {
+	region := trace.StartRegion(ctx, "systems.Player.cameraFollow")
+	defer region.End()
+
+	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](ctx, p.EntityManager()))
+	if !ok {
+		return
+	}
+
+	playerTransform := ecs.MustGetComponent[components.Transform](ctx, p.EntityManager(), p.getPlayerEntity(ctx))
+	cameraTransform := ecs.MustGetComponent[components.Transform](ctx, p.EntityManager(), camera)
+
+	cameraTransform.SetPosition(f64.Vec2{
+		playerTransform.Vec2[0] + p.cameraOffset[0],
+		playerTransform.Vec2[1] + p.cameraOffset[1],
+	})
 }
 
 func (p *Player) Update(ctx context.Context) error {
@@ -92,8 +108,9 @@ func (p *Player) Update(ctx context.Context) error {
 
 	rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, p.EntityManager(), player)
 
-	p.applyInput(ctx, rigidBody)
+	p.jump(ctx, rigidBody)
 	p.moveForward(ctx, rigidBody)
+	p.cameraFollow(ctx)
 
 	return nil
 }
