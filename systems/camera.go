@@ -9,6 +9,7 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
+	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"
 )
 
@@ -48,7 +49,8 @@ func (c *Camera) activeCamera(ctx context.Context, em *ecs.EntityManager) ecs.En
 	ctx, task := trace.NewTask(ctx, "systems.Camera.activeCamera")
 	defer task.End()
 
-	for camera := range ecs.Query2[components.Camera, components.ActiveCamera](ctx, em) {
+	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](ctx, em))
+	if ok {
 		return camera
 	}
 
