@@ -92,8 +92,8 @@ func (p *Player) cameraFollow(ctx context.Context) {
 	cameraTransform := ecs.MustGetComponent[components.Transform](ctx, p.EntityManager(), camera)
 
 	cameraTransform.SetPosition(f64.Vec2{
-		playerTransform.Vec2[0] + p.cameraOffset[0],
-		playerTransform.Vec2[1] + p.cameraOffset[1],
+		playerTransform.Position()[0] + p.cameraOffset[0],
+		p.cameraOffset[1],
 	})
 }
 

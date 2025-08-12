@@ -43,7 +43,7 @@ func (p *Physics) Update(ctx context.Context) error {
 
 		slog.Debug("Physics.Update",
 			slog.Uint64("entity", uint64(entity)),
-			slog.Any("position", transform.Vec2),
+			slog.Any("position", transform.Position()),
 			slog.Any("velocity", rigidBody.Velocity),
 		)
 	}

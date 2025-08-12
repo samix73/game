@@ -80,8 +80,8 @@ func (c *Camera) inView(ctx context.Context, cameraTransform *components.Transfo
 		return f64.Vec2{}, false
 	}
 
-	camX, camY := cameraTransform.Vec2[0], cameraTransform.Vec2[1]
-	entX, entY := entityTransform.Vec2[0], entityTransform.Vec2[1]
+	camX, camY := cameraTransform.Position()[0], cameraTransform.Position()[1]
+	entX, entY := entityTransform.Position()[0], entityTransform.Position()[1]
 
 	sw := float64(sprite.Bounds().Dx())
 	sh := float64(sprite.Bounds().Dy())
@@ -118,9 +118,9 @@ func (c *Camera) Update(ctx context.Context) error {
 		slog.Debug("Camera.Update",
 			slog.Bool("in_view", ok),
 			slog.Uint64("entity", uint64(entity)),
-			slog.Any("position", entityTransform.Vec2),
+			slog.Any("position", entityTransform.Position()),
 			slog.Any("on_screen_position", onScreenPos),
-			slog.Any("camera_position", cameraTransform.Vec2),
+			slog.Any("camera_position", cameraTransform.Position()),
 		)
 		if !ok {
 			ecs.RemoveComponent[components.Render](ctx, em, entity)
