@@ -3,6 +3,7 @@ package entities
 import (
 	"context"
 	"fmt"
+	"path"
 	"runtime/trace"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,7 +18,7 @@ func NewObstacleEntity(ctx context.Context, em *ecs.EntityManager,
 	ctx, task := trace.NewTask(ctx, "entities.NewObstacleEntity")
 	defer task.End()
 
-	tileName := fmt.Sprintf("block_%s.png", color)
+	tileName := path.Join("Tiles", "Default", fmt.Sprintf("block_%s.png", color))
 	tile, err := assets.GetSprite(ctx, tileName)
 	if err != nil {
 		return 0, fmt.Errorf("entities.NewObstacleEntity GetSprite error: %w", err)
@@ -42,8 +43,9 @@ func NewObstacleEntity(ctx context.Context, em *ecs.EntityManager,
 	transform := ecs.AddComponent[components.Transform](ctx, em, entity)
 	transform.SetPosition(f64.Vec2{
 		position[0],
-		position[1] - float64(height*th),
+		position[1] + float64(height*th/2),
 	})
+	// transform.SetPosition(position)
 
 	renderable := ecs.AddComponent[components.Renderable](ctx, em, entity)
 	renderable.Sprite = colImg

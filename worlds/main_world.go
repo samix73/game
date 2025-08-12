@@ -9,6 +9,7 @@ import (
 	"github.com/samix73/game/entities"
 	"github.com/samix73/game/game"
 	"github.com/samix73/game/systems"
+	"golang.org/x/image/math/f64"
 )
 
 var _ ecs.World = (*MainWorld)(nil)
@@ -28,6 +29,10 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 
 	if _, err := entities.NewBiogEntity(ctx, entityManager); err != nil {
 		return nil, fmt.Errorf("error creating biog entity: %w", err)
+	}
+
+	if _, err := entities.NewObstacleEntity(ctx, entityManager, "red", 10, f64.Vec2{500, 0}); err != nil {
+		return nil, fmt.Errorf("error creating red obstacle entity: %w", err)
 	}
 
 	w := &MainWorld{
