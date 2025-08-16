@@ -93,7 +93,7 @@ func main() {
 
 		PlayerJumpForce:           500,
 		PlayerForwardAcceleration: 35,
-		PlayerCameraOffset:        f64.Vec2{200, 0},
+		PlayerCameraOffset:        f64.Vec2{300, 0},
 		PlayerMaxSpeed:            500,
 	})
 

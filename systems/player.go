@@ -70,7 +70,7 @@ func (p *Player) jump(ctx context.Context, rigidBody *components.RigidBody) {
 	defer region.End()
 
 	if keys.IsPressed(keys.PlayerJumpAction) {
-		rigidBody.Velocity[1] *= 0.1
+		rigidBody.Velocity[1] = 0
 		rigidBody.ApplyImpulse(f64.Vec2{0, p.jumpForce})
 		slog.Debug("Jump!",
 			slog.Any("velocity", rigidBody.Velocity),
