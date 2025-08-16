@@ -39,7 +39,7 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 			entityManager,
 			color,
 			rand.IntN(8)+3,
-			f64.Vec2{float64(i * 200), 0},
+			f64.Vec2{float64(i * 200), 200},
 		); err != nil {
 			return nil, fmt.Errorf("error creating obstacle entity: %w", err)
 		}
@@ -64,7 +64,8 @@ func (m *MainWorld) registerSystems(ctx context.Context) {
 		systems.NewCameraSystem(ctx, 0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
 		systems.NewPhysicsSystem(ctx, 1, m.EntityManager()),
 		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
-		systems.NewPlayerSystem(ctx, 3, m.EntityManager(),
+		systems.NewCollisionSystem(ctx, 3, m.EntityManager()),
+		systems.NewPlayerSystem(ctx, 4, m.EntityManager(),
 			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset),
 	)
 }

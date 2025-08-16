@@ -32,9 +32,9 @@ func NewObstacleEntity(ctx context.Context, em *ecs.EntityManager,
 
 	colImg := ebiten.NewImage(tw, th*height)
 	for i := range height {
-		op := &ebiten.DrawImageOptions{}
+		var op ebiten.DrawImageOptions
 		op.GeoM.Translate(0, float64(i*th))
-		colImg.DrawImage(tile, op)
+		colImg.DrawImage(tile, &op)
 	}
 
 	entity := em.NewEntity(ctx)
