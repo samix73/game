@@ -3,12 +3,12 @@ package worlds
 import (
 	"context"
 	"fmt"
+	"math/rand/v2"
 	"runtime/trace"
 
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
 	"github.com/samix73/game/game"
-	"github.com/samix73/game/helpers"
 	"github.com/samix73/game/systems"
 	"golang.org/x/image/math/f64"
 )
@@ -32,9 +32,16 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 		return nil, fmt.Errorf("error creating biog entity: %w", err)
 	}
 
-	for i := range 100 {
-		if _, err := entities.NewObstacleEntity(ctx, entityManager, "red", helpers.RandomInt(1, 5), f64.Vec2{float64(i * 200), 0}); err != nil {
-			return nil, fmt.Errorf("error creating red obstacle entity: %w", err)
+	colors := []string{"red", "yellow", "blue"}
+	for i := range 1_000 {
+		color := colors[rand.IntN(len(colors))]
+		if _, err := entities.NewObstacleEntity(ctx,
+			entityManager,
+			color,
+			rand.IntN(8)+3,
+			f64.Vec2{float64(i * 200), 0},
+		); err != nil {
+			return nil, fmt.Errorf("error creating obstacle entity: %w", err)
 		}
 	}
 

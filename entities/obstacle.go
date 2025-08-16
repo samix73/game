@@ -39,13 +39,11 @@ func NewObstacleEntity(ctx context.Context, em *ecs.EntityManager,
 
 	entity := em.NewEntity(ctx)
 
-	// Components
 	transform := ecs.AddComponent[components.Transform](ctx, em, entity)
 	transform.SetPosition(f64.Vec2{
 		position[0],
-		position[1] + float64(height*th/2),
+		position[1],
 	})
-	// transform.SetPosition(position)
 
 	renderable := ecs.AddComponent[components.Renderable](ctx, em, entity)
 	renderable.Sprite = colImg
