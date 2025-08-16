@@ -1,8 +1,6 @@
 package helpers
 
 import (
-	"image"
-
 	"golang.org/x/image/math/f64"
 )
 
@@ -37,9 +35,9 @@ func (a *AABB) Overlaps(other AABB) bool {
 		a.Max[1] > other.Min[1]
 }
 
-func (a *AABB) SetImageBounds(bounds image.Rectangle) {
-	a.Min = f64.Vec2{float64(bounds.Min.X), float64(bounds.Min.Y)}
-	a.Max = f64.Vec2{float64(bounds.Max.X), float64(bounds.Max.Y)}
+func (a *AABB) SetSize(width, height float64) {
+	a.Max[0] = a.Min[0] + width
+	a.Max[1] = a.Min[1] + height
 }
 
 func (a *AABB) Offset(dx, dy float64) AABB {

@@ -23,7 +23,7 @@ func NewBiogEntity(ctx context.Context, em *ecs.EntityManager) (ecs.EntityID, er
 	ecs.AddComponent[components.Transform](ctx, em, entity)
 	ecs.AddComponent[components.Player](ctx, em, entity)
 	collider := ecs.AddComponent[components.Collider](ctx, em, entity)
-	collider.Bounds.SetImageBounds(img.Bounds())
+	collider.Bounds.SetSize(float64(img.Bounds().Dx()), float64(img.Bounds().Dy()))
 
 	rigidBody := ecs.AddComponent[components.RigidBody](ctx, em, entity)
 	rigidBody.Gravity = true
