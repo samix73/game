@@ -3,7 +3,6 @@ package entities
 import (
 	"context"
 	"fmt"
-	_ "image/png"
 	"runtime/trace"
 
 	"github.com/samix73/game/assets"
@@ -23,7 +22,7 @@ func NewBiogEntity(ctx context.Context, em *ecs.EntityManager) (ecs.EntityID, er
 	entity := em.NewEntity(ctx)
 	ecs.AddComponent[components.Transform](ctx, em, entity)
 	ecs.AddComponent[components.Player](ctx, em, entity)
-	collider := ecs.AddComponent[components.ColliderComponent](ctx, em, entity)
+	collider := ecs.AddComponent[components.Collider](ctx, em, entity)
 	collider.Bounds.SetImageBounds(img.Bounds())
 
 	rigidBody := ecs.AddComponent[components.RigidBody](ctx, em, entity)

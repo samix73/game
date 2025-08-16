@@ -7,13 +7,27 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
-type Action []ebiten.Key
+type Action struct {
+	Keys        []ebiten.Key
+	MouseButton []ebiten.MouseButton
+}
 
 var (
-	PlayerJumpAction = Action{ebiten.KeySpace, ebiten.KeyArrowUp}
-	PauseAction      = Action{ebiten.KeyP}
+	PlayerJumpAction = Action{
+		Keys: []ebiten.Key{
+			ebiten.KeySpace,
+			ebiten.KeyArrowUp,
+			ebiten.KeyW,
+		},
+		MouseButton: []ebiten.MouseButton{ebiten.MouseButtonLeft},
+	}
+	PauseAction = Action{
+		Keys:        []ebiten.Key{ebiten.KeyP, ebiten.KeyEscape},
+		MouseButton: []ebiten.MouseButton{},
+	}
 )
 
 func IsPressed(action Action) bool {
-	return slices.ContainsFunc(action, inpututil.IsKeyJustPressed)
+	return slices.ContainsFunc(action.Keys, inpututil.IsKeyJustPressed) ||
+		slices.ContainsFunc(action.MouseButton, inpututil.IsMouseButtonJustPressed)
 }

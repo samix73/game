@@ -49,7 +49,7 @@ func NewObstacleEntity(ctx context.Context, em *ecs.EntityManager,
 	obstacle.Color = color
 	obstacle.Height = height
 
-	collider := ecs.AddComponent[components.ColliderComponent](ctx, em, entity)
+	collider := ecs.AddComponent[components.Collider](ctx, em, entity)
 	collider.Bounds.SetImageBounds(colImg.Bounds())
 
 	return entity, nil
