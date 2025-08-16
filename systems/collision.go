@@ -2,9 +2,7 @@ package systems
 
 import (
 	"context"
-	"image"
 	"runtime/trace"
-	"slices"
 
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
@@ -30,28 +28,37 @@ func (c *Collision) checkCollision(ctx context.Context, a, b ecs.EntityID) bool 
 
 	em := c.EntityManager()
 
-	aBounds := ecs.MustGetComponent[components.CollisionComponent](ctx, em, a)
-	bBounds := ecs.MustGetComponent[components.CollisionComponent](ctx, em, b)
-	aTransform := ecs.MustGetComponent[components.Transform](ctx, em, a)
-	bTransform := ecs.MustGetComponent[components.Transform](ctx, em, b)
+	aCollider := ecs.MustGetComponent[components.ColliderComponent](ctx, em, a)
+	bCollider := ecs.MustGetComponent[components.ColliderComponent](ctx, em, b)
 
-	adjustedABounds := aBounds.Bounds.Add(image.Point{
-		X: int(aTransform.Position[0]),
-		Y: int(aTransform.Position[1]),
-	})
-	adjustedBBounds := bBounds.Bounds.Add(image.Point{
-		X: int(bTransform.Position[0]),
-		Y: int(bTransform.Position[1]),
-	})
+	return aCollider.Bounds.Overlaps(bCollider.Bounds)
+}
 
-	return adjustedABounds.Overlaps(adjustedBBounds)
+func (c *Collision) moveCollider(ctx context.Context, entity ecs.EntityID) {
+	region := trace.StartRegion(ctx, "systems.Collision.moveCollider")
+	defer region.End()
+
+	em := c.EntityManager()
+	transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
+	collider := ecs.MustGetComponent[components.ColliderComponent](ctx, em, entity)
+
+	collider.Bounds.Add(transform.Position)
 }
 
 func (c *Collision) Update(ctx context.Context) error {
 	ctx, task := trace.NewTask(ctx, "systems.Collision.Update")
 	defer task.End()
 
-	collisionCandidates := slices.Collect(ecs.Query2[components.CollisionComponent, components.Transform](ctx, c.EntityManager()))
+	collisionCandidates := make([]ecs.EntityID, 0)
+	for entity := range ecs.Query2[components.ColliderComponent, components.Transform](ctx, c.EntityManager()) {
+		c.moveCollider(ctx, entity)
+
+		collisionCandidates = append(collisionCandidates, entity)
+	}
+
+	if len(collisionCandidates) < 2 {
+		return nil
+	}
 
 	for i := range collisionCandidates {
 		for j := i + 1; j < len(collisionCandidates); j++ {

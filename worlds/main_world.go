@@ -33,12 +33,12 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 	}
 
 	colors := []string{"red", "yellow", "blue"}
-	for i := range 1_000 {
+	for i := range 100 {
 		if _, err := entities.NewObstacleEntity(ctx,
 			entityManager,
 			colors[rand.IntN(len(colors))],
 			rand.IntN(8)+3,
-			f64.Vec2{float64(i * 200), 200},
+			f64.Vec2{float64(i * 300), 0},
 		); err != nil {
 			return nil, fmt.Errorf("error creating obstacle entity: %w", err)
 		}
