@@ -22,6 +22,7 @@ type Camera struct {
 	halfScreenWidth  float64
 	screenHeight     float64
 	halfScreenHeight float64
+	activeCamera     ecs.EntityID
 }
 
 func NewCameraSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager, screenWidth, screenHeight int) *Camera {
@@ -45,30 +46,36 @@ func (c *Camera) createDefaultCamera(ctx context.Context) ecs.EntityID {
 	return entities.NewCameraEntity(ctx, c.EntityManager(), true)
 }
 
-func (c *Camera) activeCamera(ctx context.Context, em *ecs.EntityManager) ecs.EntityID {
-	ctx, task := trace.NewTask(ctx, "systems.Camera.activeCamera")
+func (c *Camera) getActiveCamera(ctx context.Context, em *ecs.EntityManager) ecs.EntityID {
+	ctx, task := trace.NewTask(ctx, "systems.Camera.getActiveCamera")
 	defer task.End()
 
-	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](ctx, em))
+	if c.activeCamera != ecs.UndefinedID {
+		return c.activeCamera
+	}
+
+	activeCamera, ok := helpers.First(ecs.Query[components.ActiveCamera](ctx, em))
 	if ok {
-		return camera
-	}
+		c.activeCamera = activeCamera
 
-	activeCamera := ecs.UndefinedID
-	for camera := range ecs.Query[components.Camera](ctx, em) {
-		if activeCamera == ecs.UndefinedID {
-			ecs.AddComponent[components.ActiveCamera](ctx, em, camera)
-			activeCamera = camera
-		} else {
-			ecs.RemoveComponent[components.ActiveCamera](ctx, em, camera)
-		}
-	}
-
-	if activeCamera != ecs.UndefinedID {
 		return activeCamera
 	}
 
-	return c.createDefaultCamera(ctx)
+	camera, ok := helpers.First(ecs.Query[components.Camera](ctx, em))
+	if ok {
+		ecs.AddComponent[components.ActiveCamera](ctx, em, camera)
+		activeCamera = camera
+	} else {
+		activeCamera = c.createDefaultCamera(ctx)
+	}
+
+	if activeCamera == ecs.UndefinedID {
+		return ecs.UndefinedID
+	}
+
+	c.activeCamera = activeCamera
+
+	return activeCamera
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
@@ -80,15 +87,15 @@ func (c *Camera) inView(ctx context.Context, cameraTransform *components.Transfo
 		return f64.Vec2{}, false
 	}
 
-	camX, camY := cameraTransform.Position()[0], cameraTransform.Position()[1]
-	entX, entY := entityTransform.Position()[0], entityTransform.Position()[1]
+	camX, camY := cameraTransform.Position[0], cameraTransform.Position[1]
+	entX, entY := entityTransform.Position[0], entityTransform.Position[1]
 
 	sw := float64(sprite.Bounds().Dx())
 	sh := float64(sprite.Bounds().Dy())
 
 	// Compute sprite top-left in screen space.
 	screenX := (entX - camX) + c.halfScreenWidth - sw*0.5
-	screenY := (entY - camY) + c.halfScreenHeight - sh*0.5
+	screenY := c.halfScreenHeight - (entY - camY) - sh*0.5
 
 	// AABB vs screen rect
 	if screenX+sw <= 0 || screenY+sh <= 0 || screenX >= c.screenWidth || screenY >= c.screenHeight {
@@ -104,7 +111,7 @@ func (c *Camera) Update(ctx context.Context) error {
 
 	em := c.EntityManager()
 
-	camera := c.activeCamera(ctx, em)
+	camera := c.getActiveCamera(ctx, em)
 	cameraTransform := ecs.MustGetComponent[components.Transform](ctx, em, camera)
 
 	for entity := range ecs.Query2[components.Transform, components.Renderable](ctx, em) {
@@ -118,9 +125,9 @@ func (c *Camera) Update(ctx context.Context) error {
 		slog.Debug("Camera.Update",
 			slog.Bool("in_view", ok),
 			slog.Uint64("entity", uint64(entity)),
-			slog.Any("position", entityTransform.Position()),
+			slog.Any("position", entityTransform.Position),
 			slog.Any("on_screen_position", onScreenPos),
-			slog.Any("camera_position", cameraTransform.Position()),
+			slog.Any("camera_position", cameraTransform.Position),
 		)
 		if !ok {
 			ecs.RemoveComponent[components.Render](ctx, em, entity)

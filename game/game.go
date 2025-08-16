@@ -23,6 +23,7 @@ type Config struct {
 	PlayerJumpForce           float64
 	PlayerForwardAcceleration float64
 	PlayerCameraOffset        f64.Vec2
+	PlayerMaxSpeed            float64
 }
 
 type Game struct {

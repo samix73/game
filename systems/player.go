@@ -21,10 +21,11 @@ type Player struct {
 	jumpForce           float64
 	forwardAcceleration float64
 	cameraOffset        f64.Vec2
+	maxSpeed            float64
 }
 
 func NewPlayerSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager,
-	jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2) *Player {
+	jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2, maxSpeed float64) *Player {
 	ctx, task := trace.NewTask(ctx, "systems.NewPlayerSystem")
 	defer task.End()
 
@@ -33,6 +34,7 @@ func NewPlayerSystem(ctx context.Context, priority int, entityManager *ecs.Entit
 		jumpForce:           jumpForce,
 		forwardAcceleration: forwardAcceleration * helpers.DeltaTime,
 		cameraOffset:        cameraOffset,
+		maxSpeed:            maxSpeed,
 	}
 }
 
@@ -58,7 +60,9 @@ func (p *Player) moveForward(ctx context.Context, rigidBody *components.RigidBod
 	region := trace.StartRegion(ctx, "systems.Player.moveForward")
 	defer region.End()
 
-	rigidBody.ApplyAcceleration(f64.Vec2{p.forwardAcceleration, 0})
+	if rigidBody.Velocity[0] <= p.maxSpeed {
+		rigidBody.ApplyAcceleration(f64.Vec2{p.forwardAcceleration, 0})
+	}
 }
 
 func (p *Player) jump(ctx context.Context, rigidBody *components.RigidBody) {
@@ -67,7 +71,7 @@ func (p *Player) jump(ctx context.Context, rigidBody *components.RigidBody) {
 
 	if keys.IsPressed(keys.PlayerJumpAction) {
 		rigidBody.Velocity[1] *= 0.1
-		rigidBody.ApplyImpulse(f64.Vec2{0, -p.jumpForce})
+		rigidBody.ApplyImpulse(f64.Vec2{0, p.jumpForce})
 		slog.Debug("Jump!",
 			slog.Any("velocity", rigidBody.Velocity),
 		)
@@ -86,10 +90,7 @@ func (p *Player) cameraFollow(ctx context.Context) {
 	playerTransform := ecs.MustGetComponent[components.Transform](ctx, p.EntityManager(), p.getPlayerEntity(ctx))
 	cameraTransform := ecs.MustGetComponent[components.Transform](ctx, p.EntityManager(), camera)
 
-	cameraTransform.SetPosition(f64.Vec2{
-		playerTransform.Position()[0] + p.cameraOffset[0],
-		p.cameraOffset[1],
-	})
+	cameraTransform.SetPosition(playerTransform.Position[0]+p.cameraOffset[0], p.cameraOffset[1])
 }
 
 func (p *Player) Update(ctx context.Context) error {

@@ -8,7 +8,6 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/helpers"
-	"golang.org/x/image/math/f64"
 )
 
 type Physics struct {
@@ -36,14 +35,14 @@ func (p *Physics) Update(ctx context.Context) error {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
 		transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
 
-		transform.Translate(f64.Vec2{
-			rigidBody.Velocity[0] * helpers.DeltaTime,
-			rigidBody.Velocity[1] * helpers.DeltaTime,
-		})
+		transform.Translate(
+			rigidBody.Velocity[0]*helpers.DeltaTime,
+			rigidBody.Velocity[1]*helpers.DeltaTime,
+		)
 
 		slog.Debug("Physics.Update",
 			slog.Uint64("entity", uint64(entity)),
-			slog.Any("position", transform.Position()),
+			slog.Any("position", transform.Position),
 			slog.Any("velocity", rigidBody.Velocity),
 		)
 	}

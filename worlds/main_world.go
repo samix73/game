@@ -34,10 +34,9 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 
 	colors := []string{"red", "yellow", "blue"}
 	for i := range 1_000 {
-		color := colors[rand.IntN(len(colors))]
 		if _, err := entities.NewObstacleEntity(ctx,
 			entityManager,
-			color,
+			colors[rand.IntN(len(colors))],
 			rand.IntN(8)+3,
 			f64.Vec2{float64(i * 200), 200},
 		); err != nil {
@@ -66,7 +65,7 @@ func (m *MainWorld) registerSystems(ctx context.Context) {
 		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
 		systems.NewCollisionSystem(ctx, 3, m.EntityManager()),
 		systems.NewPlayerSystem(ctx, 4, m.EntityManager(),
-			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset),
+			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset, gameCfg.PlayerMaxSpeed),
 	)
 }
 

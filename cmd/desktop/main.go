@@ -88,12 +88,13 @@ func main() {
 		Title:        "Game",
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
-		Gravity:      f64.Vec2{0, 981},
+		Gravity:      f64.Vec2{0, -981},
 		Fullscreen:   *fullscreen,
 
 		PlayerJumpForce:           500,
 		PlayerForwardAcceleration: 35,
 		PlayerCameraOffset:        f64.Vec2{200, 0},
+		PlayerMaxSpeed:            500,
 	})
 
 	mainWorld, err := worlds.NewMainWorld(ctx, g)

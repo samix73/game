@@ -36,12 +36,12 @@ func (c *Collision) checkCollision(ctx context.Context, a, b ecs.EntityID) bool 
 	bTransform := ecs.MustGetComponent[components.Transform](ctx, em, b)
 
 	adjustedABounds := aBounds.Bounds.Add(image.Point{
-		X: int(aTransform.Position()[0]),
-		Y: int(aTransform.Position()[1]),
+		X: int(aTransform.Position[0]),
+		Y: int(aTransform.Position[1]),
 	})
 	adjustedBBounds := bBounds.Bounds.Add(image.Point{
-		X: int(bTransform.Position()[0]),
-		Y: int(bTransform.Position()[1]),
+		X: int(bTransform.Position[0]),
+		Y: int(bTransform.Position[1]),
 	})
 
 	return adjustedABounds.Overlaps(adjustedBBounds)
