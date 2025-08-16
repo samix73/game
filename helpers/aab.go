@@ -36,8 +36,9 @@ func (a *AABB) Overlaps(other AABB) bool {
 }
 
 func (a *AABB) SetSize(width, height float64) {
-	a.Max[0] = a.Min[0] + width
-	a.Max[1] = a.Min[1] + height
+	hw, hh := width*0.5, height*0.5
+	a.Min[0], a.Min[1] = -hw, -hh
+	a.Max[0], a.Max[1] = hw, hh
 }
 
 func (a *AABB) Offset(dx, dy float64) AABB {
