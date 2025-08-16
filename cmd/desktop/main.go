@@ -9,7 +9,6 @@ import (
 	"runtime/trace"
 	"time"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/game"
 	"github.com/samix73/game/worlds"
 	"golang.org/x/image/math/f64"
@@ -92,7 +91,6 @@ func main() {
 		Gravity:      f64.Vec2{0, 981},
 		Fullscreen:   *fullscreen,
 
-		PlayerJumpKey:             ebiten.KeySpace,
 		PlayerJumpForce:           500,
 		PlayerForwardAcceleration: 35,
 		PlayerCameraOffset:        f64.Vec2{200, 0},

@@ -8,6 +8,7 @@ import (
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
 	"github.com/samix73/game/game"
+	"github.com/samix73/game/helpers"
 	"github.com/samix73/game/systems"
 	"golang.org/x/image/math/f64"
 )
@@ -31,8 +32,10 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 		return nil, fmt.Errorf("error creating biog entity: %w", err)
 	}
 
-	if _, err := entities.NewObstacleEntity(ctx, entityManager, "red", 10, f64.Vec2{500, 0}); err != nil {
-		return nil, fmt.Errorf("error creating red obstacle entity: %w", err)
+	for i := range 100 {
+		if _, err := entities.NewObstacleEntity(ctx, entityManager, "red", helpers.RandomInt(1, 5), f64.Vec2{float64(i * 200), 0}); err != nil {
+			return nil, fmt.Errorf("error creating red obstacle entity: %w", err)
+		}
 	}
 
 	w := &MainWorld{
@@ -55,7 +58,7 @@ func (m *MainWorld) registerSystems(ctx context.Context) {
 		systems.NewPhysicsSystem(ctx, 1, m.EntityManager()),
 		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
 		systems.NewPlayerSystem(ctx, 3, m.EntityManager(),
-			gameCfg.PlayerJumpKey, gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset),
+			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset),
 	)
 }
 

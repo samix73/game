@@ -6,7 +6,9 @@ import (
 	"runtime/trace"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/keys"
 	"golang.org/x/image/math/f64"
 )
 
@@ -18,15 +20,15 @@ type Config struct {
 	ScreenWidth, ScreenHeight int
 	Fullscreen                bool
 
-	PlayerJumpKey             ebiten.Key
 	PlayerJumpForce           float64
 	PlayerForwardAcceleration float64
 	PlayerCameraOffset        f64.Vec2
 }
 
 type Game struct {
-	cfg *Config
-	ctx context.Context
+	cfg    *Config
+	ctx    context.Context
+	paused bool
 
 	activeWorld ecs.World
 }
@@ -62,6 +64,14 @@ func (g *Game) Start() error {
 	return nil
 }
 
+func (g *Game) Pause() bool {
+	if keys.IsPressed(keys.PauseAction) {
+		g.paused = !g.paused
+	}
+
+	return g.paused
+}
+
 func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 	return g.cfg.ScreenWidth, g.cfg.ScreenHeight
 }
@@ -70,9 +80,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	ctx, task := trace.NewTask(g.ctx, "game.Game.Draw")
 	defer task.End()
 
+	if g.paused {
+		ebitenutil.DebugPrintAt(screen, "Paused - press P to resume", 16, 16)
+	}
+
 	if g.activeWorld == nil {
 		return
 	}
+
+	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %.2f", ebiten.ActualFPS()), 16, 32)
 
 	g.activeWorld.Draw(ctx, screen)
 }
@@ -80,6 +96,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) Update() error {
 	ctx, task := trace.NewTask(g.ctx, "game.Game.Update")
 	defer task.End()
+
+	if g.Pause() {
+		return nil
+	}
 
 	if g.activeWorld == nil {
 		return nil
