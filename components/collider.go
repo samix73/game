@@ -21,3 +21,11 @@ func (c *Collider) Init() {
 func (c *Collider) Reset() {
 	c.Bounds.Reset()
 }
+
+var _ ecs.Component = (*Collision)(nil)
+
+type Collision struct {
+	Enitity ecs.EntityID
+}
+
+func (c *Collision) Reset() {}

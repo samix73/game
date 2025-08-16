@@ -2,7 +2,6 @@ package systems
 
 import (
 	"context"
-	"fmt"
 	"runtime/trace"
 
 	"github.com/samix73/game/components"
@@ -72,7 +71,14 @@ func (c *Collision) Update(ctx context.Context) error {
 	for _, a := range active {
 		for _, b := range static {
 			if c.checkCollision(ctx, a, b) {
-				fmt.Println("active", a.id, "collides with", "static", b.id)
+				aCol := ecs.AddComponent[components.Collision](ctx, em, a.id)
+				aCol.Enitity = b.id
+
+				bCol := ecs.AddComponent[components.Collision](ctx, em, a.id)
+				bCol.Enitity = a.id
+			} else {
+				ecs.RemoveComponent[components.Collision](ctx, em, a.id)
+				ecs.RemoveComponent[components.Collision](ctx, em, b.id)
 			}
 		}
 	}
@@ -85,7 +91,14 @@ func (c *Collision) Update(ctx context.Context) error {
 	for i := 0; i < len(active); i++ {
 		for j := i + 1; j < len(active); j++ {
 			if c.checkCollision(ctx, active[i], active[j]) {
-				fmt.Println("active", active[i].id, "collides with", "active", active[j].id)
+				aCol := ecs.AddComponent[components.Collision](ctx, em, active[i].id)
+				aCol.Enitity = active[j].id
+
+				bCol := ecs.AddComponent[components.Collision](ctx, em, active[j].id)
+				bCol.Enitity = active[i].id
+			} else {
+				ecs.RemoveComponent[components.Collision](ctx, em, active[i].id)
+				ecs.RemoveComponent[components.Collision](ctx, em, active[j].id)
 			}
 		}
 	}

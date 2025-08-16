@@ -51,7 +51,6 @@ func NewObstacleEntity(ctx context.Context, em *ecs.EntityManager,
 
 	collider := ecs.AddComponent[components.Collider](ctx, em, entity)
 	collider.Bounds.SetSize(float64(colImg.Bounds().Dx()), float64(colImg.Bounds().Dy()))
-	fmt.Println(collider.Bounds, colImg.Bounds())
 
 	return entity, nil
 }
