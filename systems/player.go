@@ -4,13 +4,11 @@ import (
 	"context"
 	"log/slog"
 	"runtime/trace"
-	"slices"
 
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/helpers"
+	"github.com/samix73/game/keys"
 	"golang.org/x/image/math/f64"
 )
 
@@ -20,20 +18,18 @@ type Player struct {
 	*ecs.BaseSystem
 
 	playerEntity        ecs.EntityID
-	jumpKey             ebiten.Key
 	jumpForce           float64
 	forwardAcceleration float64
 	cameraOffset        f64.Vec2
 }
 
 func NewPlayerSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager,
-	jumpKey ebiten.Key, jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2) *Player {
+	jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2) *Player {
 	ctx, task := trace.NewTask(ctx, "systems.NewPlayerSystem")
 	defer task.End()
 
 	return &Player{
 		BaseSystem:          ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
-		jumpKey:             jumpKey,
 		jumpForce:           jumpForce,
 		forwardAcceleration: forwardAcceleration * helpers.DeltaTime,
 		cameraOffset:        cameraOffset,
@@ -69,9 +65,8 @@ func (p *Player) jump(ctx context.Context, rigidBody *components.RigidBody) {
 	region := trace.StartRegion(ctx, "systems.Player.jump")
 	defer region.End()
 
-	keys := inpututil.AppendJustPressedKeys([]ebiten.Key{})
-	if slices.Contains(keys, p.jumpKey) {
-		rigidBody.Velocity[1] *= 0.1 // Reset vertical velocity before applying jump force
+	if keys.IsPressed(keys.PlayerJumpAction) {
+		rigidBody.Velocity[1] *= 0.1
 		rigidBody.ApplyImpulse(f64.Vec2{0, -p.jumpForce})
 		slog.Debug("Jump!",
 			slog.Any("velocity", rigidBody.Velocity),
