@@ -20,7 +20,6 @@ type MainWorld struct {
 }
 
 func NewMainWorld(g *game.Game) (*MainWorld, error) {
-
 	entityManager := ecs.NewEntityManager()
 	systemManager := ecs.NewSystemManager(entityManager)
 

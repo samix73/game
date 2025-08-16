@@ -39,9 +39,9 @@ func (c *CameraComponent) Reset() {
 func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 	tb.Helper()
 
-	entityID := em.NewEntity(tb.Context())
+	entityID := em.NewEntity()
 
-	transform := ecs.AddComponent[TransformComponent](tb.Context(), em, entityID)
+	transform := ecs.AddComponent[TransformComponent](em, entityID)
 	assert.NotNil(tb, transform)
 
 	return entityID
@@ -50,13 +50,13 @@ func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 func NewCameraEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 	tb.Helper()
 
-	entityID := em.NewEntity(tb.Context())
+	entityID := em.NewEntity()
 
-	transform := ecs.AddComponent[TransformComponent](tb.Context(), em, entityID)
+	transform := ecs.AddComponent[TransformComponent](em, entityID)
 	if _, ok := tb.(*testing.B); !ok {
 		assert.NotNil(tb, transform)
 	}
-	camera := ecs.AddComponent[CameraComponent](tb.Context(), em, entityID)
+	camera := ecs.AddComponent[CameraComponent](em, entityID)
 	if _, ok := tb.(*testing.B); !ok {
 		assert.NotNil(tb, camera)
 	}
@@ -67,7 +67,7 @@ func NewCameraEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 func NewEmptyEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 	tb.Helper()
 
-	return em.NewEntity(tb.Context())
+	return em.NewEntity()
 }
 
 func TestEntityCreation(t *testing.T) {
@@ -99,7 +99,7 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("Query Only", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query[TransformComponent](b.Context(), em) {
+			for entityID := range ecs.Query[TransformComponent](em) {
 				_ = entityID // Just consume the entityID
 			}
 		}
@@ -107,7 +107,7 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("Query2 Only", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query2[TransformComponent, CameraComponent](b.Context(), em) {
+			for entityID := range ecs.Query2[TransformComponent, CameraComponent](em) {
 				_ = entityID // Just consume the entityID
 			}
 		}
@@ -115,12 +115,12 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("GetComponent Only", func(b *testing.B) {
 		// Pre-collect entity IDs
-		entityIDs := slices.Collect(ecs.Query[TransformComponent](b.Context(), em))
+		entityIDs := slices.Collect(ecs.Query[TransformComponent](em))
 
 		b.ResetTimer()
 		for b.Loop() {
 			for _, entityID := range entityIDs {
-				if _, ok := ecs.GetComponent[TransformComponent](b.Context(), em, entityID); !ok {
+				if _, ok := ecs.GetComponent[TransformComponent](em, entityID); !ok {
 					b.Fatalf("Expected component for entity %d", entityID)
 				}
 			}
@@ -129,8 +129,8 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("Query + GetComponent", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query[TransformComponent](b.Context(), em) {
-				if _, ok := ecs.GetComponent[TransformComponent](b.Context(), em, entityID); !ok {
+			for entityID := range ecs.Query[TransformComponent](em) {
+				if _, ok := ecs.GetComponent[TransformComponent](em, entityID); !ok {
 					b.Fatalf("Expected component for entity %d", entityID)
 				}
 			}
@@ -139,12 +139,12 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("Query2 + GetComponent", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query2[TransformComponent, CameraComponent](b.Context(), em) {
-				if _, ok := ecs.GetComponent[TransformComponent](b.Context(), em, entityID); !ok {
+			for entityID := range ecs.Query2[TransformComponent, CameraComponent](em) {
+				if _, ok := ecs.GetComponent[TransformComponent](em, entityID); !ok {
 					b.Fatalf("Expected component for entity %d", entityID)
 				}
 
-				if _, ok := ecs.GetComponent[CameraComponent](b.Context(), em, entityID); !ok {
+				if _, ok := ecs.GetComponent[CameraComponent](em, entityID); !ok {
 					b.Fatalf("Expected component for entity %d", entityID)
 				}
 			}
