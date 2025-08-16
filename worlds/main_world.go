@@ -1,10 +1,8 @@
 package worlds
 
 import (
-	"context"
 	"fmt"
 	"math/rand/v2"
-	"runtime/trace"
 
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
@@ -21,20 +19,18 @@ type MainWorld struct {
 	g *game.Game
 }
 
-func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
-	ctx, task := trace.NewTask(ctx, "worlds.NewMainWorld")
-	defer task.End()
+func NewMainWorld(g *game.Game) (*MainWorld, error) {
 
 	entityManager := ecs.NewEntityManager()
-	systemManager := ecs.NewSystemManager(ctx, entityManager)
+	systemManager := ecs.NewSystemManager(entityManager)
 
-	if _, err := entities.NewBiogEntity(ctx, entityManager); err != nil {
+	if _, err := entities.NewBiogEntity(entityManager); err != nil {
 		return nil, fmt.Errorf("error creating biog entity: %w", err)
 	}
 
 	colors := []string{"red", "yellow", "blue"}
 	for i := range 10_000 {
-		if _, err := entities.NewObstacleEntity(ctx,
+		if _, err := entities.NewObstacleEntity(
 			entityManager,
 			colors[rand.IntN(len(colors))],
 			rand.IntN(8)+3,
@@ -49,22 +45,19 @@ func NewMainWorld(ctx context.Context, g *game.Game) (*MainWorld, error) {
 		g:         g,
 	}
 
-	w.registerSystems(ctx)
+	w.registerSystems()
 
 	return w, nil
 }
 
-func (m *MainWorld) registerSystems(ctx context.Context) {
-	ctx, task := trace.NewTask(ctx, "worlds.MainWorld.registerSystems")
-	defer task.End()
-
+func (m *MainWorld) registerSystems() {
 	gameCfg := m.g.Config()
-	m.SystemManager().Add(ctx,
-		systems.NewCameraSystem(ctx, 0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
-		systems.NewPhysicsSystem(ctx, 1, m.EntityManager()),
-		systems.NewGravitySystem(ctx, 2, m.EntityManager(), gameCfg.Gravity),
-		systems.NewCollisionSystem(ctx, 3, m.EntityManager()),
-		systems.NewPlayerSystem(ctx, 4, m.EntityManager(),
+	m.SystemManager().Add(
+		systems.NewCameraSystem(0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
+		systems.NewPhysicsSystem(1, m.EntityManager()),
+		systems.NewGravitySystem(2, m.EntityManager(), gameCfg.Gravity),
+		systems.NewCollisionSystem(3, m.EntityManager()),
+		systems.NewPlayerSystem(4, m.EntityManager(),
 			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset, gameCfg.PlayerMaxSpeed),
 	)
 }

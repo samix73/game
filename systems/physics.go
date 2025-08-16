@@ -1,9 +1,7 @@
 package systems
 
 import (
-	"context"
 	"log/slog"
-	"runtime/trace"
 
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
@@ -14,26 +12,20 @@ type Physics struct {
 	*ecs.BaseSystem
 }
 
-func NewPhysicsSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager) *Physics {
-	ctx, task := trace.NewTask(ctx, "systems.NewPhysicsSystem")
-	defer task.End()
-
+func NewPhysicsSystem(priority int, entityManager *ecs.EntityManager) *Physics {
 	return &Physics{
-		BaseSystem: ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
 	}
 }
 
 func (p *Physics) Teardown() {}
 
-func (p *Physics) Update(ctx context.Context) error {
-	ctx, task := trace.NewTask(ctx, "systems.Physics.Update")
-	defer task.End()
-
+func (p *Physics) Update() error {
 	em := p.EntityManager()
 
-	for entity := range ecs.Query2[components.RigidBody, components.Transform](ctx, em) {
-		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
-		transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
+	for entity := range ecs.Query2[components.RigidBody, components.Transform](em) {
+		rigidBody := ecs.MustGetComponent[components.RigidBody](em, entity)
+		transform := ecs.MustGetComponent[components.Transform](em, entity)
 
 		transform.Translate(
 			rigidBody.Velocity[0]*helpers.DeltaTime,

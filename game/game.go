@@ -1,9 +1,7 @@
 package game
 
 import (
-	"context"
 	"fmt"
-	"runtime/trace"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -28,16 +26,14 @@ type Config struct {
 
 type Game struct {
 	cfg    *Config
-	ctx    context.Context
 	paused bool
 
 	activeWorld ecs.World
 }
 
-func NewGame(ctx context.Context, cfg *Config) *Game {
+func NewGame(cfg *Config) *Game {
 	return &Game{
 		cfg: cfg,
-		ctx: ctx,
 	}
 }
 
@@ -78,9 +74,6 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ctx, task := trace.NewTask(g.ctx, "game.Game.Draw")
-	defer task.End()
-
 	if g.paused {
 		ebitenutil.DebugPrintAt(screen, "Paused - press P to resume", 16, 16)
 	}
@@ -91,13 +84,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %.2f", ebiten.ActualFPS()), 16, 32)
 
-	g.activeWorld.Draw(ctx, screen)
+	g.activeWorld.Draw(screen)
 }
 
 func (g *Game) Update() error {
-	ctx, task := trace.NewTask(g.ctx, "game.Game.Update")
-	defer task.End()
-
 	if g.Pause() {
 		return nil
 	}
@@ -106,7 +96,7 @@ func (g *Game) Update() error {
 		return nil
 	}
 
-	if err := g.activeWorld.Update(ctx); err != nil {
+	if err := g.activeWorld.Update(); err != nil {
 		return fmt.Errorf("game.Game.Update activeWorld.Update error: %w", err)
 	}
 

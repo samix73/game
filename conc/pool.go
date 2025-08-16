@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"gitlab.com/abios/gohelpers/conc/panics"
+	"github.com/samix73/game/conc/panics"
 )
 
 type opt struct {

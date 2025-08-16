@@ -1,8 +1,6 @@
 package systems
 
 import (
-	"context"
-
 	"github.com/samix73/game/ecs"
 )
 
@@ -12,7 +10,7 @@ type LevelGen struct {
 	*ecs.BaseSystem
 }
 
-func (l *LevelGen) Update(ctx context.Context) error {
+func (l *LevelGen) Update() error {
 	return nil
 }
 

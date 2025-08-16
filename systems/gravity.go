@@ -1,9 +1,6 @@
 package systems
 
 import (
-	"context"
-	"runtime/trace"
-
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/helpers"
@@ -18,12 +15,9 @@ type Gravity struct {
 	dv f64.Vec2
 }
 
-func NewGravitySystem(ctx context.Context, priority int, entityManager *ecs.EntityManager, acceleration f64.Vec2) *Gravity {
-	ctx, task := trace.NewTask(ctx, "systems.NewGravitySystem")
-	defer task.End()
-
+func NewGravitySystem(priority int, entityManager *ecs.EntityManager, acceleration f64.Vec2) *Gravity {
 	return &Gravity{
-		BaseSystem: ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
 		dv: f64.Vec2{
 			acceleration[0] * helpers.DeltaTime,
 			acceleration[1] * helpers.DeltaTime,
@@ -33,13 +27,10 @@ func NewGravitySystem(ctx context.Context, priority int, entityManager *ecs.Enti
 
 func (g *Gravity) Teardown() {}
 
-func (g *Gravity) Update(ctx context.Context) error {
-	ctx, task := trace.NewTask(ctx, "systems.Gravity.Update")
-	defer task.End()
-
+func (g *Gravity) Update() error {
 	em := g.EntityManager()
-	for entity := range ecs.Query[components.RigidBody](ctx, em) {
-		rigidBody := ecs.MustGetComponent[components.RigidBody](ctx, em, entity)
+	for entity := range ecs.Query[components.RigidBody](em) {
+		rigidBody := ecs.MustGetComponent[components.RigidBody](em, entity)
 		if rigidBody == nil {
 			continue
 		}

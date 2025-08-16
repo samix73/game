@@ -1,11 +1,9 @@
 package ecs
 
 import (
-	"context"
 	"fmt"
 	"iter"
 	"reflect"
-	"runtime/trace"
 )
 
 type EntityID = ID
@@ -24,21 +22,15 @@ func NewEntityManager() *EntityManager {
 	}
 }
 
-func (em *EntityManager) NewEntity(ctx context.Context) EntityID {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.NewEntity")
-	defer task.End()
-
-	id := NextID(ctx)
+func (em *EntityManager) NewEntity() EntityID {
+	id := NextID()
 	em.entities[id] = struct{}{}
 	em.entityComponentSignatures[id] = make(map[reflect.Type]struct{})
 
 	return id
 }
 
-func (em *EntityManager) HasComponent(ctx context.Context, entityID EntityID, componentType reflect.Type) bool {
-	region := trace.StartRegion(ctx, "ecs.EntityManager.HasComponent")
-	defer region.End()
-
+func (em *EntityManager) HasComponent(entityID EntityID, componentType reflect.Type) bool {
 	if _, exists := em.entities[entityID]; !exists {
 		return false
 	}
@@ -50,17 +42,14 @@ func (em *EntityManager) HasComponent(ctx context.Context, entityID EntityID, co
 	return true
 }
 
-func (em *EntityManager) Remove(ctx context.Context, entityID EntityID) {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.Remove")
-	defer task.End()
-
+func (em *EntityManager) Remove(entityID EntityID) {
 	if _, exists := em.entities[entityID]; !exists {
 		return
 	}
 
 	for componentType := range em.entityComponentSignatures[entityID] {
 		if container, exists := em.componentContainers[componentType]; exists {
-			container.Remove(ctx, entityID)
+			container.Remove(entityID)
 		}
 	}
 
@@ -68,10 +57,7 @@ func (em *EntityManager) Remove(ctx context.Context, entityID EntityID) {
 	delete(em.entities, entityID)
 }
 
-func (em *EntityManager) RemoveComponent(ctx context.Context, entityID EntityID, componentType reflect.Type) {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.RemoveComponent")
-	defer task.End()
-
+func (em *EntityManager) RemoveComponent(entityID EntityID, componentType reflect.Type) {
 	if _, exists := em.entities[entityID]; !exists {
 		return
 	}
@@ -85,15 +71,12 @@ func (em *EntityManager) RemoveComponent(ctx context.Context, entityID EntityID,
 		return
 	}
 
-	container.Remove(ctx, entityID)
+	container.Remove(entityID)
 	delete(em.entityComponentSignatures[entityID], componentType)
 }
 
 // Query returns a sequence of EntityIDs that match the specified component types.
-func (em *EntityManager) Query(ctx context.Context, componentTypes ...reflect.Type) iter.Seq[EntityID] {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.Query")
-	defer task.End()
-
+func (em *EntityManager) Query(componentTypes ...reflect.Type) iter.Seq[EntityID] {
 	zeroIter := func(yield func(EntityID) bool) {}
 
 	if len(componentTypes) == 0 {
@@ -107,7 +90,7 @@ func (em *EntityManager) Query(ctx context.Context, componentTypes ...reflect.Ty
 			return zeroIter
 		}
 
-		return componentContainer.Entities(ctx)
+		return componentContainer.Entities()
 	}
 
 	// Pre-check: if any component type doesn't exist, return empty iterator
@@ -123,7 +106,7 @@ func (em *EntityManager) Query(ctx context.Context, componentTypes ...reflect.Ty
 	// Find the container with the smallest number of entities to start with
 	// This reduces the number of entities we need to check
 	smallestIdx := 0
-	smallestCount := containers[0].Count(ctx)
+	smallestCount := containers[0].Count()
 
 	// Check if the smallest container is empty
 	if smallestCount == 0 {
@@ -131,7 +114,7 @@ func (em *EntityManager) Query(ctx context.Context, componentTypes ...reflect.Ty
 	}
 
 	for i := 1; i < len(containers); i++ {
-		count := containers[i].Count(ctx)
+		count := containers[i].Count()
 		if count == 0 {
 			// If any container has zero entities, we can return immediately
 			return zeroIter
@@ -151,11 +134,11 @@ func (em *EntityManager) Query(ctx context.Context, componentTypes ...reflect.Ty
 	}
 
 	return func(yield func(EntityID) bool) {
-		for entityID := range smallestContainer.Entities(ctx) {
+		for entityID := range smallestContainer.Entities() {
 			// Check if this entity exists in all other containers
 			hasAllComponents := true
 			for _, container := range otherContainers {
-				if _, exists := container.Get(ctx, entityID); !exists {
+				if _, exists := container.Get(entityID); !exists {
 					hasAllComponents = false
 					break
 				}
@@ -170,10 +153,7 @@ func (em *EntityManager) Query(ctx context.Context, componentTypes ...reflect.Ty
 	}
 }
 
-func AddComponent[C any](ctx context.Context, em *EntityManager, entityID EntityID) *C {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.AddComponent")
-	defer task.End()
-
+func AddComponent[C any](em *EntityManager, entityID EntityID) *C {
 	if _, exists := em.entities[entityID]; !exists {
 		return nil
 	}
@@ -182,71 +162,53 @@ func AddComponent[C any](ctx context.Context, em *EntityManager, entityID Entity
 	// Check if the component type is already registered for this entity
 	componentType := reflect.TypeOf(zero)
 	if _, exists := em.entityComponentSignatures[entityID][componentType]; exists {
-		return MustGetComponent[C](ctx, em, entityID)
+		return MustGetComponent[C](em, entityID)
 	}
 
 	container, exists := em.componentContainers[componentType]
 	if !exists {
-		container = NewComponentContainer(ctx, func() any {
+		container = NewComponentContainer(func() any {
 			var c C
 			return &c
 		})
 		em.componentContainers[componentType] = container
 	}
 
-	component := container.Add(ctx, entityID)
+	component := container.Add(entityID)
 	em.entityComponentSignatures[entityID][componentType] = struct{}{}
 
 	return component.(*C)
 }
 
-func RemoveComponent[C any](ctx context.Context, em *EntityManager, entityID EntityID) {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.RemoveComponent")
-	defer task.End()
-
+func RemoveComponent[C any](em *EntityManager, entityID EntityID) {
 	var zero C
-	em.RemoveComponent(ctx, entityID, reflect.TypeOf(zero))
+	em.RemoveComponent(entityID, reflect.TypeOf(zero))
 }
 
-func Query[C any](ctx context.Context, em *EntityManager) iter.Seq[EntityID] {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.Query")
-	defer task.End()
-
+func Query[C any](em *EntityManager) iter.Seq[EntityID] {
 	var zero C
-	return em.Query(ctx, reflect.TypeOf(zero))
+	return em.Query(reflect.TypeOf(zero))
 }
 
-func Query2[C1, C2 any](ctx context.Context, em *EntityManager) iter.Seq[EntityID] {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.Query2")
-	defer task.End()
-
+func Query2[C1, C2 any](em *EntityManager) iter.Seq[EntityID] {
 	var zero1 C1
 	var zero2 C2
-	return em.Query(ctx, reflect.TypeOf(zero1), reflect.TypeOf(zero2))
+	return em.Query(reflect.TypeOf(zero1), reflect.TypeOf(zero2))
 }
 
-func Query3[C1, C2, C3 any](ctx context.Context, em *EntityManager) iter.Seq[EntityID] {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.Query3")
-	defer task.End()
-
+func Query3[C1, C2, C3 any](em *EntityManager) iter.Seq[EntityID] {
 	var zero1 C1
 	var zero2 C2
 	var zero3 C3
-	return em.Query(ctx, reflect.TypeOf(zero1), reflect.TypeOf(zero2), reflect.TypeOf(zero3))
+	return em.Query(reflect.TypeOf(zero1), reflect.TypeOf(zero2), reflect.TypeOf(zero3))
 }
 
-func HasComponent[C any](ctx context.Context, em *EntityManager, entityID EntityID) bool {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.HasComponent")
-	defer task.End()
-
+func HasComponent[C any](em *EntityManager, entityID EntityID) bool {
 	var zero C
-	return em.HasComponent(ctx, entityID, reflect.TypeOf(zero))
+	return em.HasComponent(entityID, reflect.TypeOf(zero))
 }
 
-func GetComponent[C any](ctx context.Context, em *EntityManager, entityID EntityID) (*C, bool) {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.GetComponent")
-	defer task.End()
-
+func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
 	var zero C
 	componentType := reflect.TypeOf(zero)
 
@@ -263,7 +225,7 @@ func GetComponent[C any](ctx context.Context, em *EntityManager, entityID Entity
 		return nil, false
 	}
 
-	component, exists := container.Get(ctx, entityID)
+	component, exists := container.Get(entityID)
 	if !exists {
 		return nil, false
 	}
@@ -271,11 +233,8 @@ func GetComponent[C any](ctx context.Context, em *EntityManager, entityID Entity
 	return component.(*C), true
 }
 
-func MustGetComponent[C any](ctx context.Context, em *EntityManager, entityID EntityID) *C {
-	ctx, task := trace.NewTask(ctx, "ecs.EntityManager.MustGetComponent")
-	defer task.End()
-
-	component, exists := GetComponent[C](ctx, em, entityID)
+func MustGetComponent[C any](em *EntityManager, entityID EntityID) *C {
+	component, exists := GetComponent[C](em, entityID)
 	if !exists {
 		var zero C
 		panic(fmt.Sprintf("Entity %d does not have component of type %s", entityID, reflect.TypeOf(zero).Name()))

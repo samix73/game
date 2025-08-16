@@ -1,9 +1,6 @@
 package systems
 
 import (
-	"context"
-	"runtime/trace"
-
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/helpers"
@@ -20,37 +17,31 @@ type Collision struct {
 	*ecs.BaseSystem
 }
 
-func NewCollisionSystem(ctx context.Context, priority int, entityManager *ecs.EntityManager) *Collision {
+func NewCollisionSystem(priority int, entityManager *ecs.EntityManager) *Collision {
 	return &Collision{
-		BaseSystem: ecs.NewBaseSystem(ctx, ecs.NextID(ctx), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
 	}
 }
 
 func (c *Collision) Teardown() {}
 
-func (c *Collision) checkCollision(ctx context.Context, a, b collisionCandidate) bool {
-	region := trace.StartRegion(ctx, "systems.Collision.CollisionCheck")
-	defer region.End()
-
+func (c *Collision) checkCollision(a, b collisionCandidate) bool {
 	return a.bounds.Overlaps(b.bounds)
 }
 
-func (c *Collision) Update(ctx context.Context) error {
-	ctx, task := trace.NewTask(ctx, "systems.Collision.Update")
-	defer task.End()
-
+func (c *Collision) Update() error {
 	em := c.EntityManager()
 
 	active := make([]collisionCandidate, 0, 16)
 	static := make([]collisionCandidate, 0, 1024)
 
-	for entity := range ecs.Query2[components.Collider, components.Transform](ctx, em) {
-		transform := ecs.MustGetComponent[components.Transform](ctx, em, entity)
-		col := ecs.MustGetComponent[components.Collider](ctx, em, entity)
+	for entity := range ecs.Query2[components.Collider, components.Transform](em) {
+		transform := ecs.MustGetComponent[components.Transform](em, entity)
+		col := ecs.MustGetComponent[components.Collider](em, entity)
 
 		adjustedBounds := col.Bounds.Add(transform.Position)
 
-		if ecs.HasComponent[components.RigidBody](ctx, em, entity) {
+		if ecs.HasComponent[components.RigidBody](em, entity) {
 			active = append(active, collisionCandidate{
 				id:     entity,
 				bounds: adjustedBounds,
@@ -70,15 +61,15 @@ func (c *Collision) Update(ctx context.Context) error {
 	// Active vs Static
 	for _, a := range active {
 		for _, b := range static {
-			if c.checkCollision(ctx, a, b) {
-				aCol := ecs.AddComponent[components.Collision](ctx, em, a.id)
+			if c.checkCollision(a, b) {
+				aCol := ecs.AddComponent[components.Collision](em, a.id)
 				aCol.Enitity = b.id
 
-				bCol := ecs.AddComponent[components.Collision](ctx, em, a.id)
+				bCol := ecs.AddComponent[components.Collision](em, a.id)
 				bCol.Enitity = a.id
 			} else {
-				ecs.RemoveComponent[components.Collision](ctx, em, a.id)
-				ecs.RemoveComponent[components.Collision](ctx, em, b.id)
+				ecs.RemoveComponent[components.Collision](em, a.id)
+				ecs.RemoveComponent[components.Collision](em, b.id)
 			}
 		}
 	}
@@ -90,15 +81,15 @@ func (c *Collision) Update(ctx context.Context) error {
 	// Active vs Active
 	for i := 0; i < len(active); i++ {
 		for j := i + 1; j < len(active); j++ {
-			if c.checkCollision(ctx, active[i], active[j]) {
-				aCol := ecs.AddComponent[components.Collision](ctx, em, active[i].id)
+			if c.checkCollision(active[i], active[j]) {
+				aCol := ecs.AddComponent[components.Collision](em, active[i].id)
 				aCol.Enitity = active[j].id
 
-				bCol := ecs.AddComponent[components.Collision](ctx, em, active[j].id)
+				bCol := ecs.AddComponent[components.Collision](em, active[j].id)
 				bCol.Enitity = active[i].id
 			} else {
-				ecs.RemoveComponent[components.Collision](ctx, em, active[i].id)
-				ecs.RemoveComponent[components.Collision](ctx, em, active[j].id)
+				ecs.RemoveComponent[components.Collision](em, active[i].id)
+				ecs.RemoveComponent[components.Collision](em, active[j].id)
 			}
 		}
 	}
