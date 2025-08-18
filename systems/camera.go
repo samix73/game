@@ -7,7 +7,6 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
-	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"
 )
 
@@ -43,14 +42,14 @@ func (c *Camera) getActiveCamera(em *ecs.EntityManager) ecs.EntityID {
 		return c.activeCamera
 	}
 
-	activeCamera, ok := helpers.First(ecs.Query[components.ActiveCamera](em))
+	activeCamera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
 	if ok {
 		c.activeCamera = activeCamera
 
 		return activeCamera
 	}
 
-	camera, ok := helpers.First(ecs.Query[components.Camera](em))
+	camera, ok := ecs.First(ecs.Query[components.Camera](em))
 	if ok {
 		ecs.AddComponent[components.ActiveCamera](em, camera)
 		activeCamera = camera

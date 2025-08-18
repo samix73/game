@@ -37,7 +37,7 @@ func (p *Player) Teardown() {}
 
 func (p *Player) getPlayerEntity() ecs.EntityID {
 	if p.playerEntity == ecs.UndefinedID {
-		playerEntity, ok := helpers.First(ecs.Query[components.Player](p.EntityManager()))
+		playerEntity, ok := ecs.First(ecs.Query[components.Player](p.EntityManager()))
 		if !ok {
 			return ecs.UndefinedID
 		}
@@ -65,7 +65,7 @@ func (p *Player) jump(rigidBody *components.RigidBody) {
 }
 
 func (p *Player) cameraFollow() {
-	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](p.EntityManager()))
+	camera, ok := ecs.First(ecs.Query[components.ActiveCamera](p.EntityManager()))
 	if !ok {
 		return
 	}

@@ -59,7 +59,7 @@ func (l *LevelGen) obstacleOffset(cameraBounds helpers.AABB, height int) float64
 func (l *LevelGen) Update() error {
 	em := l.EntityManager()
 
-	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](em))
+	camera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
 	if !ok {
 		return nil
 	}
@@ -67,7 +67,7 @@ func (l *LevelGen) Update() error {
 	cameraComponent := ecs.MustGetComponent[components.Camera](em, camera)
 	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
 
-	player, ok := helpers.First(ecs.Query[components.Player](em))
+	player, ok := ecs.First(ecs.Query[components.Player](em))
 	if !ok {
 		return nil
 	}
