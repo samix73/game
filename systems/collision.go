@@ -39,17 +39,17 @@ func (c *Collision) Update() error {
 		transform := ecs.MustGetComponent[components.Transform](em, entity)
 		col := ecs.MustGetComponent[components.Collider](em, entity)
 
-		adjustedBounds := col.Bounds.Add(transform.Position)
+		translatedBounds := col.Bounds.Add(transform.Position)
 
 		if ecs.HasComponent[components.RigidBody](em, entity) {
 			active = append(active, collisionCandidate{
 				id:     entity,
-				bounds: adjustedBounds,
+				bounds: translatedBounds,
 			})
 		} else {
 			static = append(static, collisionCandidate{
 				id:     entity,
-				bounds: adjustedBounds,
+				bounds: translatedBounds,
 			})
 		}
 	}

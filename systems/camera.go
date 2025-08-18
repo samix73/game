@@ -35,7 +35,7 @@ func NewCameraSystem(priority int, entityManager *ecs.EntityManager, screenWidth
 }
 
 func (c *Camera) createDefaultCamera() ecs.EntityID {
-	return entities.NewCameraEntity(c.EntityManager(), true)
+	return entities.NewCameraEntity(c.EntityManager(), true, float64(c.screenWidth), float64(c.screenHeight))
 }
 
 func (c *Camera) getActiveCamera(em *ecs.EntityManager) ecs.EntityID {

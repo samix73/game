@@ -1,8 +1,11 @@
 package components
 
+import "github.com/samix73/game/helpers"
+
 // Camera represents the viewable area of the game world.
 type Camera struct {
-	Zoom float64
+	Bounds helpers.AABB
+	Zoom   float64
 }
 
 func (c *Camera) Init() {
@@ -10,6 +13,7 @@ func (c *Camera) Init() {
 }
 
 func (c *Camera) Reset() {
+	c.Bounds.Reset()
 	c.Zoom = 0
 }
 
