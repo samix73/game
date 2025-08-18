@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"slices"
 )
 
 type EntityID = ID
@@ -241,4 +242,8 @@ func MustGetComponent[C any](em *EntityManager, entityID EntityID) *C {
 	}
 
 	return component
+}
+
+func Count(it iter.Seq[EntityID]) int {
+	return len(slices.Collect(it))
 }
