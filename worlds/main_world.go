@@ -45,6 +45,7 @@ func (m *MainWorld) registerSystems() {
 		systems.NewPlayerSystem(4, m.EntityManager(),
 			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset, gameCfg.PlayerMaxSpeed),
 		systems.NewLevelGenSystem(5, m.EntityManager()),
+		systems.NewPlayerCollisionSystem(6, m.EntityManager()),
 	)
 }
 
