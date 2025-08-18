@@ -38,14 +38,14 @@ func NewMainWorld(g *game.Game) (*MainWorld, error) {
 func (m *MainWorld) registerSystems() {
 	gameCfg := m.g.Config()
 	m.SystemManager().Add(
-		systems.NewCameraSystem(0, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
-		systems.NewPhysicsSystem(1, m.EntityManager()),
-		systems.NewGravitySystem(2, m.EntityManager(), gameCfg.Gravity),
-		systems.NewCollisionSystem(3, m.EntityManager()),
-		systems.NewPlayerSystem(4, m.EntityManager(),
+		systems.NewPlayerSystem(0, m.EntityManager(),
 			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset, gameCfg.PlayerMaxSpeed),
+		systems.NewGravitySystem(1, m.EntityManager(), gameCfg.Gravity),
+		systems.NewPhysicsSystem(2, m.EntityManager()),
+		systems.NewCollisionSystem(3, m.EntityManager()),
+		systems.NewPlayerCollisionSystem(4, m.EntityManager()),
 		systems.NewLevelGenSystem(5, m.EntityManager()),
-		systems.NewPlayerCollisionSystem(6, m.EntityManager()),
+		systems.NewCameraSystem(6, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
 	)
 }
 
