@@ -29,6 +29,26 @@ func (c *Collision) checkCollision(a, b collisionCandidate) bool {
 	return a.bounds.Overlaps(b.bounds)
 }
 
+func (c *Collision) registerCollision(a, b ecs.EntityID) {
+	aCol := ecs.AddComponent[components.Collision](c.EntityManager(), a)
+	aCol.Enitity = b
+
+	bCol := ecs.AddComponent[components.Collision](c.EntityManager(), b)
+	bCol.Enitity = a
+}
+
+func (c *Collision) removeCollision(a, b ecs.EntityID) {
+	aCol, ok := ecs.GetComponent[components.Collision](c.EntityManager(), a)
+	if ok && aCol.Enitity == b {
+		ecs.RemoveComponent[components.Collision](c.EntityManager(), a)
+	}
+
+	bCol, ok := ecs.GetComponent[components.Collision](c.EntityManager(), b)
+	if ok && bCol.Enitity == a {
+		ecs.RemoveComponent[components.Collision](c.EntityManager(), b)
+	}
+}
+
 func (c *Collision) Update() error {
 	em := c.EntityManager()
 
@@ -62,14 +82,9 @@ func (c *Collision) Update() error {
 	for _, a := range active {
 		for _, b := range static {
 			if c.checkCollision(a, b) {
-				aCol := ecs.AddComponent[components.Collision](em, a.id)
-				aCol.Enitity = b.id
-
-				bCol := ecs.AddComponent[components.Collision](em, a.id)
-				bCol.Enitity = a.id
+				c.registerCollision(a.id, b.id)
 			} else {
-				ecs.RemoveComponent[components.Collision](em, a.id)
-				ecs.RemoveComponent[components.Collision](em, b.id)
+				c.removeCollision(a.id, b.id)
 			}
 		}
 	}
@@ -82,14 +97,9 @@ func (c *Collision) Update() error {
 	for i := 0; i < len(active); i++ {
 		for j := i + 1; j < len(active); j++ {
 			if c.checkCollision(active[i], active[j]) {
-				aCol := ecs.AddComponent[components.Collision](em, active[i].id)
-				aCol.Enitity = active[j].id
-
-				bCol := ecs.AddComponent[components.Collision](em, active[j].id)
-				bCol.Enitity = active[i].id
+				c.registerCollision(active[i].id, active[j].id)
 			} else {
-				ecs.RemoveComponent[components.Collision](em, active[i].id)
-				ecs.RemoveComponent[components.Collision](em, active[j].id)
+				c.removeCollision(active[i].id, active[j].id)
 			}
 		}
 	}
