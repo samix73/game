@@ -11,7 +11,9 @@ type Renderable struct {
 }
 
 func (r *Renderable) Reset() {
-	r.Sprite.Deallocate()
+	if r.Sprite != nil {
+		r.Sprite.Deallocate()
+	}
 	r.GeoM.Reset()
 }
 

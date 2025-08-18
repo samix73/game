@@ -1,8 +1,6 @@
 package systems
 
 import (
-	"fmt"
-
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 )
@@ -28,6 +26,6 @@ func (c *PlayerCollision) IsPlayerColliding() bool {
 }
 
 func (c *PlayerCollision) Update() error {
-	fmt.Println(c.IsPlayerColliding())
+	c.IsPlayerColliding()
 	return nil
 }
