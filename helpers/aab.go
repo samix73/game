@@ -15,6 +15,21 @@ func (a *AABB) Reset() {
 	a.Max[1] = 0
 }
 
+func (a *AABB) Center() f64.Vec2 {
+	return f64.Vec2{
+		a.Dx() * 0.5,
+		a.Dy() * 0.5,
+	}
+}
+
+func (a *AABB) Dy() float64 {
+	return a.Max[1] - a.Min[1]
+}
+
+func (a *AABB) Dx() float64 {
+	return a.Max[0] - a.Min[0]
+}
+
 func (a *AABB) Add(p f64.Vec2) AABB {
 	return AABB{
 		Min: f64.Vec2{

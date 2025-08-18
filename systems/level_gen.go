@@ -44,6 +44,7 @@ func (l *LevelGen) Update() error {
 
 	cameraComponent := ecs.MustGetComponent[components.Camera](em, player)
 	cameraTransform := ecs.MustGetComponent[components.Transform](em, player)
+
 	fmt.Println(cameraComponent, cameraTransform)
 
 	return nil
