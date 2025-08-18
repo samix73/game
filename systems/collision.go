@@ -31,20 +31,20 @@ func (c *Collision) checkCollision(a, b collisionCandidate) bool {
 
 func (c *Collision) registerCollision(a, b ecs.EntityID) {
 	aCol := ecs.AddComponent[components.Collision](c.EntityManager(), a)
-	aCol.Enitity = b
+	aCol.Entity = b
 
 	bCol := ecs.AddComponent[components.Collision](c.EntityManager(), b)
-	bCol.Enitity = a
+	bCol.Entity = a
 }
 
 func (c *Collision) removeCollision(a, b ecs.EntityID) {
 	aCol, ok := ecs.GetComponent[components.Collision](c.EntityManager(), a)
-	if ok && aCol.Enitity == b {
+	if ok && aCol.Entity == b {
 		ecs.RemoveComponent[components.Collision](c.EntityManager(), a)
 	}
 
 	bCol, ok := ecs.GetComponent[components.Collision](c.EntityManager(), b)
-	if ok && bCol.Enitity == a {
+	if ok && bCol.Entity == a {
 		ecs.RemoveComponent[components.Collision](c.EntityManager(), b)
 	}
 }

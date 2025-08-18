@@ -25,7 +25,7 @@ func (c *Collider) Reset() {
 var _ ecs.Component = (*Collision)(nil)
 
 type Collision struct {
-	Enitity ecs.EntityID
+	Entity ecs.EntityID
 }
 
 func (c *Collision) Reset() {}
