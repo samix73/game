@@ -3,17 +3,18 @@ package systems
 import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game"
 )
 
 var _ ecs.System = (*PlayerCollision)(nil)
 
 type PlayerCollision struct {
-	*ecs.BaseSystem
+	*ecs.BaseSystem[*game.Game]
 }
 
-func NewPlayerCollisionSystem(priority int, entityManager *ecs.EntityManager) *PlayerCollision {
+func NewPlayerCollisionSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *PlayerCollision {
 	return &PlayerCollision{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 	}
 }
 
@@ -27,5 +28,6 @@ func (c *PlayerCollision) IsPlayerColliding() bool {
 
 func (c *PlayerCollision) Update() error {
 	c.IsPlayerColliding()
+	c.Game()
 	return nil
 }

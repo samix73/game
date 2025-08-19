@@ -7,13 +7,14 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
+	"github.com/samix73/game/game"
 	"golang.org/x/image/math/f64"
 )
 
 var _ ecs.RendererSystem = (*Camera)(nil)
 
 type Camera struct {
-	*ecs.BaseSystem
+	*ecs.BaseSystem[*game.Game]
 
 	screenWidth      float64
 	halfScreenWidth  float64
@@ -22,9 +23,9 @@ type Camera struct {
 	activeCamera     ecs.EntityID
 }
 
-func NewCameraSystem(priority int, entityManager *ecs.EntityManager, screenWidth, screenHeight int) *Camera {
+func NewCameraSystem(priority int, entityManager *ecs.EntityManager, game *game.Game, screenWidth, screenHeight int) *Camera {
 	return &Camera{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 
 		screenWidth:      float64(screenWidth),
 		halfScreenWidth:  float64(screenWidth) * 0.5,

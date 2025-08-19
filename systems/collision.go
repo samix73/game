@@ -3,6 +3,7 @@ package systems
 import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game"
 	"github.com/samix73/game/helpers"
 )
 
@@ -14,12 +15,12 @@ type collisionCandidate struct {
 }
 
 type Collision struct {
-	*ecs.BaseSystem
+	*ecs.BaseSystem[*game.Game]
 }
 
-func NewCollisionSystem(priority int, entityManager *ecs.EntityManager) *Collision {
+func NewCollisionSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *Collision {
 	return &Collision{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 	}
 }
 

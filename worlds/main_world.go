@@ -12,9 +12,7 @@ import (
 var _ ecs.World = (*MainWorld)(nil)
 
 type MainWorld struct {
-	*ecs.BaseWorld
-
-	g *game.Game
+	*ecs.BaseWorld[*game.Game]
 }
 
 func NewMainWorld(g *game.Game) (*MainWorld, error) {
@@ -26,8 +24,7 @@ func NewMainWorld(g *game.Game) (*MainWorld, error) {
 	}
 
 	w := &MainWorld{
-		BaseWorld: ecs.NewBaseWorld(entityManager, systemManager),
-		g:         g,
+		BaseWorld: ecs.NewBaseWorld(entityManager, systemManager, g),
 	}
 
 	w.registerSystems()
@@ -36,16 +33,16 @@ func NewMainWorld(g *game.Game) (*MainWorld, error) {
 }
 
 func (m *MainWorld) registerSystems() {
-	gameCfg := m.g.Config()
+	gameCfg := m.Game().Config()
 	m.SystemManager().Add(
-		systems.NewPlayerSystem(0, m.EntityManager(),
+		systems.NewPlayerSystem(0, m.EntityManager(), m.Game(),
 			gameCfg.PlayerJumpForce, gameCfg.PlayerForwardAcceleration, gameCfg.PlayerCameraOffset, gameCfg.PlayerMaxSpeed),
-		systems.NewGravitySystem(1, m.EntityManager(), gameCfg.Gravity),
-		systems.NewPhysicsSystem(2, m.EntityManager()),
-		systems.NewCollisionSystem(3, m.EntityManager()),
-		systems.NewPlayerCollisionSystem(4, m.EntityManager()),
-		systems.NewLevelGenSystem(5, m.EntityManager()),
-		systems.NewCameraSystem(6, m.EntityManager(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
+		systems.NewGravitySystem(1, m.EntityManager(), m.Game(), gameCfg.Gravity),
+		systems.NewPhysicsSystem(2, m.EntityManager(), m.Game()),
+		systems.NewCollisionSystem(3, m.EntityManager(), m.Game()),
+		systems.NewPlayerCollisionSystem(4, m.EntityManager(), m.Game()),
+		systems.NewLevelGenSystem(5, m.EntityManager(), m.Game()),
+		systems.NewCameraSystem(6, m.EntityManager(), m.Game(), gameCfg.ScreenWidth, gameCfg.ScreenHeight),
 	)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
+	"github.com/samix73/game/game"
 	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"
 )
@@ -28,12 +29,12 @@ const (
 var _ ecs.System = (*LevelGen)(nil)
 
 type LevelGen struct {
-	*ecs.BaseSystem
+	*ecs.BaseSystem[*game.Game]
 }
 
-func NewLevelGenSystem(priority int, entityManager *ecs.EntityManager) *LevelGen {
+func NewLevelGenSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *LevelGen {
 	return &LevelGen{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 	}
 }
 

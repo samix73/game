@@ -12,37 +12,43 @@ type World interface {
 	baseWorld() // Force embedding BaseWorld
 }
 
-type BaseWorld struct {
+type BaseWorld[G any] struct {
 	entityManager *EntityManager
 	systemManager *SystemManager
+	game          G
 }
 
-func (bw *BaseWorld) baseWorld() {
+func (bw *BaseWorld[G]) baseWorld() {
 	panic("BaseWorld cannot be used directly, it must be embedded in a concrete World implementation")
 }
 
-func NewBaseWorld(entityManager *EntityManager, systemManager *SystemManager) *BaseWorld {
-	return &BaseWorld{
+func NewBaseWorld[G any](entityManager *EntityManager, systemManager *SystemManager, game G) *BaseWorld[G] {
+	return &BaseWorld[G]{
 		entityManager: entityManager,
 		systemManager: systemManager,
+		game:          game,
 	}
 }
 
-func (w *BaseWorld) Update() error {
+func (w *BaseWorld[G]) Update() error {
 	if err := w.SystemManager().Update(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (w *BaseWorld) Draw(screen *ebiten.Image) {
+func (w *BaseWorld[G]) Draw(screen *ebiten.Image) {
 	w.SystemManager().Draw(screen)
 }
 
-func (w *BaseWorld) EntityManager() *EntityManager {
+func (w *BaseWorld[G]) EntityManager() *EntityManager {
 	return w.entityManager
 }
 
-func (w *BaseWorld) SystemManager() *SystemManager {
+func (w *BaseWorld[G]) SystemManager() *SystemManager {
 	return w.systemManager
+}
+
+func (w *BaseWorld[G]) Game() G {
+	return w.game
 }

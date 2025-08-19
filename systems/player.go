@@ -5,6 +5,7 @@ import (
 
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game"
 	"github.com/samix73/game/helpers"
 	"github.com/samix73/game/keys"
 	"golang.org/x/image/math/f64"
@@ -13,7 +14,7 @@ import (
 var _ ecs.System = (*Player)(nil)
 
 type Player struct {
-	*ecs.BaseSystem
+	*ecs.BaseSystem[*game.Game]
 
 	playerEntity        ecs.EntityID
 	jumpForce           float64
@@ -22,10 +23,10 @@ type Player struct {
 	maxSpeed            float64
 }
 
-func NewPlayerSystem(priority int, entityManager *ecs.EntityManager,
+func NewPlayerSystem(priority int, entityManager *ecs.EntityManager, game *game.Game,
 	jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2, maxSpeed float64) *Player {
 	return &Player{
-		BaseSystem:          ecs.NewBaseSystem(ecs.NextID(), priority, entityManager),
+		BaseSystem:          ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 		jumpForce:           jumpForce,
 		forwardAcceleration: forwardAcceleration * helpers.DeltaTime,
 		cameraOffset:        cameraOffset,
