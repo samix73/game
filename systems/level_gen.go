@@ -13,13 +13,16 @@ import (
 )
 
 const (
-	maxComingObstacles   = 6
-	obstacleSpacing      = 300.0
-	topMaxObstacleHeight = 6
-	topMinObstacleHeight = 3
-	botMaxObstacleHeight = 7
-	botMinObstacleHeight = 3
-	obstacleBlockSize    = 64
+	maxComingObstacles        = 6
+	maxObstacleSpacing        = 550
+	minObstacleSpacing        = 350
+	topMaxObstacleHeight      = 6
+	topMinObstacleHeight      = 4
+	botMaxObstacleHeight      = 8
+	botMinObstacleHeight      = 4
+	obstacleBlockSize         = 64
+	topObstacleSpawnChance    = 0.88
+	bottomObstacleSpawnChance = 0.9
 )
 
 var _ ecs.System = (*LevelGen)(nil)
@@ -112,10 +115,11 @@ func (l *LevelGen) Update() error {
 		furthestDistance = furthest.transform.Position[0]
 	}
 
-	xPosition := furthestDistance + obstacleSpacing
+	spacing := rand.Float64()*(maxObstacleSpacing-minObstacleSpacing) + minObstacleSpacing
+	xPosition := furthestDistance + spacing
 
 	// Top obstacle
-	if rand.Float64() < 0.5 {
+	if rand.Float64() < topObstacleSpawnChance {
 		height := l.obstacleHeight(topMinObstacleHeight, topMaxObstacleHeight)
 
 		if err := l.addObstacle(em,
@@ -131,7 +135,7 @@ func (l *LevelGen) Update() error {
 	}
 
 	// Bottom obstacle
-	if rand.Float64() < 0.8 {
+	if rand.Float64() < bottomObstacleSpawnChance {
 		height := l.obstacleHeight(botMinObstacleHeight, botMaxObstacleHeight)
 
 		if err := l.addObstacle(em,

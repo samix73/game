@@ -49,9 +49,9 @@ func main() {
 		Fullscreen:   *fullscreen,
 
 		PlayerJumpForce:           500,
-		PlayerForwardAcceleration: 35,
+		PlayerForwardAcceleration: 30,
 		PlayerCameraOffset:        f64.Vec2{300, 0},
-		PlayerMaxSpeed:            500,
+		PlayerMaxSpeed:            800,
 	})
 
 	mainWorld, err := worlds.NewMainWorld(g)
