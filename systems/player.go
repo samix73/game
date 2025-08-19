@@ -23,8 +23,14 @@ type Player struct {
 	maxSpeed            float64
 }
 
-func NewPlayerSystem(priority int, entityManager *ecs.EntityManager, game *game.Game,
-	jumpForce float64, forwardAcceleration float64, cameraOffset f64.Vec2, maxSpeed float64) *Player {
+func NewPlayerSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *Player {
+	cfg := game.Config()
+
+	jumpForce := cfg.PlayerJumpForce
+	forwardAcceleration := cfg.PlayerForwardAcceleration
+	cameraOffset := cfg.PlayerCameraOffset
+	maxSpeed := cfg.PlayerMaxSpeed
+
 	return &Player{
 		BaseSystem:          ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 		jumpForce:           jumpForce,

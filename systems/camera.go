@@ -23,7 +23,12 @@ type Camera struct {
 	activeCamera     ecs.EntityID
 }
 
-func NewCameraSystem(priority int, entityManager *ecs.EntityManager, game *game.Game, screenWidth, screenHeight int) *Camera {
+func NewCameraSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *Camera {
+	cfg := game.Config()
+
+	screenWidth := cfg.ScreenWidth
+	screenHeight := cfg.ScreenHeight
+
 	return &Camera{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 
