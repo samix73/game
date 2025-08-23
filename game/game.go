@@ -6,7 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/keys"
 	"golang.org/x/image/math/f64"
 )
 
@@ -61,11 +60,15 @@ func (g *Game) Start() error {
 	return nil
 }
 
-func (g *Game) Pause() bool {
-	if keys.IsPressed(keys.PauseAction) {
-		g.paused = !g.paused
-	}
+func (g *Game) Pause() {
+	g.paused = true
+}
 
+func (g *Game) Resume() {
+	g.paused = false
+}
+
+func (g *Game) IsPaused() bool {
 	return g.paused
 }
 
@@ -74,8 +77,8 @@ func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.paused {
-		ebitenutil.DebugPrintAt(screen, "Paused - press P to resume", 16, 16)
+	if g.IsPaused() {
+		ebitenutil.DebugPrintAt(screen, "Paused", 16, 16)
 	}
 
 	if g.activeWorld == nil {
@@ -88,7 +91,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Update() error {
-	if g.Pause() {
+	if g.IsPaused() {
 		return nil
 	}
 

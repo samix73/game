@@ -20,14 +20,26 @@ func NewPlayerCollisionSystem(priority int, entityManager *ecs.EntityManager, ga
 
 func (c *PlayerCollision) Teardown() {}
 
-func (c *PlayerCollision) IsPlayerColliding() bool {
+func (c *PlayerCollision) IsPlayerCollidingObstacle() bool {
 	em := c.EntityManager()
-	_, ok := ecs.First(ecs.Query2[components.Player, components.Collision](em))
-	return ok
+	player, ok := ecs.First(ecs.Query2[components.Player, components.Collision](em))
+	if !ok {
+		return false
+	}
+
+	collision := ecs.MustGetComponent[components.Collision](em, player)
+
+	if collision.Entity == ecs.UndefinedID {
+		return false
+	}
+
+	return ecs.HasComponent[components.Obstacle](em, collision.Entity)
 }
 
 func (c *PlayerCollision) Update() error {
-	c.IsPlayerColliding()
-	c.Game()
+	if c.IsPlayerCollidingObstacle() {
+		c.Game().Pause()
+	}
+
 	return nil
 }
