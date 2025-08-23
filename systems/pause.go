@@ -11,7 +11,8 @@ var _ ecs.System = (*PauseSystem)(nil)
 type PauseSystem struct {
 	*ecs.BaseSystem[*game.Game]
 
-	paused bool
+	paused            bool
+	originalTimeScale float64
 }
 
 func NewPauseSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *PauseSystem {
@@ -27,10 +28,13 @@ func (p *PauseSystem) Update() error {
 		return nil
 	}
 
+	game := p.Game()
+
 	if p.paused {
-		p.Game().SetTimeScale(1)
+		game.SetTimeScale(p.originalTimeScale)
 	} else {
-		p.Game().SetTimeScale(0)
+		p.originalTimeScale = game.TimeScale()
+		game.SetTimeScale(0)
 	}
 
 	p.paused = !p.paused

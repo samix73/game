@@ -2,11 +2,11 @@ package game
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"
 )
 
@@ -43,7 +43,7 @@ func (g *Game) TimeScale() float64 {
 }
 
 func (g *Game) SetTimeScale(scale float64) {
-	g.timeScale = helpers.Clamp(scale, 0, 1)
+	g.timeScale = math.Max(scale, 0)
 }
 
 func (g *Game) Config() *Config {
