@@ -34,14 +34,14 @@ func NewMainWorld(g *game.Game) (*MainWorld, error) {
 
 func (m *MainWorld) registerSystems() {
 	m.SystemManager().Add(
-		systems.NewPlayerSystem(0, m.EntityManager(), m.Game()),
-		systems.NewGravitySystem(1, m.EntityManager(), m.Game()),
-		systems.NewPhysicsSystem(2, m.EntityManager(), m.Game()),
-		systems.NewCollisionSystem(3, m.EntityManager(), m.Game()),
-		systems.NewPlayerCollisionSystem(4, m.EntityManager(), m.Game()),
-		systems.NewLevelGenSystem(5, m.EntityManager(), m.Game()),
-		systems.NewCameraSystem(6, m.EntityManager(), m.Game()),
-		systems.NewPauseSystem(7, m.EntityManager(), m.Game()),
+		systems.NewPauseSystem(0, m.EntityManager(), m.Game()),
+		systems.NewPlayerSystem(1, m.EntityManager(), m.Game()),
+		systems.NewGravitySystem(2, m.EntityManager(), m.Game()),
+		systems.NewPhysicsSystem(3, m.EntityManager(), m.Game()),
+		systems.NewCollisionSystem(4, m.EntityManager(), m.Game()),
+		systems.NewPlayerCollisionSystem(5, m.EntityManager(), m.Game()),
+		systems.NewLevelGenSystem(6, m.EntityManager(), m.Game()),
+		systems.NewCameraSystem(7, m.EntityManager(), m.Game()),
 		systems.NewRestartSystem(8, m.EntityManager(), m.Game()),
 	)
 }
