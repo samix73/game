@@ -154,6 +154,16 @@ func (em *EntityManager) Query(componentTypes ...reflect.Type) iter.Seq[EntityID
 	}
 }
 
+func (em *EntityManager) Teardown() {
+	for _, container := range em.componentContainers {
+		container.Teardown()
+	}
+
+	em.entities = nil
+	em.entityComponentSignatures = nil
+	em.componentContainers = nil
+}
+
 func AddComponent[C any](em *EntityManager, entityID EntityID) *C {
 	if _, exists := em.entities[entityID]; !exists {
 		return nil

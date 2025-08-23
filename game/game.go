@@ -62,6 +62,11 @@ func (g *Game) DeltaTime() float64 {
 	return 1.0 / float64(ebiten.TPS()) * g.TimeScale()
 }
 
+func (g *Game) Restart() {
+	// TODO re-initliaze the active world
+	// g.SetWorld(nil)
+}
+
 func (g *Game) Start() error {
 	ebiten.SetWindowSize(g.cfg.ScreenWidth, g.cfg.ScreenHeight)
 	ebiten.SetFullscreen(g.cfg.Fullscreen)

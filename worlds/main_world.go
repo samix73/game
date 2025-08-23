@@ -45,7 +45,3 @@ func (m *MainWorld) registerSystems() {
 		systems.NewRestartSystem(8, m.EntityManager(), m.Game()),
 	)
 }
-
-func (m *MainWorld) Teardown() {
-	m.SystemManager().Teardown()
-}

@@ -52,3 +52,8 @@ func (w *BaseWorld[G]) SystemManager() *SystemManager {
 func (w *BaseWorld[G]) Game() G {
 	return w.game
 }
+
+func (m *BaseWorld[G]) Teardown() {
+	m.SystemManager().Teardown()
+	m.EntityManager().Teardown()
+}

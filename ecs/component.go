@@ -115,3 +115,10 @@ func (c *ComponentContainer) Components() iter.Seq[any] {
 		}
 	}
 }
+
+func (c *ComponentContainer) Teardown() {
+	c.components = nil
+	c.entityIDs = nil
+	c.componentLookupMap = nil
+	c.pool = sync.Pool{}
+}
