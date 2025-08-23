@@ -6,7 +6,6 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game"
-	"github.com/samix73/game/helpers"
 )
 
 type Physics struct {
@@ -28,9 +27,11 @@ func (p *Physics) Update() error {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](em, entity)
 		transform := ecs.MustGetComponent[components.Transform](em, entity)
 
+		game := p.Game()
+
 		transform.Translate(
-			rigidBody.Velocity[0]*helpers.DeltaTime,
-			rigidBody.Velocity[1]*helpers.DeltaTime,
+			rigidBody.Velocity[0]*game.DeltaTime(),
+			rigidBody.Velocity[1]*game.DeltaTime(),
 		)
 
 		slog.Debug("Physics.Update",

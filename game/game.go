@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"
 )
 
@@ -24,16 +25,25 @@ type Config struct {
 }
 
 type Game struct {
-	cfg    *Config
-	paused bool
+	cfg *Config
 
 	activeWorld ecs.World
+	timeScale   float64
 }
 
 func NewGame(cfg *Config) *Game {
 	return &Game{
-		cfg: cfg,
+		cfg:       cfg,
+		timeScale: 1.0,
 	}
+}
+
+func (g *Game) TimeScale() float64 {
+	return g.timeScale
+}
+
+func (g *Game) SetTimeScale(scale float64) {
+	g.timeScale = helpers.Clamp(scale, 0, 1)
 }
 
 func (g *Game) Config() *Config {
@@ -48,6 +58,10 @@ func (g *Game) SetWorld(world ecs.World) {
 	g.activeWorld = world
 }
 
+func (g *Game) DeltaTime() float64 {
+	return 1.0 / float64(ebiten.TPS()) * g.TimeScale()
+}
+
 func (g *Game) Start() error {
 	ebiten.SetWindowSize(g.cfg.ScreenWidth, g.cfg.ScreenHeight)
 	ebiten.SetFullscreen(g.cfg.Fullscreen)
@@ -60,27 +74,11 @@ func (g *Game) Start() error {
 	return nil
 }
 
-func (g *Game) Pause() {
-	g.paused = true
-}
-
-func (g *Game) Resume() {
-	g.paused = false
-}
-
-func (g *Game) IsPaused() bool {
-	return g.paused
-}
-
 func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
 	return g.cfg.ScreenWidth, g.cfg.ScreenHeight
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.IsPaused() {
-		ebitenutil.DebugPrintAt(screen, "Paused", 16, 16)
-	}
-
 	if g.activeWorld == nil {
 		return
 	}
@@ -91,10 +89,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Update() error {
-	if g.IsPaused() {
-		return nil
-	}
-
 	if g.activeWorld == nil {
 		return nil
 	}

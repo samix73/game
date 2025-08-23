@@ -38,7 +38,7 @@ func (c *PlayerCollision) IsPlayerCollidingObstacle() bool {
 
 func (c *PlayerCollision) Update() error {
 	if c.IsPlayerCollidingObstacle() {
-		c.Game().Pause()
+		// c.Game().Pause()
 	}
 
 	return nil

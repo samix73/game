@@ -4,7 +4,6 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game"
-	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"
 )
 
@@ -17,16 +16,9 @@ type Gravity struct {
 }
 
 func NewGravitySystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *Gravity {
-	cfg := game.Config()
-
-	acceleration := cfg.Gravity
-
 	return &Gravity{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
-		dv: f64.Vec2{
-			acceleration[0] * helpers.DeltaTime,
-			acceleration[1] * helpers.DeltaTime,
-		},
+		dv:         game.Config().Gravity,
 	}
 }
 
@@ -44,7 +36,14 @@ func (g *Gravity) Update() error {
 			continue
 		}
 
-		rigidBody.ApplyAcceleration(g.dv)
+		game := g.Game()
+
+		acc := f64.Vec2{
+			g.dv[0] * game.DeltaTime(),
+			g.dv[1] * game.DeltaTime(),
+		}
+
+		rigidBody.ApplyAcceleration(acc)
 	}
 
 	return nil

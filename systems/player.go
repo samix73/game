@@ -6,7 +6,6 @@ import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game"
-	"github.com/samix73/game/helpers"
 	"github.com/samix73/game/keys"
 	"golang.org/x/image/math/f64"
 )
@@ -34,7 +33,7 @@ func NewPlayerSystem(priority int, entityManager *ecs.EntityManager, game *game.
 	return &Player{
 		BaseSystem:          ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 		jumpForce:           jumpForce,
-		forwardAcceleration: forwardAcceleration * helpers.DeltaTime,
+		forwardAcceleration: forwardAcceleration,
 		cameraOffset:        cameraOffset,
 		maxSpeed:            maxSpeed,
 	}
@@ -57,7 +56,10 @@ func (p *Player) getPlayerEntity() ecs.EntityID {
 
 func (p *Player) moveForward(rigidBody *components.RigidBody) {
 	if rigidBody.Velocity[0] <= p.maxSpeed {
-		rigidBody.ApplyAcceleration(f64.Vec2{p.forwardAcceleration, 0})
+		game := p.Game()
+
+		acc := p.forwardAcceleration * game.DeltaTime()
+		rigidBody.ApplyAcceleration(f64.Vec2{acc, 0})
 	}
 }
 
