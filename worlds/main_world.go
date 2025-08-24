@@ -5,31 +5,28 @@ import (
 
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
-	"github.com/samix73/game/game"
 	"github.com/samix73/game/systems"
 )
 
 var _ ecs.World = (*MainWorld)(nil)
 
 type MainWorld struct {
-	*ecs.BaseWorld[*game.Game]
+	*ecs.BaseWorld
 }
 
-func NewMainWorld(g *game.Game) (*MainWorld, error) {
+func (m *MainWorld) Init(g *ecs.Game) error {
 	entityManager := ecs.NewEntityManager()
 	systemManager := ecs.NewSystemManager(entityManager)
 
+	m.BaseWorld = ecs.NewBaseWorld(entityManager, systemManager, g)
+
 	if _, err := entities.NewBiogEntity(entityManager); err != nil {
-		return nil, fmt.Errorf("error creating biog entity: %w", err)
+		return fmt.Errorf("error creating biog entity: %w", err)
 	}
 
-	w := &MainWorld{
-		BaseWorld: ecs.NewBaseWorld(entityManager, systemManager, g),
-	}
+	m.registerSystems()
 
-	w.registerSystems()
-
-	return w, nil
+	return nil
 }
 
 func (m *MainWorld) registerSystems() {
@@ -42,6 +39,5 @@ func (m *MainWorld) registerSystems() {
 		systems.NewPlayerCollisionSystem(5, m.EntityManager(), m.Game()),
 		systems.NewLevelGenSystem(6, m.EntityManager(), m.Game()),
 		systems.NewCameraSystem(7, m.EntityManager(), m.Game()),
-		systems.NewRestartSystem(8, m.EntityManager(), m.Game()),
 	)
 }

@@ -2,20 +2,19 @@ package systems
 
 import (
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/game"
 	"github.com/samix73/game/keys"
 )
 
 var _ ecs.System = (*PauseSystem)(nil)
 
 type PauseSystem struct {
-	*ecs.BaseSystem[*game.Game]
+	*ecs.BaseSystem
 
 	paused            bool
 	originalTimeScale float64
 }
 
-func NewPauseSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *PauseSystem {
+func NewPauseSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *PauseSystem {
 	return &PauseSystem{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 

@@ -1,37 +1,29 @@
-package game
+package ecs
 
 import (
 	"fmt"
 	"math"
+	"reflect"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/samix73/game/ecs"
-	"golang.org/x/image/math/f64"
 )
 
 var _ ebiten.Game = (*Game)(nil)
 
-type Config struct {
+type GameConfig struct {
 	Title                     string
-	Gravity                   f64.Vec2
 	ScreenWidth, ScreenHeight int
 	Fullscreen                bool
-
-	PlayerJumpForce           float64
-	PlayerForwardAcceleration float64
-	PlayerCameraOffset        f64.Vec2
-	PlayerMaxSpeed            float64
 }
 
 type Game struct {
-	cfg *Config
-
-	activeWorld ecs.World
+	cfg         *GameConfig
+	activeWorld World
 	timeScale   float64
 }
 
-func NewGame(cfg *Config) *Game {
+func NewGame(cfg *GameConfig) *Game {
 	return &Game{
 		cfg:       cfg,
 		timeScale: 1.0,
@@ -46,25 +38,37 @@ func (g *Game) SetTimeScale(scale float64) {
 	g.timeScale = math.Max(scale, 0)
 }
 
-func (g *Game) Config() *Config {
-	return g.cfg
+func (g *Game) Config() GameConfig {
+	return *g.cfg
 }
 
-func (g *Game) SetWorld(world ecs.World) {
+func (g *Game) RestartActiveWorld() error {
+	typ := reflect.TypeOf(g.activeWorld).Elem()
+	newWorld := reflect.New(typ).Interface().(World)
+
+	if err := g.SetActiveWorld(newWorld); err != nil {
+		return fmt.Errorf("ecs.Game.RestartActiveWorld g.SetActiveWorld error: %w", err)
+	}
+
+	return nil
+}
+
+func (g *Game) SetActiveWorld(world World) error {
 	if g.activeWorld != nil {
 		g.activeWorld.Teardown()
 	}
 
+	if err := world.Init(g); err != nil {
+		return fmt.Errorf("ecs.Game.SetActiveWorld world.Init error: %w", err)
+	}
+
 	g.activeWorld = world
+
+	return nil
 }
 
 func (g *Game) DeltaTime() float64 {
 	return 1.0 / float64(ebiten.TPS()) * g.TimeScale()
-}
-
-func (g *Game) Restart() {
-	// TODO re-initliaze the active world
-	// g.SetWorld(nil)
 }
 
 func (g *Game) Start() error {
@@ -73,13 +77,13 @@ func (g *Game) Start() error {
 	ebiten.SetWindowTitle(g.cfg.Title)
 
 	if err := ebiten.RunGameWithOptions(g, nil); err != nil {
-		return fmt.Errorf("game.Game.Start ebiten.RunGameWithOptions error: %w", err)
+		return fmt.Errorf("ecs.Game.Start ebiten.RunGameWithOptions error: %w", err)
 	}
 
 	return nil
 }
 
-func (g *Game) Layout(outsideWidth int, outsideHeight int) (int, int) {
+func (g *Game) Layout(outsideWidth int, outsideHeight int) (screenWidth int, screenHeight int) {
 	return g.cfg.ScreenWidth, g.cfg.ScreenHeight
 }
 
@@ -99,7 +103,7 @@ func (g *Game) Update() error {
 	}
 
 	if err := g.activeWorld.Update(); err != nil {
-		return fmt.Errorf("game.Game.Update activeWorld.Update error: %w", err)
+		return fmt.Errorf("ecs.Game.Update activeWorld.Update error: %w", err)
 	}
 
 	return nil

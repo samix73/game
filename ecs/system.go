@@ -22,15 +22,15 @@ type RendererSystem interface {
 	Draw(screen *ebiten.Image)
 }
 
-type BaseSystem[G any] struct {
+type BaseSystem struct {
 	id            SystemID
 	priority      int
 	entityManager *EntityManager
-	game          G
+	game          *Game
 }
 
-func NewBaseSystem[G any](id SystemID, priority int, entityManager *EntityManager, game G) *BaseSystem[G] {
-	return &BaseSystem[G]{
+func NewBaseSystem(id SystemID, priority int, entityManager *EntityManager, game *Game) *BaseSystem {
+	return &BaseSystem{
 		id:            id,
 		priority:      priority,
 		entityManager: entityManager,
@@ -38,23 +38,23 @@ func NewBaseSystem[G any](id SystemID, priority int, entityManager *EntityManage
 	}
 }
 
-func (s *BaseSystem[G]) ID() SystemID {
+func (s *BaseSystem) ID() SystemID {
 	return s.id
 }
 
-func (s *BaseSystem[G]) Priority() int {
+func (s *BaseSystem) Priority() int {
 	return s.priority
 }
 
-func (s *BaseSystem[G]) EntityManager() *EntityManager {
+func (s *BaseSystem) EntityManager() *EntityManager {
 	return s.entityManager
 }
 
-func (s *BaseSystem[G]) Game() G {
+func (s *BaseSystem) Game() *Game {
 	return s.game
 }
 
-func (s *BaseSystem[G]) baseSystem() {}
+func (s *BaseSystem) baseSystem() {}
 
 type SystemManager struct {
 	systems       []System

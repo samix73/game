@@ -3,22 +3,23 @@ package systems
 import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/game"
 	"golang.org/x/image/math/f64"
 )
+
+var gravity = f64.Vec2{0, -981}
 
 var _ ecs.System = (*Gravity)(nil)
 
 type Gravity struct {
-	*ecs.BaseSystem[*game.Game]
+	*ecs.BaseSystem
 
 	dv f64.Vec2
 }
 
-func NewGravitySystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *Gravity {
+func NewGravitySystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *Gravity {
 	return &Gravity{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
-		dv:         game.Config().Gravity,
+		dv:         gravity,
 	}
 }
 

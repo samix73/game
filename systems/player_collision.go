@@ -3,16 +3,15 @@ package systems
 import (
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/game"
 )
 
 var _ ecs.System = (*PlayerCollision)(nil)
 
 type PlayerCollision struct {
-	*ecs.BaseSystem[*game.Game]
+	*ecs.BaseSystem
 }
 
-func NewPlayerCollisionSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *PlayerCollision {
+func NewPlayerCollisionSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *PlayerCollision {
 	return &PlayerCollision{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 	}

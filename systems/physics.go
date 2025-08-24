@@ -5,14 +5,13 @@ import (
 
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/game"
 )
 
 type Physics struct {
-	*ecs.BaseSystem[*game.Game]
+	*ecs.BaseSystem
 }
 
-func NewPhysicsSystem(priority int, entityManager *ecs.EntityManager, game *game.Game) *Physics {
+func NewPhysicsSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *Physics {
 	return &Physics{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
 	}

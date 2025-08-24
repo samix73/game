@@ -5,9 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/samix73/game/game"
+	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/worlds"
-	"golang.org/x/image/math/f64"
 )
 
 var (
@@ -41,26 +40,15 @@ func main() {
 
 	setupLogger(*logLevel)
 
-	g := game.NewGame(&game.Config{
+	g := ecs.NewGame(&ecs.GameConfig{
 		Title:        "Game",
 		ScreenWidth:  1280,
 		ScreenHeight: 960,
-		Gravity:      f64.Vec2{0, -981},
 		Fullscreen:   *fullscreen,
-
-		PlayerJumpForce:           500,
-		PlayerForwardAcceleration: 30,
-		PlayerCameraOffset:        f64.Vec2{300, 0},
-		PlayerMaxSpeed:            800,
 	})
 
-	mainWorld, err := worlds.NewMainWorld(g)
-	if err != nil {
-		slog.Error("error creating main world", "error", err)
-		os.Exit(1)
-	}
-
-	g.SetWorld(mainWorld)
+	var mainWorld worlds.MainWorld
+	g.SetActiveWorld(&mainWorld)
 
 	if err := g.Start(); err != nil {
 		slog.Error(err.Error())
