@@ -15,6 +15,8 @@ type MainWorld struct {
 }
 
 func (m *MainWorld) Init(g *ecs.Game) error {
+	g.SetTimeScale(1)
+
 	entityManager := ecs.NewEntityManager()
 	systemManager := ecs.NewSystemManager(entityManager)
 
@@ -39,5 +41,6 @@ func (m *MainWorld) registerSystems() {
 		systems.NewPlayerCollisionSystem(5, m.EntityManager(), m.Game()),
 		systems.NewLevelGenSystem(6, m.EntityManager(), m.Game()),
 		systems.NewCameraSystem(7, m.EntityManager(), m.Game()),
+		systems.NewRestartSystem(8, m.EntityManager(), m.Game()),
 	)
 }
