@@ -1,8 +1,8 @@
 package systems
 
 import (
+	"github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
-	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/helpers"
 )
 

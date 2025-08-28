@@ -5,9 +5,9 @@ import (
 	"path"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/assets"
 	"github.com/samix73/game/components"
-	"github.com/samix73/game/ecs"
 	"golang.org/x/image/math/f64"
 )
 

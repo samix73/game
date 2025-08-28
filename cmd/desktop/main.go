@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/samix73/game/ecs"
+	"github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/worlds"
 )
 
@@ -47,8 +47,10 @@ func main() {
 		Fullscreen:   *fullscreen,
 	})
 
-	var mainWorld worlds.MainWorld
-	g.SetActiveWorld(&mainWorld)
+	if err := g.SetActiveWorld(new(worlds.MainWorld)); err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
 
 	if err := g.Start(); err != nil {
 		slog.Error(err.Error())

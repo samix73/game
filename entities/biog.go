@@ -3,9 +3,9 @@ package entities
 import (
 	"fmt"
 
+	"github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/assets"
 	"github.com/samix73/game/components"
-	"github.com/samix73/game/ecs"
 )
 
 func NewBiogEntity(em *ecs.EntityManager) (ecs.EntityID, error) {

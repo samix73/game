@@ -4,8 +4,8 @@ import (
 	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
-	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
 	"golang.org/x/image/math/f64"
 )

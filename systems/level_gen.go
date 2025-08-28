@@ -5,8 +5,8 @@ import (
 	"math/rand/v2"
 	"slices"
 
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
-	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
 	"github.com/samix73/game/helpers"
 	"golang.org/x/image/math/f64"

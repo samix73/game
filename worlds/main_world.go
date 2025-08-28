@@ -3,7 +3,7 @@ package worlds
 import (
 	"fmt"
 
-	"github.com/samix73/game/ecs"
+	"github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/entities"
 	"github.com/samix73/game/systems"
 )

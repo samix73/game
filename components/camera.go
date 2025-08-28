@@ -1,6 +1,11 @@
 package components
 
-import "github.com/samix73/game/helpers"
+import (
+	ecs "github.com/samix73/ebiten-ecs"
+	"github.com/samix73/game/helpers"
+)
+
+var _ ecs.Component = (*Camera)(nil)
 
 // Camera represents the viewable area of the game world.
 type Camera struct {

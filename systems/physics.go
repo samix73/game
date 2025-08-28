@@ -3,8 +3,8 @@ package systems
 import (
 	"log/slog"
 
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
-	"github.com/samix73/game/ecs"
 )
 
 type Physics struct {

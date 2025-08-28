@@ -3,7 +3,7 @@ package systems
 import (
 	"fmt"
 
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/keys"
 )
 
