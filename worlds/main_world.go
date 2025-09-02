@@ -1,10 +1,7 @@
 package worlds
 
 import (
-	"fmt"
-
-	"github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/entities"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/systems"
 )
 
@@ -22,10 +19,6 @@ func (m *MainWorld) Init(g *ecs.Game) error {
 
 	m.BaseWorld = ecs.NewBaseWorld(entityManager, systemManager, g)
 
-	if _, err := entities.NewBiogEntity(entityManager); err != nil {
-		return fmt.Errorf("error creating biog entity: %w", err)
-	}
-
 	m.registerSystems()
 
 	return nil
@@ -38,9 +31,7 @@ func (m *MainWorld) registerSystems() {
 		systems.NewGravitySystem(2, m.EntityManager(), m.Game()),
 		systems.NewPhysicsSystem(3, m.EntityManager(), m.Game()),
 		systems.NewCollisionSystem(4, m.EntityManager(), m.Game()),
-		systems.NewPlayerCollisionSystem(5, m.EntityManager(), m.Game()),
-		systems.NewLevelGenSystem(6, m.EntityManager(), m.Game()),
-		systems.NewCameraSystem(7, m.EntityManager(), m.Game()),
-		systems.NewRestartSystem(8, m.EntityManager(), m.Game()),
+		systems.NewCameraSystem(5, m.EntityManager(), m.Game()),
+		systems.NewRestartSystem(6, m.EntityManager(), m.Game()),
 	)
 }
