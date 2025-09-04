@@ -2,6 +2,7 @@ package systems
 
 import (
 	"log/slog"
+	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	ecs "github.com/samix73/ebiten-ecs"
@@ -135,6 +136,8 @@ func (c *Camera) Update() error {
 func (c *Camera) Draw(screen *ebiten.Image) {
 	em := c.EntityManager()
 
+	renderables := make([]*components.Renderable, 0)
+
 	for entity := range ecs.Query2[components.Render, components.Renderable](em) {
 		renderable := ecs.MustGetComponent[components.Renderable](em, entity)
 
@@ -142,8 +145,16 @@ func (c *Camera) Draw(screen *ebiten.Image) {
 			continue
 		}
 
-		screen.DrawImage(renderable.Sprite, &ebiten.DrawImageOptions{
-			GeoM: renderable.GeoM,
+		renderables = append(renderables, renderable)
+	}
+
+	slices.SortStableFunc(renderables, func(a, b *components.Renderable) int {
+		return a.Order - b.Order
+	})
+
+	for _, render := range renderables {
+		screen.DrawImage(render.Sprite, &ebiten.DrawImageOptions{
+			GeoM: render.GeoM,
 		})
 	}
 }

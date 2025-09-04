@@ -8,6 +8,7 @@ import (
 type Renderable struct {
 	Sprite *ebiten.Image
 	GeoM   ebiten.GeoM
+	Order  int // Rendering order; lower values are rendered first
 }
 
 func (r *Renderable) Reset() {
@@ -15,6 +16,7 @@ func (r *Renderable) Reset() {
 		r.Sprite.Deallocate()
 	}
 	r.GeoM.Reset()
+	r.Order = 0
 }
 
 // Render marks entities to be rendered.
