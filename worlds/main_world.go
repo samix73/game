@@ -15,9 +15,9 @@ func (m *MainWorld) Init(g *ecs.Game) error {
 	g.SetTimeScale(1)
 
 	entityManager := ecs.NewEntityManager()
-	systemManager := ecs.NewSystemManager(entityManager)
+	systemManager := ecs.NewSystemManager(entityManager, g)
 
-	m.BaseWorld = ecs.NewBaseWorld(entityManager, systemManager, g)
+	m.BaseWorld = ecs.NewBaseWorld(systemManager)
 
 	m.registerSystems()
 
@@ -26,12 +26,10 @@ func (m *MainWorld) Init(g *ecs.Game) error {
 
 func (m *MainWorld) registerSystems() {
 	m.SystemManager().Add(
-		systems.NewPauseSystem(0, m.EntityManager(), m.Game()),
-		systems.NewPlayerSystem(1, m.EntityManager(), m.Game()),
-		systems.NewGravitySystem(2, m.EntityManager(), m.Game()),
-		systems.NewPhysicsSystem(3, m.EntityManager(), m.Game()),
-		systems.NewCollisionSystem(4, m.EntityManager(), m.Game()),
-		systems.NewCameraSystem(5, m.EntityManager(), m.Game()),
-		systems.NewRestartSystem(6, m.EntityManager(), m.Game()),
+		systems.NewPauseSystem(0),
+		systems.NewGravitySystem(1),
+		systems.NewPhysicsSystem(2),
+		systems.NewCollisionSystem(3),
+		systems.NewCameraSystem(4),
 	)
 }

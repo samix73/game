@@ -16,9 +16,9 @@ type Gravity struct {
 	dv f64.Vec2
 }
 
-func NewGravitySystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *Gravity {
+func NewGravitySystem(priority int) *Gravity {
 	return &Gravity{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 		dv:         gravity,
 	}
 }

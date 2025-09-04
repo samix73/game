@@ -1,7 +1,7 @@
 package systems
 
 import (
-	"github.com/samix73/ebiten-ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/helpers"
 )
@@ -17,9 +17,9 @@ type Collision struct {
 	*ecs.BaseSystem
 }
 
-func NewCollisionSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *Collision {
+func NewCollisionSystem(priority int) *Collision {
 	return &Collision{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 

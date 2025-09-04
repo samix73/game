@@ -4,48 +4,41 @@ import (
 	"log/slog"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/samix73/ebiten-ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/entities"
 	"golang.org/x/image/math/f64"
 )
 
-var _ ecs.RendererSystem = (*Camera)(nil)
+var _ ecs.DrawableSystem = (*Camera)(nil)
 
 type Camera struct {
 	*ecs.BaseSystem
 
-	screenWidth      float64
-	halfScreenWidth  float64
-	screenHeight     float64
-	halfScreenHeight float64
-	activeCamera     ecs.EntityID
+	activeCamera ecs.EntityID
 }
 
-func NewCameraSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *Camera {
-	cfg := game.Config()
-
-	screenWidth := cfg.ScreenWidth
-	screenHeight := cfg.ScreenHeight
-
+func NewCameraSystem(priority int) *Camera {
 	return &Camera{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
-
-		screenWidth:      float64(screenWidth),
-		halfScreenWidth:  float64(screenWidth) * 0.5,
-		screenHeight:     float64(screenHeight),
-		halfScreenHeight: float64(screenHeight) * 0.5,
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 
 func (c *Camera) createDefaultCamera() ecs.EntityID {
-	return entities.NewCameraEntity(c.EntityManager(), true, float64(c.screenWidth), float64(c.screenHeight))
+	cfg := c.Game().Config()
+	return entities.NewCameraEntity(
+		c.EntityManager(),
+		true,
+		float64(cfg.ScreenWidth), float64(cfg.ScreenHeight),
+	)
 }
 
-func (c *Camera) getActiveCamera(em *ecs.EntityManager) ecs.EntityID {
+func (c *Camera) getActiveCamera() ecs.EntityID {
 	if c.activeCamera != ecs.UndefinedID {
 		return c.activeCamera
 	}
+
+	em := c.EntityManager()
 
 	activeCamera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
 	if ok {
@@ -83,12 +76,20 @@ func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *
 	sw := float64(sprite.Bounds().Dx())
 	sh := float64(sprite.Bounds().Dy())
 
+	cfg := c.Game().Config()
+
+	screenWidth := float64(cfg.ScreenWidth)
+	screenHeight := float64(cfg.ScreenHeight)
+
+	halfScreenWidth := screenWidth / 2
+	halfScreenHeight := screenHeight / 2
+
 	// Compute sprite top-left in screen space.
-	screenX := (entX - camX) + c.halfScreenWidth - sw*0.5
-	screenY := c.halfScreenHeight - (entY - camY) - sh*0.5
+	screenX := (entX - camX) + halfScreenWidth - sw*0.5
+	screenY := halfScreenHeight - (entY - camY) - sh*0.5
 
 	// AABB vs screen rect
-	if screenX+sw <= 0 || screenY+sh <= 0 || screenX >= c.screenWidth || screenY >= c.screenHeight {
+	if screenX+sw <= 0 || screenY+sh <= 0 || screenX >= screenWidth || screenY >= screenHeight {
 		return f64.Vec2{}, false
 	}
 
@@ -98,7 +99,7 @@ func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *
 func (c *Camera) Update() error {
 	em := c.EntityManager()
 
-	camera := c.getActiveCamera(em)
+	camera := c.getActiveCamera()
 	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
 
 	for entity := range ecs.Query2[components.Transform, components.Renderable](em) {

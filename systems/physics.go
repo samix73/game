@@ -11,9 +11,9 @@ type Physics struct {
 	*ecs.BaseSystem
 }
 
-func NewPhysicsSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *Physics {
+func NewPhysicsSystem(priority int) *Physics {
 	return &Physics{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 

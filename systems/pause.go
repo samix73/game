@@ -14,9 +14,9 @@ type PauseSystem struct {
 	originalTimeScale float64
 }
 
-func NewPauseSystem(priority int, entityManager *ecs.EntityManager, game *ecs.Game) *PauseSystem {
+func NewPauseSystem(priority int) *PauseSystem {
 	return &PauseSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority, entityManager, game),
+		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 
 		paused: false,
 	}

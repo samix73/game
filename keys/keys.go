@@ -13,20 +13,8 @@ type Action struct {
 }
 
 var (
-	PlayerJumpAction = Action{
-		Keys: []ebiten.Key{
-			ebiten.KeySpace,
-			ebiten.KeyArrowUp,
-			ebiten.KeyW,
-		},
-		MouseButton: []ebiten.MouseButton{ebiten.MouseButtonLeft},
-	}
 	PauseAction = Action{
 		Keys:        []ebiten.Key{ebiten.KeyP, ebiten.KeyEscape},
-		MouseButton: []ebiten.MouseButton{},
-	}
-	RestartAction = Action{
-		Keys:        []ebiten.Key{ebiten.KeyR},
 		MouseButton: []ebiten.MouseButton{},
 	}
 )
