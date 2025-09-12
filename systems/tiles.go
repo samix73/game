@@ -72,7 +72,6 @@ func (t *TileSystem) buildTileSet(entity ecs.EntityID, tm *components.TileMap) {
 
 	renderable.Sprite = t.buildTileSetImage(tm)
 	renderable.Order = tm.Layer
-	renderable.GeoM = ebiten.GeoM{}
 }
 
 func (t *TileSystem) Update() error {
