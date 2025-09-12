@@ -11,13 +11,14 @@ import (
 var _ ecs.Component = (*TileMap)(nil)
 
 type TileMap struct {
-	Width, Height int
-	Layer         int
-	Tiles         []int // Width * Height; each int is an index into the tileset; -1 = empty
-	Atlas         *ebiten.Image
-	TileSize      int
-	Columns       int
-	Sub           []*ebiten.Image
+	Width, Height         int
+	Layer                 int
+	Tiles                 []int  // Width * Height; each int is an index into the tileset; -1 = empty
+	RenderedTilesChecksum uint64 // hash of the Tiles slice to detect changes
+	Atlas                 *ebiten.Image
+	TileSize              int
+	Columns               int
+	Sub                   []*ebiten.Image
 }
 
 func (t *TileMap) Reset() {
