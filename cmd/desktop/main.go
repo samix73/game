@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/samix73/ebiten-ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/worlds"
 )
 

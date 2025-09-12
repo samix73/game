@@ -57,12 +57,7 @@ func (t *TileSystem) buildTileSetImage(tm *components.TileMap) *ebiten.Image {
 
 	for y := 0; y < tm.Height; y++ {
 		for x := 0; x < tm.Width; x++ {
-			tileIndex := tm.At(x, y)
-			if tileIndex < 0 {
-				continue
-			}
-
-			tileImg := tm.ImageAt(tileIndex)
+			tileImg := tm.ImageAt(x, y)
 			if tileImg == nil {
 				continue
 			}
@@ -73,18 +68,15 @@ func (t *TileSystem) buildTileSetImage(tm *components.TileMap) *ebiten.Image {
 		}
 	}
 
-	tm.SetRenderedTilesChecksum(t.tilesChecksum(tm.Tiles))
-
 	return img
 }
 
-func (t *TileSystem) buildTileSet(entity ecs.EntityID, tm *components.TileMap) {
-	em := t.EntityManager()
-
+func (t *TileSystem) buildTileSet(em *ecs.EntityManager, entity ecs.EntityID, tm *components.TileMap) {
 	renderable := ecs.MustGetComponent[components.Renderable](em, entity)
 
 	renderable.Order = tm.Layer
 	renderable.Sprite = t.buildTileSetImage(tm)
+	tm.SetRenderedTilesChecksum(t.tilesChecksum(tm.Tiles))
 }
 
 func (t *TileSystem) Update() error {
@@ -101,7 +93,7 @@ func (t *TileSystem) Update() error {
 			continue
 		}
 
-		t.buildTileSet(entity, tm)
+		t.buildTileSet(em, entity, tm)
 	}
 
 	return nil

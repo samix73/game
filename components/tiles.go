@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -13,11 +12,11 @@ var _ ecs.Component = (*TileMap)(nil)
 type TileMap struct {
 	Width, Height int
 	Layer         int
-	Tiles         []int // Width * Height; each int is an index into the tileset; -1 = empty
 	TileSize      int
+	Tiles         []int // Width * Height; each int is an index into the tileset; -1 = empty
+	Atlas         *ebiten.Image
 
 	renderedTilesChecksum uint64 // hash of the Tiles slice to detect changes
-	atlas                 *ebiten.Image
 	columns               int
 	sub                   []*ebiten.Image
 }
@@ -29,13 +28,13 @@ func (t *TileMap) Reset() {
 	t.Tiles = make([]int, 0)
 	t.TileSize = 0
 	t.renderedTilesChecksum = 0
-	t.atlas.Deallocate()
+	t.Atlas.Deallocate()
 	t.columns = 0
 	t.sub = nil
 }
 
 func (t *TileMap) Init() {
-	if t.atlas == nil || t.TileSize <= 0 {
+	if t.Atlas == nil || t.TileSize <= 0 {
 		return
 	}
 
@@ -48,8 +47,8 @@ func (t *TileMap) Init() {
 		t.Tiles[i] = -1
 	}
 
-	w := t.atlas.Bounds().Dx()
-	h := t.atlas.Bounds().Dy()
+	w := t.Atlas.Bounds().Dx()
+	h := t.Atlas.Bounds().Dy()
 
 	t.columns = w / t.TileSize
 	rows := h / t.TileSize
@@ -60,13 +59,13 @@ func (t *TileMap) Init() {
 		x := (id % t.columns) * t.TileSize
 		y := (id / t.columns) * t.TileSize
 
-		subImage := t.atlas.SubImage(
+		subImage := t.Atlas.SubImage(
 			image.Rect(x, y, x+t.TileSize, y+t.TileSize),
 		).(*ebiten.Image)
 		t.sub = append(t.sub, subImage)
 	}
 
-	t.columns = t.atlas.Bounds().Dx() / t.TileSize
+	t.columns = t.Atlas.Bounds().Dx() / t.TileSize
 }
 
 func (t *TileMap) index(x, y int) int {
@@ -85,11 +84,6 @@ func (t *TileMap) SetRenderedTilesChecksum(c uint64) {
 	t.renderedTilesChecksum = c
 }
 
-func (t *TileMap) SetAtlas(atlas *ebiten.Image) {
-	t.atlas = atlas
-	t.Init()
-}
-
 func (t *TileMap) At(x, y int) int {
 	i := t.index(x, y)
 	if i == -1 {
@@ -99,18 +93,23 @@ func (t *TileMap) At(x, y int) int {
 	return t.Tiles[i]
 }
 
-func (t *TileMap) Set(x, y, id int) error {
+func (t *TileMap) Set(x, y, id int) {
 	i := t.index(x, y)
 	if i == -1 {
-		return fmt.Errorf("invalid tile coordinates: (%d, %d)", x, y)
+		return
 	}
 
 	t.Tiles[i] = id
-
-	return nil
 }
 
-func (t *TileMap) ImageAt(id int) *ebiten.Image {
+func (t *TileMap) ImageAt(x, y int) *ebiten.Image {
+	i := t.index(x, y)
+	if i == -1 {
+		return nil
+	}
+
+	id := t.Tiles[i]
+
 	if id < 0 || id >= len(t.sub) {
 		return nil
 	}

@@ -23,11 +23,17 @@ func NewTileMapEntity(em *ecs.EntityManager) ecs.EntityID {
 
 	img, _, _ := image.Decode(bytes.NewReader(images.Tiles_png))
 	atlas := ebiten.NewImageFromImage(img)
-	tileMap.SetAtlas(atlas)
 	tileMap.TileSize = tileSize
 	tileMap.Layer = 0
-	tileMap.Width = 240
-	tileMap.Height = 240
+	tileMap.Width = 2
+	tileMap.Height = 2
+	tileMap.Atlas = atlas
+	tileMap.Init()
+
+	tileMap.Set(0, 0, 243)
+	tileMap.Set(1, 0, 243)
+	tileMap.Set(0, 1, 218)
+	tileMap.Set(1, 1, 243)
 
 	return entity
 }
