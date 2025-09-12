@@ -22,11 +22,7 @@ func NewTileSystem(priority int) *TileSystem {
 }
 
 func (t *TileSystem) validateTileMap(tm *components.TileMap) bool {
-	if tm.Width <= 0 || tm.Height <= 0 {
-		return false
-	}
-
-	if tm.Atlas == nil || tm.TileSize <= 0 || tm.Columns <= 0 {
+	if tm.Width <= 0 || tm.Height <= 0 || tm.TileSize <= 0 {
 		return false
 	}
 
@@ -77,22 +73,15 @@ func (t *TileSystem) buildTileSetImage(tm *components.TileMap) *ebiten.Image {
 		}
 	}
 
-	tm.RenderedTilesChecksum = t.tilesChecksum(tm.Tiles)
+	tm.SetRenderedTilesChecksum(t.tilesChecksum(tm.Tiles))
 
 	return img
 }
 
 func (t *TileSystem) buildTileSet(entity ecs.EntityID, tm *components.TileMap) {
-	if !t.validateTileMap(tm) {
-		return
-	}
-
 	em := t.EntityManager()
 
-	renderable, ok := ecs.GetComponent[components.Renderable](em, entity)
-	if !ok {
-		renderable = ecs.AddComponent[components.Renderable](em, entity)
-	}
+	renderable := ecs.MustGetComponent[components.Renderable](em, entity)
 
 	renderable.Order = tm.Layer
 	renderable.Sprite = t.buildTileSetImage(tm)
@@ -101,10 +90,14 @@ func (t *TileSystem) buildTileSet(entity ecs.EntityID, tm *components.TileMap) {
 func (t *TileSystem) Update() error {
 	em := t.EntityManager()
 
-	for entity := range ecs.Query[components.TileMap](em) {
+	for entity := range ecs.Query2[components.TileMap, components.Renderable](em) {
 		tm := ecs.MustGetComponent[components.TileMap](em, entity)
 
-		if tm.RenderedTilesChecksum == t.tilesChecksum(tm.Tiles) {
+		if !t.validateTileMap(tm) {
+			continue
+		}
+
+		if tm.RenderedTilesChecksum() == t.tilesChecksum(tm.Tiles) {
 			continue
 		}
 

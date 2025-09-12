@@ -11,14 +11,15 @@ import (
 var _ ecs.Component = (*TileMap)(nil)
 
 type TileMap struct {
-	Width, Height         int
-	Layer                 int
-	Tiles                 []int  // Width * Height; each int is an index into the tileset; -1 = empty
-	RenderedTilesChecksum uint64 // hash of the Tiles slice to detect changes
-	Atlas                 *ebiten.Image
-	TileSize              int
-	Columns               int
-	Sub                   []*ebiten.Image
+	Width, Height int
+	Layer         int
+	Tiles         []int // Width * Height; each int is an index into the tileset; -1 = empty
+	TileSize      int
+
+	renderedTilesChecksum uint64 // hash of the Tiles slice to detect changes
+	atlas                 *ebiten.Image
+	columns               int
+	sub                   []*ebiten.Image
 }
 
 func (t *TileMap) Reset() {
@@ -26,14 +27,15 @@ func (t *TileMap) Reset() {
 	t.Height = 0
 	t.Layer = 0
 	t.Tiles = make([]int, 0)
-	t.Atlas.Deallocate()
 	t.TileSize = 0
-	t.Columns = 0
-	t.Sub = nil
+	t.renderedTilesChecksum = 0
+	t.atlas.Deallocate()
+	t.columns = 0
+	t.sub = nil
 }
 
 func (t *TileMap) Init() {
-	if t.Atlas == nil || t.TileSize <= 0 {
+	if t.atlas == nil || t.TileSize <= 0 {
 		return
 	}
 
@@ -46,25 +48,25 @@ func (t *TileMap) Init() {
 		t.Tiles[i] = -1
 	}
 
-	w := t.Atlas.Bounds().Dx()
-	h := t.Atlas.Bounds().Dy()
+	w := t.atlas.Bounds().Dx()
+	h := t.atlas.Bounds().Dy()
 
-	t.Columns = w / t.TileSize
+	t.columns = w / t.TileSize
 	rows := h / t.TileSize
-	count := t.Columns * rows
+	count := t.columns * rows
 
-	t.Sub = make([]*ebiten.Image, 0, count)
+	t.sub = make([]*ebiten.Image, 0, count)
 	for id := range count {
-		x := (id % t.Columns) * t.TileSize
-		y := (id / t.Columns) * t.TileSize
+		x := (id % t.columns) * t.TileSize
+		y := (id / t.columns) * t.TileSize
 
-		subImage := t.Atlas.SubImage(
+		subImage := t.atlas.SubImage(
 			image.Rect(x, y, x+t.TileSize, y+t.TileSize),
 		).(*ebiten.Image)
-		t.Sub = append(t.Sub, subImage)
+		t.sub = append(t.sub, subImage)
 	}
 
-	t.Columns = t.Atlas.Bounds().Dx() / t.TileSize
+	t.columns = t.atlas.Bounds().Dx() / t.TileSize
 }
 
 func (t *TileMap) index(x, y int) int {
@@ -73,6 +75,19 @@ func (t *TileMap) index(x, y int) int {
 	}
 
 	return y*t.Width + x
+}
+
+func (t *TileMap) RenderedTilesChecksum() uint64 {
+	return t.renderedTilesChecksum
+}
+
+func (t *TileMap) SetRenderedTilesChecksum(c uint64) {
+	t.renderedTilesChecksum = c
+}
+
+func (t *TileMap) SetAtlas(atlas *ebiten.Image) {
+	t.atlas = atlas
+	t.Init()
 }
 
 func (t *TileMap) At(x, y int) int {
@@ -96,9 +111,9 @@ func (t *TileMap) Set(x, y, id int) error {
 }
 
 func (t *TileMap) ImageAt(id int) *ebiten.Image {
-	if id < 0 || id >= len(t.Sub) {
+	if id < 0 || id >= len(t.sub) {
 		return nil
 	}
 
-	return t.Sub[id]
+	return t.sub[id]
 }

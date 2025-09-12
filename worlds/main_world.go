@@ -2,6 +2,7 @@ package worlds
 
 import (
 	ecs "github.com/samix73/ebiten-ecs"
+	"github.com/samix73/game/entities"
 	"github.com/samix73/game/systems"
 )
 
@@ -17,11 +18,17 @@ func (m *MainWorld) Init(g *ecs.Game) error {
 	entityManager := ecs.NewEntityManager()
 	systemManager := ecs.NewSystemManager(entityManager, g)
 
-	m.BaseWorld = ecs.NewBaseWorld(systemManager)
+	m.BaseWorld = ecs.NewBaseWorld(entityManager, systemManager)
 
 	m.registerSystems()
 
+	m.addEntities()
+
 	return nil
+}
+
+func (m *MainWorld) addEntities() {
+	entities.NewTileMapEntity(m.EntityManager())
 }
 
 func (m *MainWorld) registerSystems() {
@@ -31,5 +38,6 @@ func (m *MainWorld) registerSystems() {
 		systems.NewPhysicsSystem(2),
 		systems.NewCollisionSystem(3),
 		systems.NewCameraSystem(4),
+		systems.NewTileSystem(5),
 	)
 }
