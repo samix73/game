@@ -1,9 +1,6 @@
 package systems
 
 import (
-	"hash/fnv"
-	"unsafe"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
@@ -33,25 +30,6 @@ func (t *TileSystem) validateTileMap(tm *components.TileMap) bool {
 	return true
 }
 
-func (t *TileSystem) tilesChecksum(tiles []int) uint64 {
-	h := fnv.New64a()
-
-	// Convert the int slice to a byte slice. This is an efficient way
-	// to get a pointer to the underlying data without making a copy.
-	// We use `unsafe` for this.
-	// `unsafe.Slice` takes a pointer and a length, creating a byte slice.
-	// `unsafe.Pointer(&slice[0])` gives a pointer to the first element.
-	// `len(slice) * 8` is the total number of bytes (8 bytes per int64 on most systems).
-	bytes := unsafe.Slice((*byte)(unsafe.Pointer(&tiles[0])), len(tiles)*8)
-
-	_, err := h.Write(bytes)
-	if err != nil {
-		return 0
-	}
-
-	return h.Sum64()
-}
-
 func (t *TileSystem) buildTileSetImage(tm *components.TileMap) *ebiten.Image {
 	img := ebiten.NewImage(tm.Width*tm.TileSize, tm.Height*tm.TileSize)
 
@@ -76,7 +54,6 @@ func (t *TileSystem) buildTileSet(em *ecs.EntityManager, entity ecs.EntityID, tm
 
 	renderable.Order = tm.Layer
 	renderable.Sprite = t.buildTileSetImage(tm)
-	tm.SetRenderedTilesChecksum(t.tilesChecksum(tm.Tiles))
 }
 
 func (t *TileSystem) Update() error {
@@ -86,10 +63,6 @@ func (t *TileSystem) Update() error {
 		tm := ecs.MustGetComponent[components.TileMap](em, entity)
 
 		if !t.validateTileMap(tm) {
-			continue
-		}
-
-		if tm.RenderedTilesChecksum() == t.tilesChecksum(tm.Tiles) {
 			continue
 		}
 
