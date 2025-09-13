@@ -23,8 +23,6 @@ func NewCollisionSystem(priority int) *Collision {
 	}
 }
 
-func (c *Collision) Teardown() {}
-
 func (c *Collision) checkCollision(a, b collisionCandidate) bool {
 	return a.bounds.Overlaps(b.bounds)
 }

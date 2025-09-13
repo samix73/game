@@ -40,5 +40,3 @@ func (p *PauseSystem) Update() error {
 
 	return nil
 }
-
-func (p *PauseSystem) Teardown() {}

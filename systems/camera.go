@@ -158,5 +158,3 @@ func (c *Camera) Draw(screen *ebiten.Image) {
 		})
 	}
 }
-
-func (c *Camera) Teardown() {}

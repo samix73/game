@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.8.8
-	github.com/samix73/ebiten-ecs v0.5.0
+	github.com/samix73/ebiten-ecs v0.6.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/goleak v1.3.0
 	golang.org/x/image v0.30.0

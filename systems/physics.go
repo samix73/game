@@ -17,8 +17,6 @@ func NewPhysicsSystem(priority int) *Physics {
 	}
 }
 
-func (p *Physics) Teardown() {}
-
 func (p *Physics) Update() error {
 	em := p.EntityManager()
 

@@ -71,5 +71,3 @@ func (t *TileSystem) Update() error {
 
 	return nil
 }
-
-func (t *TileSystem) Teardown() {}

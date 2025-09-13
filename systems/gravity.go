@@ -23,8 +23,6 @@ func NewGravitySystem(priority int) *Gravity {
 	}
 }
 
-func (g *Gravity) Teardown() {}
-
 func (g *Gravity) Update() error {
 	em := g.EntityManager()
 	for entity := range ecs.Query[components.RigidBody](em) {
