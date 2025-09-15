@@ -2,8 +2,8 @@ package systems
 
 import (
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/components"
-	"github.com/samix73/game/helpers"
+	"github.com/samix73/game/client/components"
+	"github.com/samix73/game/client/helpers"
 )
 
 var _ ecs.System = (*Collision)(nil)

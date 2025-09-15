@@ -7,8 +7,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/entities"
-	"github.com/samix73/game/systems"
+	"github.com/samix73/game/client/entities"
+	"github.com/samix73/game/client/systems"
 )
 
 var _ ecs.World = (*MainWorld)(nil)

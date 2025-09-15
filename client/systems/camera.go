@@ -6,8 +6,8 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/components"
-	"github.com/samix73/game/entities"
+	"github.com/samix73/game/client/components"
+	"github.com/samix73/game/client/entities"
 	"golang.org/x/image/math/f64"
 )
 

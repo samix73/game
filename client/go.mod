@@ -1,4 +1,4 @@
-module github.com/samix73/game
+module github.com/samix73/game/client
 
 go 1.25.0
 

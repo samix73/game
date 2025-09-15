@@ -2,7 +2,7 @@ package systems
 
 import (
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/keys"
+	"github.com/samix73/game/client/keys"
 )
 
 var _ ecs.System = (*PauseSystem)(nil)

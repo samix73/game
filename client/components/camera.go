@@ -2,7 +2,7 @@ package components
 
 import (
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/helpers"
+	"github.com/samix73/game/client/helpers"
 )
 
 var _ ecs.Component = (*Camera)(nil)

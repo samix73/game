@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/samix73/game/conc/panics"
+	"github.com/samix73/game/client/conc/panics"
 )
 
 type opt struct {

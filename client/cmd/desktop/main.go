@@ -6,7 +6,7 @@ import (
 	"os"
 
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/worlds"
+	"github.com/samix73/game/client/worlds"
 )
 
 var (

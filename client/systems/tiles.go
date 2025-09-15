@@ -3,7 +3,7 @@ package systems
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/components"
+	"github.com/samix73/game/client/components"
 )
 
 var _ ecs.System = (*TileSystem)(nil)

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 
-	"github.com/samix73/game/conc"
+	"github.com/samix73/game/client/conc"
 )
 
 func TestErrorPool(t *testing.T) {

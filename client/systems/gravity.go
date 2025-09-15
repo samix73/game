@@ -2,7 +2,7 @@ package systems
 
 import (
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/components"
+	"github.com/samix73/game/client/components"
 	"golang.org/x/image/math/f64"
 )
 

@@ -1,8 +1,8 @@
 package components
 
 import (
-	"github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/helpers"
+	ecs "github.com/samix73/ebiten-ecs"
+	"github.com/samix73/game/client/helpers"
 )
 
 var _ ecs.Component = (*Collider)(nil)
