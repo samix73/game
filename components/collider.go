@@ -3,6 +3,7 @@ package components
 import (
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/helpers"
+	"golang.org/x/image/math/f64"
 )
 
 var _ ecs.Component = (*Collider)(nil)
@@ -25,7 +26,9 @@ func (c *Collider) Reset() {
 var _ ecs.Component = (*Collision)(nil)
 
 type Collision struct {
-	Entity ecs.EntityID
+	Entity      ecs.EntityID
+	Penetration float64
+	Normal      f64.Vec2
 }
 
 func (c *Collision) Reset() {}
