@@ -4,7 +4,7 @@ import (
 	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	ecs "github.com/samix73/ebiten-ecs"
+	"github.com/samix73/game/ecs"
 )
 
 var _ ecs.Component = (*TileMap)(nil)

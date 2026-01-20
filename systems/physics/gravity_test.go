@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/jakecoffman/cp"
-	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
+	"github.com/samix73/game/ecs"
 	"github.com/stretchr/testify/require"
 )
 

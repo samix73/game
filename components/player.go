@@ -1,6 +1,6 @@
 package components
 
-import ecs "github.com/samix73/ebiten-ecs"
+import "github.com/samix73/game/ecs"
 
 var _ ecs.Component = (*Player)(nil)
 

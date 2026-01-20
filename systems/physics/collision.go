@@ -2,32 +2,32 @@ package physics
 
 import (
 	"github.com/jakecoffman/cp"
-	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
+	"github.com/samix73/game/ecs"
 )
 
-var _ ecs.System = (*Collision)(nil)
+var _ ecs.System = (*CollisionSystem)(nil)
 
 type collisionCandidate struct {
 	id     ecs.EntityID
 	bounds cp.BB
 }
 
-type Collision struct {
+type CollisionSystem struct {
 	*ecs.BaseSystem
 }
 
-func NewCollisionSystem(priority int) *Collision {
-	return &Collision{
+func NewCollisionSystem(priority int) *CollisionSystem {
+	return &CollisionSystem{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 
-func (c *Collision) checkCollision(a, b collisionCandidate) bool {
+func (c *CollisionSystem) checkCollision(a, b collisionCandidate) bool {
 	return a.bounds.Intersects(b.bounds)
 }
 
-func (c *Collision) registerCollision(a, b ecs.EntityID) {
+func (c *CollisionSystem) registerCollision(a, b ecs.EntityID) {
 	aCol := ecs.AddComponent[components.Collision](c.EntityManager(), a)
 	aCol.Entity = b
 
@@ -35,7 +35,7 @@ func (c *Collision) registerCollision(a, b ecs.EntityID) {
 	bCol.Entity = a
 }
 
-func (c *Collision) removeCollision(a, b ecs.EntityID) {
+func (c *CollisionSystem) removeCollision(a, b ecs.EntityID) {
 	aCol, ok := ecs.GetComponent[components.Collision](c.EntityManager(), a)
 	if ok && aCol.Entity == b {
 		ecs.RemoveComponent[components.Collision](c.EntityManager(), a)
@@ -47,7 +47,7 @@ func (c *Collision) removeCollision(a, b ecs.EntityID) {
 	}
 }
 
-func (c *Collision) Update() error {
+func (c *CollisionSystem) Update() error {
 	em := c.EntityManager()
 
 	active := make([]collisionCandidate, 0, 16)

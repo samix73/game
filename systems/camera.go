@@ -6,26 +6,26 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
-	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
+	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/entities"
 )
 
-var _ ecs.DrawableSystem = (*Camera)(nil)
+var _ ecs.DrawableSystem = (*CameraSystem)(nil)
 
-type Camera struct {
+type CameraSystem struct {
 	*ecs.BaseSystem
 
 	activeCamera ecs.EntityID
 }
 
-func NewCameraSystem(priority int) *Camera {
-	return &Camera{
+func NewCameraSystem(priority int) *CameraSystem {
+	return &CameraSystem{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 
-func (c *Camera) createDefaultCamera() ecs.EntityID {
+func (c *CameraSystem) createDefaultCamera() ecs.EntityID {
 	cfg := c.Game().Config()
 	return entities.NewCameraEntity(
 		c.EntityManager(),
@@ -34,7 +34,7 @@ func (c *Camera) createDefaultCamera() ecs.EntityID {
 	)
 }
 
-func (c *Camera) getActiveCamera() ecs.EntityID {
+func (c *CameraSystem) getActiveCamera() ecs.EntityID {
 	if c.activeCamera != ecs.UndefinedID {
 		return c.activeCamera
 	}
@@ -66,7 +66,7 @@ func (c *Camera) getActiveCamera() ecs.EntityID {
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
-func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (cp.Vector, bool) {
+func (c *CameraSystem) inView(cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (cp.Vector, bool) {
 	if sprite == nil {
 		return cp.Vector{}, false
 	}
@@ -97,7 +97,7 @@ func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *
 	return cp.Vector{X: screenX, Y: screenY}, true
 }
 
-func (c *Camera) Update() error {
+func (c *CameraSystem) Update() error {
 	em := c.EntityManager()
 
 	camera := c.getActiveCamera()
@@ -133,7 +133,7 @@ func (c *Camera) Update() error {
 	return nil
 }
 
-func (c *Camera) Draw(screen *ebiten.Image) {
+func (c *CameraSystem) Draw(screen *ebiten.Image) {
 	em := c.EntityManager()
 
 	renderables := make([]*components.Renderable, 0)

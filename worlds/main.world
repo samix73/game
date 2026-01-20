@@ -1,0 +1,8 @@
+systems:
+    - PauseSystem
+    - GravitySystem
+    - PhysicsSystem
+    - CollisionSystem
+    - CollisionResolverSystem
+    - CameraSystem
+    - TileSystem

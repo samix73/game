@@ -4,21 +4,21 @@ import (
 	"log/slog"
 
 	"github.com/jakecoffman/cp"
-	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/components"
+	"github.com/samix73/game/ecs"
 )
 
-type Physics struct {
+type PhysicsSystem struct {
 	*ecs.BaseSystem
 }
 
-func NewPhysicsSystem(priority int) *Physics {
-	return &Physics{
+func NewPhysicsSystem(priority int) *PhysicsSystem {
+	return &PhysicsSystem{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 
-func (p *Physics) Update() error {
+func (p *PhysicsSystem) Update() error {
 	em := p.EntityManager()
 
 	// First, apply physics movement
@@ -43,18 +43,18 @@ func (p *Physics) Update() error {
 	return nil
 }
 
-// CollisionResolver handles collision response
-type CollisionResolver struct {
+// CollisionResolverSystem handles collision response
+type CollisionResolverSystem struct {
 	*ecs.BaseSystem
 }
 
-func NewCollisionResolverSystem(priority int) *CollisionResolver {
-	return &CollisionResolver{
+func NewCollisionResolverSystem(priority int) *CollisionResolverSystem {
+	return &CollisionResolverSystem{
 		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
 	}
 }
 
-func (cr *CollisionResolver) Update() error {
+func (cr *CollisionResolverSystem) Update() error {
 	em := cr.EntityManager()
 
 	// Handle all collision responses
@@ -94,7 +94,7 @@ func (cr *CollisionResolver) Update() error {
 	return nil
 }
 
-func (cr *CollisionResolver) resolveElasticCollision(transform1 *components.Transform, rb1 *components.RigidBody,
+func (cr *CollisionResolverSystem) resolveElasticCollision(transform1 *components.Transform, rb1 *components.RigidBody,
 	transform2 *components.Transform, rb2 *components.RigidBody, normal cp.Vector, penetration float64) {
 
 	// Separate objects first
@@ -144,7 +144,7 @@ func (cr *CollisionResolver) resolveElasticCollision(transform1 *components.Tran
 	}
 }
 
-func (cr *CollisionResolver) resolveStaticCollision(transform *components.Transform, rb *components.RigidBody,
+func (cr *CollisionResolverSystem) resolveStaticCollision(transform *components.Transform, rb *components.RigidBody,
 	normal cp.Vector, penetration float64) {
 
 	// Separate the rigidbody from the static object
