@@ -3,7 +3,7 @@ package physics
 import (
 	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/client/components"
+	"github.com/samix73/game/components"
 )
 
 var gravity = cp.Vector{X: 0, Y: -981}

@@ -7,8 +7,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/client/components"
-	"github.com/samix73/game/client/entities"
+	"github.com/samix73/game/components"
+	"github.com/samix73/game/entities"
 )
 
 var _ ecs.DrawableSystem = (*Camera)(nil)

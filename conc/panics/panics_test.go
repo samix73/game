@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/samix73/game/client/conc/panics"
+	"github.com/samix73/game/conc/panics"
 )
 
 func TestCatcher_Try_NoPanic(t *testing.T) {

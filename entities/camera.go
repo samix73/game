@@ -3,7 +3,7 @@ package entities
 import (
 	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/client/components"
+	"github.com/samix73/game/components"
 )
 
 func NewCameraEntity(em *ecs.EntityManager, active bool, cameraWidth, cameraHeight float64) ecs.EntityID {

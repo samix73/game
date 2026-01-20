@@ -3,7 +3,7 @@ package physics
 import (
 	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/client/components"
+	"github.com/samix73/game/components"
 )
 
 var _ ecs.System = (*Collision)(nil)

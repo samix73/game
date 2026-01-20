@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
 
-	"github.com/samix73/game/client/conc"
+	"github.com/samix73/game/conc"
 )
 
 func TestResultPool(t *testing.T) {
