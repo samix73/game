@@ -7,10 +7,12 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/examples/resources/images"
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
 	"github.com/samix73/game/client/entities"
 	"github.com/samix73/game/client/systems"
+	"github.com/samix73/game/client/systems/physics"
 )
 
 var _ ecs.World = (*MainWorld)(nil)
@@ -104,11 +106,11 @@ func (m *MainWorld) addTestEntities() {
 
 	rb1 := ecs.AddComponent[components.RigidBody](em, entity1)
 	rb1.Mass = 1.0
-	rb1.Velocity = [2]float64{100, 0} // Moving right
+	rb1.Velocity = cp.Vector{X: 100, Y: 0} // Moving right
 	rb1.Gravity = false
 
 	collider1 := ecs.AddComponent[components.Collider](em, entity1)
-	collider1.Bounds.SetSize(32, 32)
+	collider1.SetSize(32, 32)
 
 	renderable := ecs.AddComponent[components.Renderable](em, entity1)
 	renderable.Sprite = ebiten.NewImage(32, 32)
@@ -120,11 +122,11 @@ func (m *MainWorld) addTestEntities() {
 
 	rb2 := ecs.AddComponent[components.RigidBody](em, entity2)
 	rb2.Mass = 2.0
-	rb2.Velocity = [2]float64{-50, 0} // Moving left
+	rb2.Velocity = cp.Vector{X: -50, Y: 0} // Moving left
 	rb2.Gravity = false
 
 	collider2 := ecs.AddComponent[components.Collider](em, entity2)
-	collider2.Bounds.SetSize(32, 32)
+	collider2.SetSize(32, 32)
 
 	renderable2 := ecs.AddComponent[components.Renderable](em, entity2)
 	renderable2.Sprite = ebiten.NewImage(32, 32)
@@ -137,11 +139,11 @@ func (m *MainWorld) addTestEntities() {
 
 	rb3 := ecs.AddComponent[components.RigidBody](em, entity3)
 	rb3.Mass = 1.0
-	rb3.Velocity = [2]float64{80, 0} // Moving right
+	rb3.Velocity = cp.Vector{X: 80, Y: 0} // Moving right
 	rb3.Gravity = false
 
 	collider3 := ecs.AddComponent[components.Collider](em, entity3)
-	collider3.Bounds.SetSize(32, 32)
+	collider3.SetSize(32, 32)
 
 	renderable3 := ecs.AddComponent[components.Renderable](em, entity3)
 	renderable3.Sprite = ebiten.NewImage(32, 32)
@@ -153,7 +155,7 @@ func (m *MainWorld) addTestEntities() {
 	transform4.SetPosition(300, 300)
 
 	collider4 := ecs.AddComponent[components.Collider](em, entity4)
-	collider4.Bounds.SetSize(32, 32)
+	collider4.SetSize(32, 32)
 
 	renderable4 := ecs.AddComponent[components.Renderable](em, entity4)
 	renderable4.Sprite = ebiten.NewImage(32, 32)
@@ -163,10 +165,10 @@ func (m *MainWorld) addTestEntities() {
 func (m *MainWorld) registerSystems() {
 	m.SystemManager().Add(
 		systems.NewPauseSystem(0),
-		systems.NewGravitySystem(1),
-		systems.NewPhysicsSystem(2),
-		systems.NewCollisionSystem(3),
-		systems.NewCollisionResolverSystem(4),
+		physics.NewGravitySystem(1),
+		physics.NewPhysicsSystem(2),
+		physics.NewCollisionSystem(3),
+		physics.NewCollisionResolverSystem(4),
 		systems.NewCameraSystem(5),
 		systems.NewTileSystem(6),
 	)

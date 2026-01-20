@@ -1,19 +1,19 @@
-package systems
+package physics
 
 import (
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
-	"golang.org/x/image/math/f64"
 )
 
-var gravity = f64.Vec2{0, -981}
+var gravity = cp.Vector{X: 0, Y: -981}
 
 var _ ecs.System = (*Gravity)(nil)
 
 type Gravity struct {
 	*ecs.BaseSystem
 
-	dv f64.Vec2
+	dv cp.Vector
 }
 
 func NewGravitySystem(priority int) *Gravity {
@@ -37,9 +37,9 @@ func (g *Gravity) Update() error {
 
 		game := g.Game()
 
-		acc := f64.Vec2{
-			g.dv[0] * game.DeltaTime(),
-			g.dv[1] * game.DeltaTime(),
+		acc := cp.Vector{
+			X: g.dv.X * game.DeltaTime(),
+			Y: g.dv.Y * game.DeltaTime(),
 		}
 
 		rigidBody.ApplyAcceleration(acc)

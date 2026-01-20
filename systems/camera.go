@@ -5,10 +5,10 @@ import (
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
 	"github.com/samix73/game/client/entities"
-	"golang.org/x/image/math/f64"
 )
 
 var _ ecs.DrawableSystem = (*Camera)(nil)
@@ -66,13 +66,13 @@ func (c *Camera) getActiveCamera() ecs.EntityID {
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
-func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (f64.Vec2, bool) {
+func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *components.Transform, sprite *ebiten.Image) (cp.Vector, bool) {
 	if sprite == nil {
-		return f64.Vec2{}, false
+		return cp.Vector{}, false
 	}
 
-	camX, camY := cameraTransform.Position[0], cameraTransform.Position[1]
-	entX, entY := entityTransform.Position[0], entityTransform.Position[1]
+	camX, camY := cameraTransform.Position.X, cameraTransform.Position.Y
+	entX, entY := entityTransform.Position.X, entityTransform.Position.Y
 
 	sw := float64(sprite.Bounds().Dx())
 	sh := float64(sprite.Bounds().Dy())
@@ -91,10 +91,10 @@ func (c *Camera) inView(cameraTransform *components.Transform, entityTransform *
 
 	// AABB vs screen rect
 	if screenX+sw <= 0 || screenY+sh <= 0 || screenX >= screenWidth || screenY >= screenHeight {
-		return f64.Vec2{}, false
+		return cp.Vector{}, false
 	}
 
-	return f64.Vec2{screenX, screenY}, true
+	return cp.Vector{X: screenX, Y: screenY}, true
 }
 
 func (c *Camera) Update() error {
@@ -126,8 +126,8 @@ func (c *Camera) Update() error {
 
 		ecs.AddComponent[components.Render](em, entity)
 
-		render.GeoM.SetElement(0, 2, onScreenPos[0])
-		render.GeoM.SetElement(1, 2, onScreenPos[1])
+		render.GeoM.SetElement(0, 2, onScreenPos.X)
+		render.GeoM.SetElement(1, 2, onScreenPos.Y)
 	}
 
 	return nil

@@ -1,12 +1,12 @@
-package systems
+package physics
 
 import (
 	"testing"
 
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/image/math/f64"
 )
 
 func testRigidbodyEntity(t *testing.T, em *ecs.EntityManager, gravity bool) ecs.EntityID {
@@ -44,14 +44,14 @@ func TestGravity_Update(t *testing.T) {
 	err := g.Update()
 	require.NoError(t, err)
 
-	expectedVelocity := f64.Vec2{
-		gravity[0] * game.DeltaTime(),
-		gravity[1] * game.DeltaTime(),
+	expectedVelocity := cp.Vector{
+		X: gravity.X * game.DeltaTime(),
+		Y: gravity.Y * game.DeltaTime(),
 	}
 	enableGravityRigidBody := ecs.MustGetComponent[components.RigidBody](em, gravityEnabledRigidBody)
 	require.Equal(t, expectedVelocity, enableGravityRigidBody.Velocity)
 
 	disableGravityRigidBody := ecs.MustGetComponent[components.RigidBody](em, gravityDisabledRigidBody)
-	require.Equal(t, f64.Vec2{0, 0}, disableGravityRigidBody.Velocity)
+	require.Equal(t, cp.Vector{X: 0, Y: 0}, disableGravityRigidBody.Velocity)
 
 }

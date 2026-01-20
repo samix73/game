@@ -1,16 +1,16 @@
-package systems
+package physics
 
 import (
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
-	"github.com/samix73/game/client/helpers"
 )
 
 var _ ecs.System = (*Collision)(nil)
 
 type collisionCandidate struct {
 	id     ecs.EntityID
-	bounds helpers.AABB
+	bounds cp.BB
 }
 
 type Collision struct {
@@ -24,7 +24,7 @@ func NewCollisionSystem(priority int) *Collision {
 }
 
 func (c *Collision) checkCollision(a, b collisionCandidate) bool {
-	return a.bounds.Overlaps(b.bounds)
+	return a.bounds.Intersects(b.bounds)
 }
 
 func (c *Collision) registerCollision(a, b ecs.EntityID) {
@@ -57,7 +57,7 @@ func (c *Collision) Update() error {
 		transform := ecs.MustGetComponent[components.Transform](em, entity)
 		col := ecs.MustGetComponent[components.Collider](em, entity)
 
-		translatedBounds := col.Bounds.Add(transform.Position)
+		translatedBounds := col.Bounds.Offset(transform.Position)
 
 		if ecs.HasComponent[components.RigidBody](em, entity) {
 			active = append(active, collisionCandidate{

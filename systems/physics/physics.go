@@ -1,11 +1,11 @@
-package systems
+package physics
 
 import (
 	"log/slog"
 
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
-	"golang.org/x/image/math/f64"
 )
 
 type Physics struct {
@@ -29,8 +29,8 @@ func (p *Physics) Update() error {
 		game := p.Game()
 
 		transform.Translate(
-			rigidBody.Velocity[0]*game.DeltaTime(),
-			rigidBody.Velocity[1]*game.DeltaTime(),
+			rigidBody.Velocity.X*game.DeltaTime(),
+			rigidBody.Velocity.Y*game.DeltaTime(),
 		)
 
 		slog.Debug("Physics.Update",
@@ -86,7 +86,7 @@ func (cr *CollisionResolver) Update() error {
 			cr.resolveStaticCollision(transform1, rigidbody1, collision.Normal, collision.Penetration)
 		} else if !hasRigidBody1 && hasRigidBody2 {
 			// Entity 2 has rigidbody, entity 1 is static
-			cr.resolveStaticCollision(transform2, rigidbody2, f64.Vec2{-collision.Normal[0], -collision.Normal[1]}, collision.Penetration)
+			cr.resolveStaticCollision(transform2, rigidbody2, cp.Vector{X: -collision.Normal.X, Y: -collision.Normal.Y}, collision.Penetration)
 		}
 		// If neither has rigidbody, no physics response needed
 	}
@@ -95,7 +95,7 @@ func (cr *CollisionResolver) Update() error {
 }
 
 func (cr *CollisionResolver) resolveElasticCollision(transform1 *components.Transform, rb1 *components.RigidBody,
-	transform2 *components.Transform, rb2 *components.RigidBody, normal f64.Vec2, penetration float64) {
+	transform2 *components.Transform, rb2 *components.RigidBody, normal cp.Vector, penetration float64) {
 
 	// Separate objects first
 	totalMass := rb1.Mass + rb2.Mass
@@ -103,18 +103,18 @@ func (cr *CollisionResolver) resolveElasticCollision(transform1 *components.Tran
 		separation1 := penetration * (rb2.Mass / totalMass)
 		separation2 := penetration * (rb1.Mass / totalMass)
 
-		transform1.Translate(-normal[0]*separation1, -normal[1]*separation1)
-		transform2.Translate(normal[0]*separation2, normal[1]*separation2)
+		transform1.Translate(-normal.X*separation1, -normal.Y*separation1)
+		transform2.Translate(normal.X*separation2, normal.Y*separation2)
 	}
 
 	// Calculate relative velocity
-	relativeVelocity := f64.Vec2{
-		rb1.Velocity[0] - rb2.Velocity[0],
-		rb1.Velocity[1] - rb2.Velocity[1],
+	relativeVelocity := cp.Vector{
+		X: rb1.Velocity.X - rb2.Velocity.X,
+		Y: rb1.Velocity.Y - rb2.Velocity.Y,
 	}
 
 	// Calculate relative velocity along the normal
-	velocityAlongNormal := relativeVelocity[0]*normal[0] + relativeVelocity[1]*normal[1]
+	velocityAlongNormal := relativeVelocity.X*normal.X + relativeVelocity.Y*normal.Y
 
 	// Don't resolve if velocities are separating
 	if velocityAlongNormal > 0 {
@@ -131,27 +131,27 @@ func (cr *CollisionResolver) resolveElasticCollision(transform1 *components.Tran
 	}
 
 	// Apply impulse
-	impulse := f64.Vec2{impulseScalar * normal[0], impulseScalar * normal[1]}
+	impulse := cp.Vector{X: impulseScalar * normal.X, Y: impulseScalar * normal.Y}
 
 	if rb1.Mass > 0 {
-		rb1.Velocity[0] += impulse[0] / rb1.Mass
-		rb1.Velocity[1] += impulse[1] / rb1.Mass
+		rb1.Velocity.X += impulse.X / rb1.Mass
+		rb1.Velocity.Y += impulse.Y / rb1.Mass
 	}
 
 	if rb2.Mass > 0 {
-		rb2.Velocity[0] -= impulse[0] / rb2.Mass
-		rb2.Velocity[1] -= impulse[1] / rb2.Mass
+		rb2.Velocity.X -= impulse.X / rb2.Mass
+		rb2.Velocity.Y -= impulse.Y / rb2.Mass
 	}
 }
 
 func (cr *CollisionResolver) resolveStaticCollision(transform *components.Transform, rb *components.RigidBody,
-	normal f64.Vec2, penetration float64) {
+	normal cp.Vector, penetration float64) {
 
 	// Separate the rigidbody from the static object
-	transform.Translate(-normal[0]*penetration, -normal[1]*penetration)
+	transform.Translate(-normal.X*penetration, -normal.Y*penetration)
 
 	// Calculate velocity along the normal
-	velocityAlongNormal := rb.Velocity[0]*normal[0] + rb.Velocity[1]*normal[1]
+	velocityAlongNormal := rb.Velocity.X*normal.X + rb.Velocity.Y*normal.Y
 
 	// Don't resolve if velocity is separating
 	if velocityAlongNormal > 0 {
@@ -161,6 +161,6 @@ func (cr *CollisionResolver) resolveStaticCollision(transform *components.Transf
 	// Remove velocity component along the normal (stop at collision)
 	const restitution = 0.3 // Lower restitution for static collisions
 
-	rb.Velocity[0] -= (1 + restitution) * velocityAlongNormal * normal[0]
-	rb.Velocity[1] -= (1 + restitution) * velocityAlongNormal * normal[1]
+	rb.Velocity.X -= (1 + restitution) * velocityAlongNormal * normal.X
+	rb.Velocity.Y -= (1 + restitution) * velocityAlongNormal * normal.Y
 }

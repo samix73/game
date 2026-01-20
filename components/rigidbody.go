@@ -1,39 +1,39 @@
 package components
 
-import "golang.org/x/image/math/f64"
+import "github.com/jakecoffman/cp"
 
 // RigidBody represents a physics body with mass, velocity, and gravity.
 type RigidBody struct {
 	Mass     float64
-	Velocity f64.Vec2
+	Velocity cp.Vector
 	Gravity  bool
 }
 
 // ApplyImpulse applies an impulse to the rigid body.
-func (r *RigidBody) ApplyImpulse(impulse f64.Vec2) {
+func (r *RigidBody) ApplyImpulse(impulse cp.Vector) {
 	if r.Mass <= 0 {
 		return
 	}
 
-	r.Velocity[0] += impulse[0] / r.Mass
-	r.Velocity[1] += impulse[1] / r.Mass
+	r.Velocity.X += impulse.X / r.Mass
+	r.Velocity.Y += impulse.Y / r.Mass
 }
 
-func (rb *RigidBody) ApplyAcceleration(acceleration f64.Vec2) {
-	rb.Velocity[0] += acceleration[0]
-	rb.Velocity[1] += acceleration[1]
+func (rb *RigidBody) ApplyAcceleration(acceleration cp.Vector) {
+	rb.Velocity.X += acceleration.X
+	rb.Velocity.Y += acceleration.Y
 }
 
 func (r *RigidBody) Init() {
 	r.Mass = 1.0
-	r.Velocity[0] = 0
-	r.Velocity[1] = 0
+	r.Velocity.X = 0
+	r.Velocity.Y = 0
 	r.Gravity = true
 }
 
 func (r *RigidBody) Reset() {
 	r.Mass = 1.0
-	r.Velocity[0] = 0
-	r.Velocity[1] = 0
+	r.Velocity.X = 0
+	r.Velocity.Y = 0
 	r.Gravity = false
 }

@@ -1,15 +1,15 @@
 package components
 
 import (
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/client/helpers"
 )
 
 var _ ecs.Component = (*Camera)(nil)
 
 // Camera represents the viewable area of the game world.
 type Camera struct {
-	Bounds helpers.AABB
+	Bounds cp.BB
 	Zoom   float64
 }
 
@@ -18,7 +18,7 @@ func (c *Camera) Init() {
 }
 
 func (c *Camera) Reset() {
-	c.Bounds.Reset()
+	c.Bounds = cp.BB{}
 	c.Zoom = 0
 }
 

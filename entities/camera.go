@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/client/components"
 )
@@ -13,10 +14,7 @@ func NewCameraEntity(em *ecs.EntityManager, active bool, cameraWidth, cameraHeig
 	ecs.AddComponent[components.Transform](em, entity)
 	camera := ecs.AddComponent[components.Camera](em, entity)
 	camera.Zoom = 1.0
-	camera.Bounds.Min[0] = 0
-	camera.Bounds.Min[1] = 0
-	camera.Bounds.Max[0] = cameraWidth
-	camera.Bounds.Max[1] = cameraHeight
+	camera.Bounds = cp.BB{L: 0, B: 0, R: cameraWidth, T: cameraHeight}
 
 	return entity
 }

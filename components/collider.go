@@ -1,26 +1,29 @@
 package components
 
 import (
+	"github.com/jakecoffman/cp"
 	ecs "github.com/samix73/ebiten-ecs"
-	"github.com/samix73/game/client/helpers"
-	"golang.org/x/image/math/f64"
 )
 
 var _ ecs.Component = (*Collider)(nil)
 
 type Collider struct {
-	Bounds helpers.AABB
+	Bounds cp.BB
 }
 
 func (c *Collider) Init() {
-	c.Bounds.Min[0] = 0
-	c.Bounds.Min[1] = 0
-	c.Bounds.Max[0] = 1
-	c.Bounds.Max[1] = 1
+	c.Bounds = cp.BB{}
+}
+
+// SetSize sets the size of the collider bounds, centered at (0,0).
+func (c *Collider) SetSize(width, height float64) {
+	hw := width / 2
+	hh := height / 2
+	c.Bounds = cp.BB{L: -hw, B: -hh, R: hw, T: hh}
 }
 
 func (c *Collider) Reset() {
-	c.Bounds.Reset()
+	c.Bounds = cp.BB{}
 }
 
 var _ ecs.Component = (*Collision)(nil)
@@ -28,7 +31,11 @@ var _ ecs.Component = (*Collision)(nil)
 type Collision struct {
 	Entity      ecs.EntityID
 	Penetration float64
-	Normal      f64.Vec2
+	Normal      cp.Vector
 }
 
-func (c *Collision) Reset() {}
+func (c *Collision) Reset() {
+	c.Entity = 0
+	c.Penetration = 0
+	c.Normal = cp.Vector{}
+}
