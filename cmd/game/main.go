@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/samix73/game/ecs"
+	_ "github.com/samix73/game/game/systems"
+	_ "github.com/samix73/game/game/systems/physics"
 )
 
 var (

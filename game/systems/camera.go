@@ -13,6 +13,10 @@ import (
 
 var _ ecs.DrawableSystem = (*CameraSystem)(nil)
 
+func init() {
+	ecs.RegisterSystem(NewCameraSystem)
+}
+
 type CameraSystem struct {
 	*ecs.BaseSystem
 

@@ -8,6 +8,10 @@ import (
 
 var _ ecs.System = (*CollisionSystem)(nil)
 
+func init() {
+	ecs.RegisterSystem(NewCollisionSystem)
+}
+
 type collisionCandidate struct {
 	id     ecs.EntityID
 	bounds cp.BB

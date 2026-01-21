@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-const SpritesDir = "Sprites/"
+const (
+	SpritesDir = "Sprites"
+	WorldsDir  = "Worlds"
+)
 
 //go:embed Sprites/*
 var sprites embed.FS
@@ -24,7 +28,9 @@ func GetSprite(name string) (*ebiten.Image, error) {
 		return v, nil
 	}
 
-	data, err := sprites.ReadFile(SpritesDir + name)
+	path := filepath.Join(SpritesDir, name)
+
+	data, err := sprites.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -38,4 +44,11 @@ func GetSprite(name string) (*ebiten.Image, error) {
 	spriteCache[name] = eImg
 
 	return eImg, nil
+}
+
+//go:embed Worlds/*.hcl
+var worlds embed.FS
+
+func GetWorld(name string) ([]byte, error) {
+	return worlds.ReadFile(filepath.Join(WorldsDir, name))
 }

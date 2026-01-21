@@ -8,6 +8,10 @@ import (
 
 var _ ecs.System = (*TileSystem)(nil)
 
+func init() {
+	ecs.RegisterSystem(NewTileSystem)
+}
+
 type TileSystem struct {
 	*ecs.BaseSystem
 }

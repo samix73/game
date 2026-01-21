@@ -8,6 +8,12 @@ import (
 	"github.com/samix73/game/ecs"
 )
 
+var _ ecs.System = (*PhysicsSystem)(nil)
+
+func init() {
+	ecs.RegisterSystem(NewPhysicsSystem)
+}
+
 type PhysicsSystem struct {
 	*ecs.BaseSystem
 }

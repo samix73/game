@@ -7,6 +7,10 @@ import (
 
 var _ ecs.System = (*PauseSystem)(nil)
 
+func init() {
+	ecs.RegisterSystem(NewPauseSystem)
+}
+
 type PauseSystem struct {
 	*ecs.BaseSystem
 

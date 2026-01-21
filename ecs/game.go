@@ -3,10 +3,11 @@ package ecs
 import (
 	"fmt"
 	"math"
-	"reflect"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/samix73/game/game/assets"
 )
 
 var _ ebiten.Game = (*Game)(nil)
@@ -19,7 +20,7 @@ type GameConfig struct {
 
 type Game struct {
 	cfg         *GameConfig
-	activeWorld World
+	activeWorld *World
 	timeScale   float64
 }
 
@@ -42,29 +43,44 @@ func (g *Game) Config() GameConfig {
 	return *g.cfg
 }
 
-func (g *Game) RestartActiveWorld() error {
-	typ := reflect.TypeOf(g.activeWorld).Elem()
-	newWorld := reflect.New(typ).Interface().(World)
-
-	if err := g.SetActiveWorld(newWorld); err != nil {
-		return fmt.Errorf("ecs.Game.RestartActiveWorld g.SetActiveWorld error: %w", err)
-	}
-
-	return nil
-}
-
-func (g *Game) SetActiveWorld(world World) error {
+func (g *Game) SetActiveWorld(world *World) error {
 	if g.activeWorld != nil {
 		g.activeWorld.Teardown()
-	}
-
-	if err := world.Init(g); err != nil {
-		return fmt.Errorf("ecs.Game.SetActiveWorld world.Init error: %w", err)
 	}
 
 	g.activeWorld = world
 
 	return nil
+}
+
+func (g *Game) LoadWorld(path string) (*World, error) {
+	data, err := assets.GetWorld(path)
+	if err != nil {
+		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
+	}
+
+	var worldConfig WorldConfig
+	if err := hclsimple.Decode(path, data, nil, &worldConfig); err != nil {
+		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
+	}
+
+	em := NewEntityManager()
+	sm := NewSystemManager(em, g)
+
+	for _, systemCfg := range worldConfig.Systems {
+		systemCtor, ok := GetSystem(systemCfg.Name)
+		if !ok {
+			return nil, fmt.Errorf("ecs.LoadWorld: system %s not found", systemCfg.Name)
+		}
+
+		sm.Add(systemCtor(systemCfg.Priority))
+	}
+
+	return &World{
+		name:          worldConfig.Name,
+		systemManager: sm,
+		entityManager: em,
+	}, nil
 }
 
 func (g *Game) DeltaTime() float64 {
