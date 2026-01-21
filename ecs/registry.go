@@ -1,6 +1,9 @@
 package ecs
 
-import "reflect"
+import (
+	"log/slog"
+	"reflect"
+)
 
 type SystemCtor[S System] func(priority int) S
 
@@ -9,14 +12,26 @@ var (
 )
 
 func getName[S System]() string {
-	return reflect.TypeFor[S]().Name()
+	t := reflect.TypeFor[S]()
+	if t.Kind() == reflect.Pointer {
+		return t.Elem().Name()
+	}
+
+	return t.Name()
 }
 
 func RegisterSystem[S System](systemCtor SystemCtor[S]) {
 	name := getName[S]()
+	if _, ok := systemsRegistry[name]; ok {
+		slog.Error("ecs.RegisterSystem: system already registered", slog.String("name", name))
+		return
+	}
+
 	systemsRegistry[name] = func(priority int) System {
 		return systemCtor(priority)
 	}
+
+	slog.Debug("ecs.RegisterSystem: registered system", slog.String("name", name))
 }
 
 func GetSystem(name string) (SystemCtor[System], bool) {

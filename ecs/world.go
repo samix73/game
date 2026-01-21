@@ -3,17 +3,18 @@ package ecs
 import "github.com/hajimehoshi/ebiten/v2"
 
 type SystemConfig struct {
-	Name     string `hcl:"name"`
+	Name     string `hcl:"name,label"`
 	Priority int    `hcl:"priority"`
 }
 
 type WorldConfig struct {
 	Name    string         `hcl:"name"`
-	Systems []SystemConfig `hcl:"systems"`
+	Systems []SystemConfig `hcl:"system,block"`
 }
 
 type World struct {
-	name          string
+	cfg WorldConfig
+
 	systemManager *SystemManager
 	entityManager *EntityManager
 }

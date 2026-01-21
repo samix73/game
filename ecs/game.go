@@ -77,7 +77,8 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 	}
 
 	return &World{
-		name:          worldConfig.Name,
+		cfg: worldConfig,
+
 		systemManager: sm,
 		entityManager: em,
 	}, nil
