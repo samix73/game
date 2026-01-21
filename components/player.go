@@ -6,4 +6,6 @@ var _ ecs.Component = (*Player)(nil)
 
 type Player struct{}
 
+func (p *Player) Init() {}
+
 func (p *Player) Reset() {}

@@ -9,6 +9,8 @@ type Obstacle struct {
 	Height int
 }
 
+func (o *Obstacle) Init() {}
+
 func (o *Obstacle) Reset() {
 	o.Color = ""
 	o.Height = 0

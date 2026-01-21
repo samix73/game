@@ -13,7 +13,7 @@ type Teardowner interface {
 }
 
 // SystemID is a type alias for the unique identifier of a system.
-type SystemID = ID
+type SystemID = uint64
 
 // System is the interface that all systems must implement.
 // Systems are responsible for updating and processing entities that have specific components.

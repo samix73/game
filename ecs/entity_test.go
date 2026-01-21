@@ -74,11 +74,11 @@ func TestEntityCreation(t *testing.T) {
 	em := ecs.NewEntityManager()
 
 	player := NewPlayerEntity(t, em)
-	assert.NotEqual(t, player, ecs.UndefinedID)
+	assert.Equal(t, player, ecs.EntityID(1))
 	camera := NewCameraEntity(t, em)
-	assert.NotEqual(t, camera, ecs.UndefinedID)
+	assert.Equal(t, camera, ecs.EntityID(2))
 	empty := NewEmptyEntity(t, em)
-	assert.NotEqual(t, empty, ecs.UndefinedID)
+	assert.Equal(t, empty, ecs.EntityID(3))
 }
 
 func BenchmarkQueryEntities(b *testing.B) {

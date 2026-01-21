@@ -34,6 +34,8 @@ type Collision struct {
 	Normal      cp.Vector
 }
 
+func (c *Collision) Init() {}
+
 func (c *Collision) Reset() {
 	c.Entity = 0
 	c.Penetration = 0
