@@ -7,6 +7,7 @@ import (
 
 type Component interface {
 	Reset()
+	Init()
 }
 
 type ComponentContainer struct {
@@ -35,7 +36,7 @@ func (c *ComponentContainer) Add(entityID EntityID) any {
 
 	component := c.pool.Get()
 
-	if initable, ok := component.(interface{ Init() }); ok {
+	if initable, ok := component.(Component); ok {
 		initable.Init()
 	}
 
