@@ -48,6 +48,14 @@ func main() {
 		Fullscreen:   *fullscreen,
 	})
 
+	world, err := g.LoadWorld("main_world.hcl")
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+
+	g.SetActiveWorld(world)
+
 	if err := g.Start(); err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
