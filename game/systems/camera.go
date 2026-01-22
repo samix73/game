@@ -8,7 +8,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
-	"github.com/samix73/game/entities"
+	"github.com/samix73/game/game/entities"
 )
 
 var _ ecs.DrawableSystem = (*CameraSystem)(nil)
