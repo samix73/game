@@ -1,15 +1,29 @@
 package ecs
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hashicorp/hcl/v2"
+)
 
 type SystemConfig struct {
 	Name     string `hcl:"name,label"`
 	Priority int    `hcl:"priority"`
 }
 
+type EntityComponentConfig struct {
+	Name string   `hcl:"name,label"`
+	Body hcl.Body `hcl:",remain"`
+}
+
+type EntityConfig struct {
+	Name       string                  `hcl:"name,label"`
+	Components []EntityComponentConfig `hcl:"component,block"`
+}
+
 type WorldConfig struct {
-	Name    string         `hcl:"name"`
-	Systems []SystemConfig `hcl:"system,block"`
+	Name     string         `hcl:"name"`
+	Systems  []SystemConfig `hcl:"system,block"`
+	Entities []EntityConfig `hcl:"entity,block"`
 }
 
 type World struct {

@@ -154,6 +154,42 @@ func (em *EntityManager) Query(componentTypes ...any) iter.Seq[EntityID] {
 	}
 }
 
+func (em *EntityManager) AddComponent(entityID EntityID, component any) error {
+	archetype, exists := em.entityArchetype[entityID]
+	if !exists {
+		return fmt.Errorf("entity %d does not exist", entityID)
+	}
+
+	typ := reflect.TypeOf(component)
+	if typ.Kind() != reflect.Pointer {
+		return fmt.Errorf("component must be a pointer type")
+	}
+
+	componentType := reflect.TypeOf(component).Elem()
+
+	if resettable, ok := any(component).(Component); ok {
+		resettable.Init()
+	}
+
+	// Get current component data
+	componentData := archetype.RemoveEntity(entityID)
+
+	// Add new component
+	componentData[componentType] = component
+
+	// Calculate new signature
+	newSignature := make([]reflect.Type, 0, len(archetype.signature)+1)
+	newSignature = append(newSignature, archetype.signature...)
+	newSignature = append(newSignature, componentType)
+
+	// Move entity to new archetype
+	newArchetype := em.getOrCreateArchetype(newSignature)
+	newArchetype.AddEntity(entityID, componentData)
+	em.entityArchetype[entityID] = newArchetype
+
+	return nil
+}
+
 func (em *EntityManager) Teardown() {
 	em.archetypes = nil
 	em.entityArchetype = nil

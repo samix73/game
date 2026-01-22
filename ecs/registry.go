@@ -10,10 +10,11 @@ type (
 )
 
 var (
-	systemsRegistry map[string]SystemCtor[System] = make(map[string]SystemCtor[System])
+	systemsRegistry    map[string]SystemCtor[System] = make(map[string]SystemCtor[System])
+	componentsRegistry map[string]any
 )
 
-func getName[S System]() string {
+func getName[S any]() string {
 	t := reflect.TypeFor[S]()
 	if t.Kind() == reflect.Pointer {
 		return t.Elem().Name()
@@ -36,6 +37,29 @@ func RegisterSystem[S System](systemCtor SystemCtor[S]) {
 	}
 
 	slog.Debug("ecs.RegisterSystem: registered system", slog.String("name", name))
+}
+
+func RegisterComponent[T any]() {
+	name := getName[T]()
+	if _, ok := componentsRegistry[name]; ok {
+		slog.Error("ecs.RegisterComponent: component already registered", slog.String("name", name))
+		return
+	}
+
+	componentsRegistry[name] = *new(T)
+
+	slog.Debug("ecs.RegisterComponent: registered component", slog.String("name", name))
+}
+
+func NewComponent(name string) (any, bool) {
+	comp, ok := componentsRegistry[name]
+	if !ok {
+		return nil, false
+	}
+
+	v := reflect.New(reflect.TypeOf(comp))
+
+	return v.Interface(), true
 }
 
 // GetSystem retrieves a system constructor from the ECS registry by name.

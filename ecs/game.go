@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/samix73/game/game/assets"
 )
@@ -66,6 +67,32 @@ func (g *Game) loadSystems(systemManager *SystemManager, systemCfgs []SystemConf
 	return nil
 }
 
+func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig) error {
+	for _, entityCfg := range entityCfgs {
+		entity := em.NewEntity()
+
+		for _, compCfg := range entityCfg.Components {
+			component, ok := NewComponent(compCfg.Name)
+			if !ok {
+				return fmt.Errorf("ecs.LoadWorld: component %s not found", compCfg.Name)
+			}
+
+			diags := gohcl.DecodeBody(compCfg.Body, nil, component)
+			if diags.HasErrors() {
+				return fmt.Errorf("ecs.LoadWorld: failed to decode component %s: %w",
+					compCfg.Name, diags)
+			}
+
+			if err := em.AddComponent(entity, component); err != nil {
+				return fmt.Errorf("ecs.LoadWorld: failed to add component %s to entity %s: %w",
+					compCfg.Name, entityCfg.Name, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func (g *Game) LoadWorld(path string) (*World, error) {
 	data, err := assets.GetWorld(path)
 	if err != nil {
@@ -81,6 +108,10 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 	sm := NewSystemManager(em, g)
 
 	if err := g.loadSystems(sm, worldConfig.Systems); err != nil {
+		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
+	}
+
+	if err := g.loadEntities(em, worldConfig.Entities); err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
