@@ -78,7 +78,7 @@ func (s *BaseSystem) baseSystem() *BaseSystem {
 }
 
 func (s *BaseSystem) canUpdate() bool {
-	return s.entityManager != nil && s.game != nil
+	return s.entityManager != nil && s.game != nil && s.ID() != UndefinedSystemID
 }
 
 // SystemManager manages a collection of systems within the framework.
