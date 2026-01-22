@@ -32,7 +32,7 @@ entity "Camera" {
     component "Transform" {}
     component "Camera" {
         Zoom = 1.0
-        Bounds = {L: 0, B: 0, R: 800, T: 600}
+        # Bounds = {L: 0, B: 0, R: 800, T: 600}
     }
 }
 

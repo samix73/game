@@ -14,8 +14,8 @@ var _ ecs.Component = (*Camera)(nil)
 
 // Camera represents the viewable area of the game world.
 type Camera struct {
-	Bounds cp.BB
-	Zoom   float64
+	Bounds cp.BB   `hcl:"Bounds,optional"`
+	Zoom   float64 `hcl:"Zoom,optional"`
 }
 
 func (c *Camera) Init() {

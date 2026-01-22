@@ -11,9 +11,9 @@ func init() {
 
 // RigidBody represents a physics body with mass, velocity, and gravity.
 type RigidBody struct {
-	Mass     float64
-	Velocity cp.Vector
-	Gravity  bool
+	Mass     float64   `hcl:"Mass,optional"`
+	Velocity cp.Vector `hcl:"Velocity,optional"`
+	Gravity  bool      `hcl:"Gravity,optional"`
 }
 
 // ApplyImpulse applies an impulse to the rigid body.
