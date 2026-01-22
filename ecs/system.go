@@ -126,11 +126,11 @@ func (sm *SystemManager) Add(systems ...System) {
 	for _, system := range systems {
 		system.baseSystem().setID(sm.nextID)
 		sm.nextID++
-		if system.baseSystem().entityManager == nil {
+		if system.baseSystem().EntityManager() == nil {
 			system.baseSystem().entityManager = sm.entityManager
 		}
 
-		if system.baseSystem().game == nil {
+		if system.baseSystem().Game() == nil {
 			system.baseSystem().game = sm.game
 		}
 	}
