@@ -10,8 +10,8 @@ type (
 )
 
 var (
-	systemsRegistry    map[string]SystemCtor[System] = make(map[string]SystemCtor[System])
-	componentsRegistry map[string]any
+	systemsRegistry    = make(map[string]SystemCtor[System])
+	componentsRegistry = make(map[string]any)
 )
 
 func getName[S any]() string {

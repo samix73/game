@@ -7,6 +7,10 @@ import (
 	"github.com/samix73/game/ecs"
 )
 
+func init() {
+	ecs.RegisterComponent[TileMap]()
+}
+
 var _ ecs.Component = (*TileMap)(nil)
 
 type TileMap struct {

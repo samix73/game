@@ -2,6 +2,10 @@ package components
 
 import "github.com/samix73/game/ecs"
 
+func init() {
+	ecs.RegisterComponent[Obstacle]()
+}
+
 var _ ecs.Component = (*Obstacle)(nil)
 
 type Obstacle struct {

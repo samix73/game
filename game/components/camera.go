@@ -5,6 +5,11 @@ import (
 	"github.com/samix73/game/ecs"
 )
 
+func init() {
+	ecs.RegisterComponent[Camera]()
+	ecs.RegisterComponent[ActiveCamera]()
+}
+
 var _ ecs.Component = (*Camera)(nil)
 
 // Camera represents the viewable area of the game world.

@@ -5,6 +5,11 @@ import (
 	"github.com/samix73/game/ecs"
 )
 
+func init() {
+	ecs.RegisterComponent[Collider]()
+	ecs.RegisterComponent[Collision]()
+}
+
 var _ ecs.Component = (*Collider)(nil)
 
 type Collider struct {

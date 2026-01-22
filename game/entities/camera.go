@@ -2,8 +2,8 @@ package entities
 
 import (
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game/components"
 )
 
 func NewCameraEntity(em *ecs.EntityManager, active bool, cameraWidth, cameraHeight float64) ecs.EntityID {

@@ -1,6 +1,13 @@
 package components
 
-import "github.com/jakecoffman/cp"
+import (
+	"github.com/jakecoffman/cp"
+	"github.com/samix73/game/ecs"
+)
+
+func init() {
+	ecs.RegisterComponent[Transform]()
+}
 
 // Transform represents the position and rotation of an entity in 2D space.
 type Transform struct {

@@ -4,8 +4,8 @@ import (
 	"log/slog"
 
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game/components"
 )
 
 var _ ecs.System = (*PhysicsSystem)(nil)

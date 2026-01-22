@@ -2,8 +2,8 @@ package entities
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game/components"
 )
 
 const (

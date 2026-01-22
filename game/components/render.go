@@ -2,7 +2,13 @@ package components
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/samix73/game/ecs"
 )
+
+func init() {
+	ecs.RegisterComponent[Renderable]()
+	ecs.RegisterComponent[Render]()
+}
 
 // Renderable represents a 2D entity that can be rendered on the screen.
 type Renderable struct {

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/components"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game/components"
 	"github.com/stretchr/testify/require"
 )
 

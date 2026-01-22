@@ -1,6 +1,13 @@
 package components
 
-import "github.com/jakecoffman/cp"
+import (
+	"github.com/jakecoffman/cp"
+	"github.com/samix73/game/ecs"
+)
+
+func init() {
+	ecs.RegisterComponent[RigidBody]()
+}
 
 // RigidBody represents a physics body with mass, velocity, and gravity.
 type RigidBody struct {
