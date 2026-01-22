@@ -20,7 +20,7 @@ type PauseSystem struct {
 
 func NewPauseSystem(priority int) *PauseSystem {
 	return &PauseSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 
 		paused: false,
 	}
@@ -43,4 +43,7 @@ func (p *PauseSystem) Update() error {
 	p.paused = !p.paused
 
 	return nil
+}
+
+func (p *PauseSystem) Teardown() {
 }

@@ -12,6 +12,7 @@ var _ ecs.System = (*PhysicsSystem)(nil)
 
 func init() {
 	ecs.RegisterSystem(NewPhysicsSystem)
+	ecs.RegisterSystem(NewCollisionResolverSystem)
 }
 
 type PhysicsSystem struct {
@@ -20,7 +21,7 @@ type PhysicsSystem struct {
 
 func NewPhysicsSystem(priority int) *PhysicsSystem {
 	return &PhysicsSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 	}
 }
 
@@ -49,6 +50,9 @@ func (p *PhysicsSystem) Update() error {
 	return nil
 }
 
+func (p *PhysicsSystem) Teardown() {
+}
+
 // CollisionResolverSystem handles collision response
 type CollisionResolverSystem struct {
 	*ecs.BaseSystem
@@ -56,7 +60,7 @@ type CollisionResolverSystem struct {
 
 func NewCollisionResolverSystem(priority int) *CollisionResolverSystem {
 	return &CollisionResolverSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 	}
 }
 
@@ -98,6 +102,9 @@ func (cr *CollisionResolverSystem) Update() error {
 	}
 
 	return nil
+}
+
+func (cr *CollisionResolverSystem) Teardown() {
 }
 
 func (cr *CollisionResolverSystem) resolveElasticCollision(transform1 *components.Transform, rb1 *components.RigidBody,

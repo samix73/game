@@ -25,7 +25,7 @@ type CameraSystem struct {
 
 func NewCameraSystem(priority int) *CameraSystem {
 	return &CameraSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 	}
 }
 
@@ -39,7 +39,7 @@ func (c *CameraSystem) createDefaultCamera() ecs.EntityID {
 }
 
 func (c *CameraSystem) getActiveCamera() ecs.EntityID {
-	if c.activeCamera != ecs.UndefinedID {
+	if c.activeCamera != ecs.UndefinedSystemID {
 		return c.activeCamera
 	}
 
@@ -60,8 +60,8 @@ func (c *CameraSystem) getActiveCamera() ecs.EntityID {
 		activeCamera = c.createDefaultCamera()
 	}
 
-	if activeCamera == ecs.UndefinedID {
-		return ecs.UndefinedID
+	if activeCamera == ecs.UndefinedSystemID {
+		return ecs.UndefinedSystemID
 	}
 
 	c.activeCamera = activeCamera
@@ -161,4 +161,7 @@ func (c *CameraSystem) Draw(screen *ebiten.Image) {
 			GeoM: render.GeoM,
 		})
 	}
+}
+
+func (c *CameraSystem) Teardown() {
 }

@@ -18,7 +18,7 @@ type TileSystem struct {
 
 func NewTileSystem(priority int) *TileSystem {
 	return &TileSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 	}
 }
 
@@ -74,4 +74,7 @@ func (t *TileSystem) Update() error {
 	}
 
 	return nil
+}
+
+func (t *TileSystem) Teardown() {
 }

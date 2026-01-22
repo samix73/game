@@ -22,7 +22,7 @@ type GravitySystem struct {
 
 func NewGravitySystem(priority int) *GravitySystem {
 	return &GravitySystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 		dv:         gravity,
 	}
 }
@@ -50,4 +50,7 @@ func (g *GravitySystem) Update() error {
 	}
 
 	return nil
+}
+
+func (g *GravitySystem) Teardown() {
 }

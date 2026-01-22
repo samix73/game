@@ -23,7 +23,7 @@ type CollisionSystem struct {
 
 func NewCollisionSystem(priority int) *CollisionSystem {
 	return &CollisionSystem{
-		BaseSystem: ecs.NewBaseSystem(ecs.NextID(), priority),
+		BaseSystem: ecs.NewBaseSystem(priority),
 	}
 }
 
@@ -107,4 +107,7 @@ func (c *CollisionSystem) Update() error {
 	}
 
 	return nil
+}
+
+func (c *CollisionSystem) Teardown() {
 }
