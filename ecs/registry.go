@@ -7,7 +7,6 @@ import (
 
 type (
 	SystemCtor[S System] func(priority int) S
-	EntityCtor           func() EntityID
 )
 
 var (
