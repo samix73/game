@@ -3,6 +3,7 @@ package ecs
 import (
 	"fmt"
 	"iter"
+	"log/slog"
 	"reflect"
 	"slices"
 	"sync"
@@ -160,12 +161,16 @@ func (em *EntityManager) AddComponent(entityID EntityID, component any) error {
 		return fmt.Errorf("entity %d does not exist", entityID)
 	}
 
-	typ := reflect.TypeOf(component)
-	if typ.Kind() != reflect.Pointer {
-		return fmt.Errorf("component must be a pointer type")
+	componentType := reflect.TypeOf(component)
+	if componentType.Kind() == reflect.Pointer {
+		componentType = componentType.Elem()
 	}
 
-	componentType := reflect.TypeOf(component).Elem()
+	if archetype.HasComponent(componentType) {
+		component, _ := archetype.GetComponent(entityID, componentType)
+		return fmt.Errorf("entity %d already has component of type %s: %+v",
+			entityID, componentType.Name(), component)
+	}
 
 	if resettable, ok := any(component).(Component); ok {
 		resettable.Init()
@@ -197,46 +202,21 @@ func (em *EntityManager) Teardown() {
 }
 
 func AddComponent[C any](em *EntityManager, entityID EntityID) *C {
-	archetype, exists := em.entityArchetype[entityID]
-	if !exists {
-		return nil
-	}
-
-	var zero C
-	componentType := reflect.TypeOf(zero)
-
-	// Check if entity already has this component
-	if archetype.HasComponent(componentType) {
-		component, _ := archetype.GetComponent(entityID, componentType)
-		return component.(*C)
-	}
-
-	// Get or create pool
+	componentType := reflect.TypeFor[C]()
 	pool := em.getOrCreatePool(componentType, func() any {
 		return new(C)
 	})
 
-	// Get component from pool
 	component := pool.Get().(*C)
-	if resettable, ok := any(component).(Component); ok {
-		resettable.Init()
+	if err := em.AddComponent(entityID, component); err != nil {
+		slog.Error("ecs.AddComponent: failed to add component",
+			slog.String("type", componentType.Name()),
+			slog.Uint64("entityID", entityID),
+			slog.Any("error", err),
+		)
+
+		return nil
 	}
-
-	// Get current component data
-	componentData := archetype.RemoveEntity(entityID)
-
-	// Add new component
-	componentData[componentType] = component
-
-	// Calculate new signature
-	newSignature := make([]reflect.Type, 0, len(archetype.signature)+1)
-	newSignature = append(newSignature, archetype.signature...)
-	newSignature = append(newSignature, componentType)
-
-	// Move entity to new archetype
-	newArchetype := em.getOrCreateArchetype(newSignature)
-	newArchetype.AddEntity(entityID, componentData)
-	em.entityArchetype[entityID] = newArchetype
 
 	return component
 }
