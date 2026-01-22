@@ -16,11 +16,15 @@ system "TileSystem" {
     priority = 4
 }
 
-system "CollisionSystem" {
+system "CollisionResolverSystem" {
     priority = 5
 }
 
-system "GravitySystem" {
+system "CollisionSystem" {
     priority = 6
+}
+
+system "GravitySystem" {
+    priority = 7
 }
 

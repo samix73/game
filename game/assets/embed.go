@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image"
 	_ "image/png"
-	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -28,9 +27,7 @@ func GetSprite(name string) (*ebiten.Image, error) {
 		return v, nil
 	}
 
-	path := filepath.Join(SpritesDir, name)
-
-	data, err := sprites.ReadFile(path)
+	data, err := sprites.ReadFile(SpritesDir + "/" + name)
 	if err != nil {
 		return nil, err
 	}
@@ -50,5 +47,10 @@ func GetSprite(name string) (*ebiten.Image, error) {
 var worlds embed.FS
 
 func GetWorld(name string) ([]byte, error) {
-	return worlds.ReadFile(filepath.Join(WorldsDir, name))
+	f, err := worlds.ReadFile(WorldsDir + "/" + name)
+	if err != nil {
+		return nil, fmt.Errorf("assets.GetWorld: %w", err)
+	}
+
+	return f, nil
 }
