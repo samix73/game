@@ -53,6 +53,19 @@ func (g *Game) SetActiveWorld(world *World) error {
 	return nil
 }
 
+func (g *Game) loadSystems(systemManager *SystemManager, systemCfgs []SystemConfig) error {
+	for _, systemCfg := range systemCfgs {
+		systemCtor, ok := GetSystem(systemCfg.Name)
+		if !ok {
+			return fmt.Errorf("ecs.LoadWorld: system %s not found", systemCfg.Name)
+		}
+
+		systemManager.Add(systemCtor(systemCfg.Priority))
+	}
+
+	return nil
+}
+
 func (g *Game) LoadWorld(path string) (*World, error) {
 	data, err := assets.GetWorld(path)
 	if err != nil {
@@ -67,13 +80,8 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 	em := NewEntityManager()
 	sm := NewSystemManager(em, g)
 
-	for _, systemCfg := range worldConfig.Systems {
-		systemCtor, ok := GetSystem(systemCfg.Name)
-		if !ok {
-			return nil, fmt.Errorf("ecs.LoadWorld: system %s not found", systemCfg.Name)
-		}
-
-		sm.Add(systemCtor(systemCfg.Priority))
+	if err := g.loadSystems(sm, worldConfig.Systems); err != nil {
+		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
 	return &World{
