@@ -51,15 +51,18 @@ func RegisterComponent[T any]() {
 	slog.Debug("ecs.RegisterComponent: registered component", slog.String("name", name))
 }
 
-func NewComponent(name string) (any, bool) {
+func NewComponent(em *EntityManager, name string) (any, bool) {
 	comp, ok := componentsRegistry[name]
 	if !ok {
 		return nil, false
 	}
 
-	v := reflect.New(reflect.TypeOf(comp))
+	componentType := reflect.TypeOf(comp)
+	pool := em.getOrCreatePool(componentType, func() any {
+		return reflect.New(componentType).Interface()
+	})
 
-	return v.Interface(), true
+	return pool.Get(), true
 }
 
 // GetSystem retrieves a system constructor from the ECS registry by name.

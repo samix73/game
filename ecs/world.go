@@ -1,8 +1,8 @@
 package ecs
 
 import (
+	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/pelletier/go-toml/v2"
 )
 
 type SystemConfig struct {
@@ -10,20 +10,15 @@ type SystemConfig struct {
 	Priority int    `toml:"priority"`
 }
 
-type EntityComponentConfig struct {
-	Name string       `toml:"name"`
-	Body toml.Decoder `toml:"body"`
-}
-
 type EntityConfig struct {
-	Name       string                  `toml:"name"`
-	Components []EntityComponentConfig `toml:"component"`
+	Name       string                    `toml:"name"`
+	Components map[string]toml.Primitive `toml:"components"`
 }
 
 type WorldConfig struct {
-	Name    string         `toml:"name"`
-	Systems []SystemConfig `toml:"system"`
-	// Entities []EntityConfig `toml:"entity"`
+	Name     string         `toml:"name"`
+	Systems  []SystemConfig `toml:"systems"`
+	Entities []EntityConfig `toml:"entities"`
 }
 
 type World struct {
