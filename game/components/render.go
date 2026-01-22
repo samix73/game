@@ -12,9 +12,9 @@ func init() {
 
 // Renderable represents a 2D entity that can be rendered on the screen.
 type Renderable struct {
-	Sprite *ebiten.Image `hcl:"-"`
-	GeoM   ebiten.GeoM   `hcl:"-"`
-	Order  int           `hcl:"Order,optional"` // Rendering order; lower values are rendered first
+	Sprite *ebiten.Image
+	GeoM   ebiten.GeoM
+	Order  int // Rendering order; lower values are rendered first
 }
 
 func (r *Renderable) Reset() {

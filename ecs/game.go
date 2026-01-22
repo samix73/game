@@ -6,8 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hashicorp/hcl/v2/gohcl"
-	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/pelletier/go-toml/v2"
 	"github.com/samix73/game/game/assets"
 )
 
@@ -67,40 +66,39 @@ func (g *Game) loadSystems(systemManager *SystemManager, systemCfgs []SystemConf
 	return nil
 }
 
-func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig) error {
-	for _, entityCfg := range entityCfgs {
-		entity := em.NewEntity()
+// func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig) error {
+// 	for _, entityCfg := range entityCfgs {
+// 		entity := em.NewEntity()
 
-		for _, compCfg := range entityCfg.Components {
-			component, ok := NewComponent(compCfg.Name)
-			if !ok {
-				return fmt.Errorf("ecs.LoadWorld: component %s not found", compCfg.Name)
-			}
+// 		for _, compCfg := range entityCfg.Components {
+// 			component, ok := NewComponent(compCfg.Name)
+// 			if !ok {
+// 				return fmt.Errorf("ecs.LoadWorld: component %s not found", compCfg.Name)
+// 			}
 
-			diags := gohcl.DecodeBody(compCfg.Body, nil, component)
-			if diags.HasErrors() {
-				return fmt.Errorf("ecs.LoadWorld: failed to decode component %s: %w",
-					compCfg.Name, diags)
-			}
+// 			if err := toml.Unmarshal(compCfg.Body, component); err != nil {
+// 				return fmt.Errorf("ecs.LoadWorld: failed to decode component %s: %w",
+// 					compCfg.Name, err)
+// 			}
 
-			if err := em.AddComponent(entity, component); err != nil {
-				return fmt.Errorf("ecs.LoadWorld: failed to add component %s to entity %s: %w",
-					compCfg.Name, entityCfg.Name, err)
-			}
-		}
-	}
+// 			if err := em.AddComponent(entity, component); err != nil {
+// 				return fmt.Errorf("ecs.LoadWorld: failed to add component %s to entity %s: %w",
+// 					compCfg.Name, entityCfg.Name, err)
+// 			}
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (g *Game) LoadWorld(path string) (*World, error) {
-	data, err := assets.GetWorld(path)
+	data, err := assets.GetWorld(path + ".toml")
 	if err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
 	var worldConfig WorldConfig
-	if err := hclsimple.Decode(path, data, nil, &worldConfig); err != nil {
+	if err := toml.Unmarshal(data, &worldConfig); err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
@@ -111,9 +109,9 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
-	if err := g.loadEntities(em, worldConfig.Entities); err != nil {
-		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
-	}
+	// if err := g.loadEntities(em, worldConfig.Entities); err != nil {
+	// 	return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
+	// }
 
 	return &World{
 		cfg: worldConfig,

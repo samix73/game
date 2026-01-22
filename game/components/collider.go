@@ -13,7 +13,7 @@ func init() {
 var _ ecs.Component = (*Collider)(nil)
 
 type Collider struct {
-	Bounds cp.BB `hcl:"Bounds,optional"`
+	Bounds cp.BB
 }
 
 func (c *Collider) Init() {

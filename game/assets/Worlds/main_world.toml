@@ -1,0 +1,30 @@
+name = "main_world"
+
+[[systems]]
+name = "CameraSystem"
+priority = 1
+[[systems]]
+name = "PhysicsSystem"
+priority = 2
+[[systems]]
+name = "PauseSystem"
+priority = 3
+[[systems]]
+name = "TileSystem"
+priority = 4
+[[systems]]
+name = "CollisionResolverSystem"
+priority = 5
+[[systems]]
+name = "CollisionSystem"
+priority = 6
+[[systems]]
+name = "GravitySystem"
+priority = 7
+
+[[entities]]
+name = "Player"
+    [entities.components.Transform]
+    [entities.components.Camera]
+        Zoom = 1.0
+        Bounds = { L = 0, B = 0, R = 800, T = 600 }

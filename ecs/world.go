@@ -2,28 +2,28 @@ package ecs
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hashicorp/hcl/v2"
+	"github.com/pelletier/go-toml/v2"
 )
 
 type SystemConfig struct {
-	Name     string `hcl:"name,label"`
-	Priority int    `hcl:"priority"`
+	Name     string `toml:"name"`
+	Priority int    `toml:"priority"`
 }
 
 type EntityComponentConfig struct {
-	Name string   `hcl:"name,label"`
-	Body hcl.Body `hcl:",remain"`
+	Name string       `toml:"name"`
+	Body toml.Decoder `toml:"body"`
 }
 
 type EntityConfig struct {
-	Name       string                  `hcl:"name,label"`
-	Components []EntityComponentConfig `hcl:"component,block"`
+	Name       string                  `toml:"name"`
+	Components []EntityComponentConfig `toml:"component"`
 }
 
 type WorldConfig struct {
-	Name     string         `hcl:"name"`
-	Systems  []SystemConfig `hcl:"system,block"`
-	Entities []EntityConfig `hcl:"entity,block"`
+	Name    string         `toml:"name"`
+	Systems []SystemConfig `toml:"system"`
+	// Entities []EntityConfig `toml:"entity"`
 }
 
 type World struct {

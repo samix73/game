@@ -14,14 +14,13 @@ func init() {
 var _ ecs.Component = (*TileMap)(nil)
 
 type TileMap struct {
-	Width    int           `hcl:"Width,optional"`
-	Height   int           `hcl:"Height,optional"`
-	Layer    int           `hcl:"Layer,optional"`
-	TileSize int           `hcl:"TileSize,optional"`
-	Tiles    []int         `hcl:"Tiles,optional"` // Width * Height; each int is an index into the tileset; -1 = empty
-	Atlas    *ebiten.Image `hcl:"-"`
-
-	sub []*ebiten.Image `hcl:"-"`
+	Width    int
+	Height   int
+	Layer    int
+	TileSize int
+	Tiles    []int // Width * Height; each int is an index into the tileset; -1 = empty
+	Atlas    *ebiten.Image
+	sub      []*ebiten.Image
 }
 
 func (t *TileMap) Reset() {

@@ -43,7 +43,7 @@ func GetSprite(name string) (*ebiten.Image, error) {
 	return eImg, nil
 }
 
-//go:embed Worlds/*.hcl
+//go:embed Worlds/*.toml
 var worlds embed.FS
 
 func GetWorld(name string) ([]byte, error) {

@@ -9,8 +9,8 @@ func init() {
 var _ ecs.Component = (*Obstacle)(nil)
 
 type Obstacle struct {
-	Color  string `hcl:"Color,optional"`
-	Height int    `hcl:"Height,optional"`
+	Color  string
+	Height int
 }
 
 func (o *Obstacle) Init() {}

@@ -11,8 +11,8 @@ func init() {
 
 // Transform represents the position and rotation of an entity in 2D space.
 type Transform struct {
-	Position cp.Vector `hcl:"Position,optional"`
-	Rotation float64   `hcl:"Rotation,optional"`
+	Position cp.Vector
+	Rotation float64
 }
 
 func (t *Transform) SetPosition(x, y float64) {
