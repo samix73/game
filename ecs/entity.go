@@ -1,12 +1,16 @@
 package ecs
 
 import (
+	"bytes"
 	"fmt"
 	"iter"
 	"log/slog"
 	"reflect"
 	"slices"
 	"sync"
+
+	"github.com/BurntSushi/toml"
+	"github.com/samix73/game/game/assets"
 )
 
 type EntityID = uint64
@@ -153,6 +157,38 @@ func (em *EntityManager) Query(componentTypes ...any) iter.Seq[EntityID] {
 			}
 		}
 	}
+}
+
+// LoadEntity loads an entity asset and adds it to the entity manager.
+func (em *EntityManager) LoadEntity(name string) (EntityID, error) {
+	entityData, err := assets.GetEntity(name)
+	if err != nil {
+		return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: %w", err)
+	}
+
+	var protoEntity EntityComponentsConfig
+	md, err := toml.NewDecoder(bytes.NewReader(entityData)).Decode(&protoEntity)
+	if err != nil {
+		return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: %w", err)
+	}
+
+	entity := em.NewEntity()
+	for componentName, args := range protoEntity {
+		component, ok := NewComponent(em, componentName)
+		if !ok {
+			return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: component %s not found", componentName)
+		}
+
+		if err := md.PrimitiveDecode(args, component); err != nil {
+			return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: PrimitiveDecode %w", err)
+		}
+
+		if err := em.AddComponent(entity, component); err != nil {
+			return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: AddComponent %w", err)
+		}
+	}
+
+	return entity, nil
 }
 
 func (em *EntityManager) AddComponent(entityID EntityID, component any) error {
