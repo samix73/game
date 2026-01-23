@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"os"
+	"reflect"
 
 	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -71,10 +73,8 @@ func (g *Game) loadSystems(systemManager *SystemManager, systemCfgs []SystemConf
 
 // loadEntities loads entities from entity configs and world metadata.
 // It overwrites components from entity configs with components from world metadata.
-func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, worldMD toml.MetaData) error {
+func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig) error {
 	for _, entityCfg := range entityCfgs {
-		entity := em.NewEntity()
-
 		if entityCfg.Name == "" {
 			return errors.New("ecs.LoadWorld: entity name is empty")
 		}
@@ -84,34 +84,16 @@ func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, worldM
 			return fmt.Errorf("ecs.LoadWorld: %w", err)
 		}
 
+		var protoComponents EntityComponentsConfig
+
 		// Load components from entity config
 		if len(entityData) > 0 {
 			components := make(EntityComponentsConfig)
-			md, err := toml.NewDecoder(bytes.NewReader(entityData)).Decode(&components)
-			if err != nil {
+			if _, err := toml.NewDecoder(bytes.NewReader(entityData)).Decode(&components); err != nil {
 				return fmt.Errorf("ecs.LoadWorld: %w", err)
 			}
 
-			for name, args := range components {
-				if name == "" {
-					return errors.New("ecs.LoadWorld: component name is empty")
-				}
-
-				component, ok := NewComponent(em, name)
-				if !ok {
-					return fmt.Errorf("ecs.LoadWorld: component %s not found", name)
-				}
-
-				if err := md.PrimitiveDecode(args, component); err != nil {
-					return fmt.Errorf("ecs.LoadWorld: failed to decode component %s: %w",
-						name, err)
-				}
-
-				if err := em.AddComponent(entity, component); err != nil {
-					return fmt.Errorf("ecs.LoadWorld: failed to add component %s to entity %s: %w",
-						name, entityCfg.Name, err)
-				}
-			}
+			protoComponents = components
 		}
 
 		// Overwrite components from entity config
@@ -120,14 +102,36 @@ func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, worldM
 				return errors.New("ecs.LoadWorld: component name is empty")
 			}
 
+			if protoArgs, ok := protoComponents[name]; ok {
+				maps.Copy(protoArgs, args)
+			} else {
+				protoComponents[name] = args
+			}
+		}
+
+		entity := em.NewEntity()
+
+		// Assign proto components field values to initialized component.
+		for name, args := range protoComponents {
 			component, ok := NewComponent(em, name)
 			if !ok {
 				return fmt.Errorf("ecs.LoadWorld: component %s not found", name)
 			}
 
-			if err := worldMD.PrimitiveDecode(args, component); err != nil {
-				return fmt.Errorf("ecs.LoadWorld: failed to decode component %s: %w",
-					name, err)
+			// Assign args to component fields
+			for fieldName, fieldValue := range args {
+				cv := reflect.ValueOf(component).Elem()
+				cfv := cv.FieldByName(fieldName)
+				if !cfv.IsValid() || !cfv.CanSet() {
+					return fmt.Errorf("ecs.LoadWorld: invalid field %s", fieldName)
+				}
+
+				fvt := reflect.ValueOf(fieldValue)
+				if !cfv.Type().AssignableTo(fvt.Type()) {
+					return fmt.Errorf("ecs.LoadWorld: invalid field type %s", fieldName)
+				}
+
+				cfv.Set(fvt)
 			}
 
 			if err := em.AddComponent(entity, component); err != nil {
@@ -147,9 +151,7 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 	}
 
 	var worldConfig WorldConfig
-
-	md, err := toml.NewDecoder(bytes.NewReader(data)).Decode(&worldConfig)
-	if err != nil {
+	if _, err := toml.NewDecoder(bytes.NewReader(data)).Decode(&worldConfig); err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
@@ -160,7 +162,7 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
-	if err := g.loadEntities(em, worldConfig.Entities, md); err != nil {
+	if err := g.loadEntities(em, worldConfig.Entities); err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 

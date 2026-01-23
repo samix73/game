@@ -1,7 +1,6 @@
 package ecs
 
 import (
-	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -10,7 +9,7 @@ type SystemConfig struct {
 	Priority int    `toml:"priority"`
 }
 
-type EntityComponentsConfig map[string]toml.Primitive
+type EntityComponentsConfig map[string]map[string]any
 
 type EntityConfig struct {
 	Name       string                 `toml:"name"`
