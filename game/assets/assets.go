@@ -2,33 +2,25 @@ package assets
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"image"
 	_ "image/png"
+	"os"
+	"path"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 const (
-	SpritesDir  = "Sprites"
-	WorldsDir   = "Worlds"
-	EntitiesDir = "Entities"
-)
-
-//go:embed Sprites/*
-var sprites embed.FS
-
-var (
-	spriteCache = make(map[string]*ebiten.Image, 10)
+	SpritesDir  = "game/assets/Sprites"
+	WorldsDir   = "game/assets/Worlds"
+	EntitiesDir = "game/assets/Entities"
 )
 
 func GetSprite(name string) (*ebiten.Image, error) {
-	if v, ok := spriteCache[name]; ok {
-		return v, nil
-	}
+	path := path.Join(SpritesDir, name)
 
-	data, err := sprites.ReadFile(SpritesDir + "/" + name)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -38,17 +30,12 @@ func GetSprite(name string) (*ebiten.Image, error) {
 		return nil, fmt.Errorf("assets.GetSprite: %w", err)
 	}
 
-	eImg := ebiten.NewImageFromImage(img)
-	spriteCache[name] = eImg
-
-	return eImg, nil
+	return ebiten.NewImageFromImage(img), nil
 }
 
-//go:embed Worlds/*.toml
-var worlds embed.FS
-
 func GetWorld(name string) ([]byte, error) {
-	f, err := worlds.ReadFile(WorldsDir + "/" + name + ".toml")
+	path := path.Join(WorldsDir, name+".toml")
+	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("assets.GetWorld: %w", err)
 	}
@@ -56,11 +43,9 @@ func GetWorld(name string) ([]byte, error) {
 	return f, nil
 }
 
-//go:embed Entities/*.toml
-var entities embed.FS
-
 func GetEntity(name string) ([]byte, error) {
-	f, err := entities.ReadFile(EntitiesDir + "/" + name + ".toml")
+	path := path.Join(EntitiesDir, name+".toml")
+	f, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("assets.GetEntity: %w", err)
 	}

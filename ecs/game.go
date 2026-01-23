@@ -79,7 +79,7 @@ func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig) error 
 			return errors.New("ecs.LoadWorld: entity name is empty")
 		}
 
-		entityData, err := assets.GetEntity("asd")
+		entityData, err := assets.GetEntity(entityCfg.Name)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("ecs.LoadWorld: %w", err)
 		}
