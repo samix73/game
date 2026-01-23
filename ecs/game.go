@@ -2,6 +2,7 @@ package ecs
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"math"
 
@@ -67,11 +68,30 @@ func (g *Game) loadSystems(systemManager *SystemManager, systemCfgs []SystemConf
 	return nil
 }
 
-func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, md toml.MetaData) error {
+func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig) error {
 	for _, entityCfg := range entityCfgs {
 		entity := em.NewEntity()
 
-		for name, args := range entityCfg.Components {
+		if entityCfg.Name == "" {
+			return errors.New("ecs.LoadWorld: entity name is empty")
+		}
+
+		entityData, err := assets.GetEntity(entityCfg.Name)
+		if err != nil {
+			return fmt.Errorf("ecs.LoadWorld: %w", err)
+		}
+
+		components := make(map[string]toml.Primitive)
+		md, err := toml.NewDecoder(bytes.NewReader(entityData)).Decode(&components)
+		if err != nil {
+			return fmt.Errorf("ecs.LoadWorld: %w", err)
+		}
+
+		for name, args := range components {
+			if name == "" {
+				return errors.New("ecs.LoadWorld: component name is empty")
+			}
+
 			component, ok := NewComponent(em, name)
 			if !ok {
 				return fmt.Errorf("ecs.LoadWorld: component %s not found", name)
@@ -93,14 +113,14 @@ func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, md tom
 }
 
 func (g *Game) LoadWorld(path string) (*World, error) {
-	data, err := assets.GetWorld(path + ".toml")
+	data, err := assets.GetWorld(path)
 	if err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
 	var worldConfig WorldConfig
-	md, err := toml.NewDecoder(bytes.NewReader(data)).Decode(&worldConfig)
-	if err != nil {
+
+	if _, err := toml.NewDecoder(bytes.NewReader(data)).Decode(&worldConfig); err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
@@ -111,7 +131,7 @@ func (g *Game) LoadWorld(path string) (*World, error) {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 
-	if err := g.loadEntities(em, worldConfig.Entities, md); err != nil {
+	if err := g.loadEntities(em, worldConfig.Entities); err != nil {
 		return nil, fmt.Errorf("ecs.LoadWorld: %w", err)
 	}
 

@@ -23,8 +23,4 @@ name = "GravitySystem"
 priority = 7
 
 [[entities]]
-name = "Player"
-    [entities.components.Transform]
-    [entities.components.Camera]
-        Zoom = 1.0
-        Bounds = { L = 0, B = 0, R = 800, T = 600 }
+name = "ActiveCamera"

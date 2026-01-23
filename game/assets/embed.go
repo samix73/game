@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	SpritesDir = "Sprites"
-	WorldsDir  = "Worlds"
+	SpritesDir  = "Sprites"
+	WorldsDir   = "Worlds"
+	EntitiesDir = "Entities"
 )
 
 //go:embed Sprites/*
@@ -47,9 +48,21 @@ func GetSprite(name string) (*ebiten.Image, error) {
 var worlds embed.FS
 
 func GetWorld(name string) ([]byte, error) {
-	f, err := worlds.ReadFile(WorldsDir + "/" + name)
+	f, err := worlds.ReadFile(WorldsDir + "/" + name + ".toml")
 	if err != nil {
 		return nil, fmt.Errorf("assets.GetWorld: %w", err)
+	}
+
+	return f, nil
+}
+
+//go:embed Entities/*.toml
+var entities embed.FS
+
+func GetEntity(name string) ([]byte, error) {
+	f, err := entities.ReadFile(EntitiesDir + "/" + name + ".toml")
+	if err != nil {
+		return nil, fmt.Errorf("assets.GetEntity: %w", err)
 	}
 
 	return f, nil

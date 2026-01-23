@@ -1,7 +1,6 @@
 package ecs
 
 import (
-	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -11,8 +10,7 @@ type SystemConfig struct {
 }
 
 type EntityConfig struct {
-	Name       string                    `toml:"name"`
-	Components map[string]toml.Primitive `toml:"components"`
+	Name string `toml:"name"`
 }
 
 type WorldConfig struct {
