@@ -69,18 +69,19 @@ func TestNot(t *testing.T) {
 func TestWhere(t *testing.T) {
 	em := ecs.NewEntityManager()
 
-	camera1Entity := em.NewEntity()
-	camera1, err := ecs.AddComponent[CameraComponent](em, camera1Entity)
+	camera1EntityID, err := em.NewEntity()
+	require.NoError(t, err)
+	camera1, err := ecs.AddComponent[CameraComponent](em, camera1EntityID)
 	require.NoError(t, err)
 	camera1.Zoom = 1.5
 
-	camera2Entity := em.NewEntity()
-	camera2, err := ecs.AddComponent[CameraComponent](em, camera2Entity)
+	camera2EntityID, err := em.NewEntity()
+	camera2, err := ecs.AddComponent[CameraComponent](em, camera2EntityID)
 	require.NoError(t, err)
 	camera2.Zoom = 0.4
 
-	camera3Entity := em.NewEntity()
-	camera3, err := ecs.AddComponent[CameraComponent](em, camera3Entity)
+	camera3EntityID, err := em.NewEntity()
+	camera3, err := ecs.AddComponent[CameraComponent](em, camera3EntityID)
 	require.NoError(t, err)
 	camera3.Zoom = 0.6
 

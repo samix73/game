@@ -7,6 +7,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/samix73/game/ecs"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -44,11 +45,12 @@ func (c *CameraComponent) Reset() {
 func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 	tb.Helper()
 
-	entityID := em.NewEntity()
+	entityID, err := em.NewEntity()
+	require.NoError(tb, err)
 
 	transform, err := ecs.AddComponent[TransformComponent](em, entityID)
-	assert.NotNil(tb, transform)
-	assert.NoError(tb, err)
+	require.NotNil(tb, transform)
+	require.NoError(tb, err)
 
 	return entityID
 }
@@ -56,23 +58,18 @@ func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 func NewCameraEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 	tb.Helper()
 
-	entityID := em.NewEntity()
+	entityID, err := em.NewEntity()
+	require.NoError(tb, err)
 
 	transform, err := ecs.AddComponent[TransformComponent](em, entityID)
-	assert.NotNil(tb, transform)
-	assert.NoError(tb, err)
+	require.NotNil(tb, transform)
+	require.NoError(tb, err)
 
 	camera, err := ecs.AddComponent[CameraComponent](em, entityID)
 	assert.NotNil(tb, camera)
 	assert.NoError(tb, err)
 
 	return entityID
-}
-
-func NewEmptyEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
-	tb.Helper()
-
-	return em.NewEntity()
 }
 
 func TestEntityCreation(t *testing.T) {
@@ -82,7 +79,8 @@ func TestEntityCreation(t *testing.T) {
 	assert.Equal(t, player, ecs.EntityID(1))
 	camera := NewCameraEntity(t, em)
 	assert.Equal(t, camera, ecs.EntityID(2))
-	empty := NewEmptyEntity(t, em)
+	empty, err := em.NewEntity()
+	require.NoError(t, err)
 	assert.Equal(t, empty, ecs.EntityID(3))
 }
 
@@ -133,7 +131,8 @@ func BenchmarkQueryEntities(b *testing.B) {
 	}
 
 	for range 1000 {
-		NewEmptyEntity(b, em)
+		_, err := em.NewEntity()
+		require.NoError(b, err)
 	}
 
 	b.Run("Query Only", func(b *testing.B) {

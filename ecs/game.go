@@ -123,9 +123,12 @@ func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, worldM
 			componentsByName[componentName] = component
 		}
 
-		entity := em.NewEntity()
+		entityID, err := em.NewEntity()
+		if err != nil {
+			return fmt.Errorf("ecs.Game.loadEntities: %w", err)
+		}
 		for _, component := range componentsByName {
-			if err := em.AddComponent(entity, component); err != nil {
+			if err := em.AddComponent(entityID, component); err != nil {
 				return fmt.Errorf("ecs.Game.loadEntities: %w", err)
 			}
 		}

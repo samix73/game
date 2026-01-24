@@ -1,7 +1,6 @@
 package ecs
 
 import (
-	"fmt"
 	"log/slog"
 	"reflect"
 )
@@ -9,6 +8,8 @@ import (
 type (
 	SystemCtor[S System] func(priority int) S
 )
+
+const maxComponents = 64
 
 var (
 	systemsRegistry    = make(map[string]SystemCtor[System])
@@ -54,7 +55,7 @@ func RegisterComponent[T any]() {
 	// Assign a unique bit position for bitmask filtering
 	componentType := reflect.TypeFor[T]()
 	if _, exists := componentTypeBits[componentType]; !exists {
-		if nextComponentBit < 64 {
+		if nextComponentBit < maxComponents {
 			componentTypeBits[componentType] = nextComponentBit
 			nextComponentBit++
 		} else {
@@ -90,17 +91,39 @@ func GetSystem(name string) (SystemCtor[System], bool) {
 	return ctor, true
 }
 
-// getComponentBitmask computes a bitmask from component types for fast signature matching.
-func getComponentBitmask(componentTypes []reflect.Type) uint64 {
+// getComponentsBitmask computes a bitmask from component types for fast signature matching.
+func getComponentsBitmask(componentTypes []archetypeComponentSignature) (uint64, bool) {
 	var mask uint64
 	for _, ct := range componentTypes {
-		bitPos, exists := componentTypeBits[ct]
-		if !exists {
-			// Component not registered - this shouldn't happen in normal operation
-			panic(fmt.Sprintf("component type %s not registered, call RegisterComponent first", ct.Name()))
+		bitPos := ct.bit
+		if bitPos == 0 {
+			var ok bool
+			bitPos, ok = getComponentBit(ct.typ)
+			if !ok {
+				return 0, false
+			}
 		}
+
 		mask |= (1 << bitPos)
 	}
 
-	return mask
+	return mask, true
+}
+
+func getComponentBit(componentType reflect.Type) (uint, bool) {
+	bitPos, exists := componentTypeBits[componentType]
+	return bitPos, exists
+}
+
+func ComponentsBitMask(head reflect.Type, tail ...reflect.Type) (uint64, bool) {
+	componentSignature := make([]archetypeComponentSignature, 1+len(tail))
+	componentSignature[0].typ = head
+	for i := range tail {
+		componentSignature[i+1].typ = tail[i]
+	}
+	return getComponentsBitmask(componentSignature)
+}
+
+func ComponentBit[T any]() (uint, bool) {
+	return getComponentBit(reflect.TypeFor[T]())
 }

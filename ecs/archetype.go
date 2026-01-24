@@ -11,35 +11,51 @@ type Component interface {
 	Init()
 }
 
-// Archetype represents a group of entities with the same component signature.
-type Archetype struct {
-	signature     []reflect.Type
-	signatureMask uint64 // Bitmask for fast signature comparison
-	entities      []EntityID
-	components    map[reflect.Type][]any // Component type -> slice of component data
-	entityLookup  map[EntityID]int       // Entity ID -> index in entities array
+type archetypeComponentSignature struct {
+	typ reflect.Type
+	bit uint // Pre-calculated bit positions for signature
 }
 
-func NewArchetype(signature []reflect.Type, signatureMask uint64) *Archetype {
-	arch := &Archetype{
+// Archetype represents a group of entities with the same component signature.
+type Archetype struct {
+	signature     []archetypeComponentSignature
+	signatureMask uint64 // Bitmask for fast signature comparison
+	entities      []EntityID
+	components    [][]any          // Indexed by component bit position
+	entityLookup  map[EntityID]int // Entity ID -> index in entities array
+}
+
+func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask uint64) (*Archetype, error) {
+	signature := make([]archetypeComponentSignature, len(componentTypes))
+	for i, compType := range componentTypes {
+		if compType.bit == 0 {
+			var exists bool
+			compType.bit, exists = getComponentBit(compType.typ)
+			if !exists {
+				return nil, fmt.Errorf("component type %s not registered, call RegisterComponent first", compType.typ.Name())
+			}
+		}
+
+		signature[i] = compType
+	}
+
+	return &Archetype{
 		signature:     signature,
 		signatureMask: signatureMask,
 		entities:      make([]EntityID, 0, 64),
-		components:    make(map[reflect.Type][]any),
+		components:    make([][]any, maxComponents), // Support up to 64 components
 		entityLookup:  make(map[EntityID]int),
-	}
+	}, nil
+}
 
-	for _, compType := range signature {
-		arch.components[compType] = make([]any, 0, 64)
-	}
-
-	return arch
+func (a *Archetype) Signature() []archetypeComponentSignature {
+	return a.signature
 }
 
 // AddEntity adds an entity with its component data to the archetype.
-func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type]any) {
+func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type]any) error {
 	if _, exists := a.entityLookup[entityID]; exists {
-		return
+		return fmt.Errorf("entity %d already exists in archetype", entityID)
 	}
 
 	index := len(a.entities)
@@ -47,13 +63,17 @@ func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type
 	a.entityLookup[entityID] = index
 
 	for _, componentType := range a.signature {
-		componentData, exists := componentsData[componentType]
+		typ := componentType.typ
+		componentData, exists := componentsData[typ]
 		if !exists {
-			panic(fmt.Sprintf("Component of type %s not provided for entity %d", componentType.Name(), entityID))
+			return fmt.Errorf("Component of type %s not provided for entity %d", typ.Name(), entityID)
 		}
 
-		a.components[componentType] = append(a.components[componentType], componentData)
+		bitPos := componentType.bit
+		a.components[bitPos] = append(a.components[bitPos], componentData)
 	}
+
+	return nil
 }
 
 // RemoveEntity removes an entity and its component data from the archetype.
@@ -66,8 +86,9 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 	// Extract component data before removal
 	componentData := make(map[reflect.Type]any)
 	for _, componentType := range a.signature {
-		component := a.components[componentType][index]
-		componentData[componentType] = component
+		bitPos := componentType.bit
+		component := a.components[bitPos][index]
+		componentData[componentType.typ] = component
 	}
 
 	// Swap-and-pop removal
@@ -78,13 +99,13 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 		a.entityLookup[lastEntityID] = index
 
 		for _, componentType := range a.signature {
-			a.components[componentType][index] = a.components[componentType][lastIndex]
+			a.components[componentType.bit][index] = a.components[componentType.bit][lastIndex]
 		}
 	}
 
 	a.entities = a.entities[:lastIndex]
 	for _, componentType := range a.signature {
-		a.components[componentType] = a.components[componentType][:lastIndex]
+		a.components[componentType.bit] = a.components[componentType.bit][:lastIndex]
 	}
 
 	delete(a.entityLookup, entityID)
@@ -93,22 +114,34 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 }
 
 func (a *Archetype) GetComponent(entityID EntityID, componentType reflect.Type) (any, bool) {
+	bitPos, exists := getComponentBit(componentType)
+	if !exists {
+		return nil, false
+	}
+
+	return a.GetComponentByBit(entityID, bitPos)
+}
+
+func (a *Archetype) GetComponentByBit(entityID EntityID, bitPos uint) (any, bool) {
 	index, exists := a.entityLookup[entityID]
 	if !exists {
 		return nil, false
 	}
 
-	components, exists := a.components[componentType]
-	if !exists {
+	if (a.signatureMask & (1 << bitPos)) == 0 {
 		return nil, false
 	}
 
-	return components[index], true
+	return a.components[bitPos][index], true
 }
 
-func (a *Archetype) HasComponent(componentTpe reflect.Type) bool {
-	_, exists := a.components[componentTpe]
-	return exists
+func (a *Archetype) HasComponent(componentType reflect.Type) bool {
+	bitPos, exists := getComponentBit(componentType)
+	if !exists {
+		return false
+	}
+
+	return (a.signatureMask & (1 << bitPos)) != 0
 }
 
 // MatchesQuery checks if the archetype matches a query based on component signatures.
