@@ -92,8 +92,8 @@ func GetSystem(name string) (SystemCtor[System], bool) {
 }
 
 // getComponentsBitmask computes a bitmask from component types for fast signature matching.
-func getComponentsBitmask(componentTypes []archetypeComponentSignature) (uint64, bool) {
-	var mask uint64
+func getComponentsBitmask(componentTypes []archetypeComponentSignature) (Bitmask, bool) {
+	var mask Bitmask
 	for _, ct := range componentTypes {
 		bitPos := ct.bit
 		if bitPos == 0 {
@@ -104,7 +104,7 @@ func getComponentsBitmask(componentTypes []archetypeComponentSignature) (uint64,
 			}
 		}
 
-		mask |= (1 << bitPos)
+		mask.SetFlag(bitPos)
 	}
 
 	return mask, true
@@ -115,7 +115,7 @@ func getComponentBit(componentType reflect.Type) (uint, bool) {
 	return bitPos, exists
 }
 
-func ComponentsBitMask(head reflect.Type, tail ...reflect.Type) (uint64, bool) {
+func ComponentsBitMask(head reflect.Type, tail ...reflect.Type) (Bitmask, bool) {
 	componentSignature := make([]archetypeComponentSignature, 1+len(tail))
 	componentSignature[0].typ = head
 	for i := range tail {

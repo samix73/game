@@ -19,13 +19,13 @@ type archetypeComponentSignature struct {
 // Archetype represents a group of entities with the same component signature.
 type Archetype struct {
 	signature     []archetypeComponentSignature
-	signatureMask uint64 // Bitmask for fast signature comparison
+	signatureMask Bitmask // Bitmask for fast signature comparison
 	entities      []EntityID
-	components    [][]any          // Indexed by component bit position
+	components    map[uint][]any   // Indexed by component bit position
 	entityLookup  map[EntityID]int // Entity ID -> index in entities array
 }
 
-func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask uint64) (*Archetype, error) {
+func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask Bitmask) (*Archetype, error) {
 	signature := make([]archetypeComponentSignature, len(componentTypes))
 	for i, compType := range componentTypes {
 		if compType.bit == 0 {
@@ -43,7 +43,7 @@ func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask ui
 		signature:     signature,
 		signatureMask: signatureMask,
 		entities:      make([]EntityID, 0, 64),
-		components:    make([][]any, maxComponents), // Support up to 64 components
+		components:    make(map[uint][]any), // Support up to 64 components
 		entityLookup:  make(map[EntityID]int),
 	}, nil
 }
@@ -128,7 +128,7 @@ func (a *Archetype) GetComponentByBit(entityID EntityID, bitPos uint) (any, bool
 		return nil, false
 	}
 
-	if (a.signatureMask & (1 << bitPos)) == 0 {
+	if !a.signatureMask.HasFlag(bitPos) {
 		return nil, false
 	}
 
@@ -141,13 +141,13 @@ func (a *Archetype) HasComponent(componentType reflect.Type) bool {
 		return false
 	}
 
-	return (a.signatureMask & (1 << bitPos)) != 0
+	return a.signatureMask.HasFlag(bitPos)
 }
 
 // MatchesQuery checks if the archetype matches a query based on component signatures.
-func (a *Archetype) MatchesQuery(queryMask uint64) bool {
+func (a *Archetype) MatchesQuery(queryMask Bitmask) bool {
 	// Subset match: Archetype must have at least all components in queryMask
-	return (a.signatureMask & queryMask) == queryMask
+	return a.signatureMask.HasFlags(queryMask)
 }
 
 func (a *Archetype) Entities() iter.Seq[EntityID] {
@@ -165,6 +165,6 @@ func (a *Archetype) Count() int {
 }
 
 // SignatureMatches checks if two signatures are identical
-func (a *Archetype) SignatureMatches(queryMask uint64) bool {
+func (a *Archetype) SignatureMatches(queryMask Bitmask) bool {
 	return a.signatureMask == queryMask
 }

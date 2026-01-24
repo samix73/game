@@ -156,7 +156,7 @@ func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) e
 	return nil
 }
 
-func (em *EntityManager) Query(queryMask uint64) iter.Seq[EntityID] {
+func (em *EntityManager) Query(queryMask Bitmask) iter.Seq[EntityID] {
 	return func(yield func(EntityID) bool) {
 		for _, archetype := range em.archetypes {
 			if !archetype.MatchesQuery(queryMask) {
@@ -300,25 +300,32 @@ func Query[C any](em *EntityManager) iter.Seq[EntityID] {
 		return func(yield func(EntityID) bool) {}
 	}
 
-	return em.Query(uint64(queryMask))
+	return em.Query(queryMask)
 }
 
 func Query2[C1, C2 any](em *EntityManager) iter.Seq[EntityID] {
-	queryMask, ok := ComponentsBitMask(reflect.TypeFor[C1](), reflect.TypeFor[C2]())
+	queryMask, ok := ComponentsBitMask(
+		reflect.TypeFor[C1](),
+		reflect.TypeFor[C2](),
+	)
 	if !ok {
 		return func(yield func(EntityID) bool) {}
 	}
 
-	return em.Query(uint64(queryMask))
+	return em.Query(queryMask)
 }
 
 func Query3[C1, C2, C3 any](em *EntityManager) iter.Seq[EntityID] {
-	queryMask, ok := ComponentsBitMask(reflect.TypeFor[C1](), reflect.TypeFor[C2](), reflect.TypeFor[C3]())
+	queryMask, ok := ComponentsBitMask(
+		reflect.TypeFor[C1](),
+		reflect.TypeFor[C2](),
+		reflect.TypeFor[C3](),
+	)
 	if !ok {
 		return func(yield func(EntityID) bool) {}
 	}
 
-	return em.Query(uint64(queryMask))
+	return em.Query(queryMask)
 }
 
 func HasComponent[C any](em *EntityManager, entityID EntityID) bool {
