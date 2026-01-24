@@ -1,27 +1,32 @@
 name = "main_world"
 
 [[systems]]
-name = "CameraSystem"
-priority = 1
+name = "PauseSystem"
+priority = 0
+# [[systems]]
+# name = "PlayerSystem"
+# priority = 1
 [[systems]]
-name = "PhysicsSystem"
+name = "GravitySystem"
 priority = 2
 [[systems]]
-name = "PauseSystem"
+name = "PhysicsSystem"
 priority = 3
 [[systems]]
-name = "TileSystem"
+name = "CollisionSystem"
 priority = 4
 [[systems]]
 name = "CollisionResolverSystem"
 priority = 5
 [[systems]]
-name = "CollisionSystem"
+name = "CameraSystem"
 priority = 6
+# [[systems]]
+# name = "RestartSystem"
+# priority = 7
 [[systems]]
-name = "GravitySystem"
-priority = 7
+name = "LevelGenSystem"
+priority = 8
 
 [[entities]]
 name = "ActiveCamera"
-

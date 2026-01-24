@@ -1,7 +1,13 @@
 package systems
 
 import (
+	"fmt"
+	"math/rand/v2"
+	"slices"
+
+	"github.com/jakecoffman/cp"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game/components"
 )
 
 const (
@@ -33,117 +39,121 @@ func NewLevelGenSystem(priority int) *LevelGenSystem {
 	}
 }
 
-// func (l *LevelGenSystem) addObstacle(entityManager *ecs.EntityManager, position cp.Vector, height int) error {
-// 	colors := []string{"red", "yellow", "blue", "green"}
-// 	if _, err := entities.NewObstacleEntity(
-// 		entityManager,
-// 		colors[rand.IntN(len(colors))],
-// 		height,
-// 		position,
-// 	); err != nil {
-// 		return fmt.Errorf("error creating obstacle entity: %w", err)
-// 	}
+func (l *LevelGenSystem) addObstacle(entityManager *ecs.EntityManager, position cp.Vector, height int) error {
+	if _, err := entityManager.LoadEntity("Obstacle"); err != nil {
+		return fmt.Errorf("error loading obstacle entity: %w", err)
+	}
 
-// 	return nil
-// }
+	// colors := []string{"red", "yellow", "blue", "green"}
+	// if _, err := entities.NewObstacleEntity(
+	// 	entityManager,
+	// 	colors[rand.IntN(len(colors))],
+	// 	height,
+	// 	position,
+	// ); err != nil {
+	// 	return fmt.Errorf("error creating obstacle entity: %w", err)
+	// }
 
-// func (l *LevelGenSystem) obstacleHeight(min, max int) int {
-// 	return rand.IntN(max-min) + min
-// }
+	return nil
+}
 
-// func (l *LevelGenSystem) obstacleOffset(cameraBounds cp.BB, height int) float64 {
-// 	return (cameraBounds.Dy() - float64(height*obstacleBlockSize)) * 0.5
-// }
+func (l *LevelGenSystem) obstacleHeight(min, max int) int {
+	return rand.IntN(max-min) + min
+}
+
+func (l *LevelGenSystem) obstacleOffset(cameraBounds cp.BB, height int) float64 {
+	return (cameraBounds.Dy() - float64(height*obstacleBlockSize)) * 0.5
+}
 
 func (l *LevelGenSystem) Update() error {
-	// em := l.EntityManager()
+	em := l.EntityManager()
 
-	// camera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
-	// if !ok {
-	// 	return nil
-	// }
+	camera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
+	if !ok {
+		return nil
+	}
 
-	// cameraComponent := ecs.MustGetComponent[components.Camera](em, camera)
-	// cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
+	cameraComponent := ecs.MustGetComponent[components.Camera](em, camera)
+	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
 
-	// player, ok := ecs.First(ecs.Query[components.Player](em))
-	// if !ok {
-	// 	return nil
-	// }
+	player, ok := ecs.First(ecs.Query[components.Player](em))
+	if !ok {
+		return nil
+	}
 
-	// playerTransform := ecs.MustGetComponent[components.Transform](em, player)
+	playerTransform := ecs.MustGetComponent[components.Transform](em, player)
 
-	// cameraLeft := cameraTransform.Position.X - cameraComponent.Bounds.L
+	cameraLeft := cameraTransform.Position.X - cameraComponent.Bounds.L
 
-	// type comingObstacle struct {
-	// 	id        ecs.EntityID
-	// 	transform *components.Transform
-	// }
+	type comingObstacle struct {
+		id        ecs.EntityID
+		transform *components.Transform
+	}
 
-	// comingObstacles := make([]comingObstacle, 0)
+	comingObstacles := make([]comingObstacle, 0)
 
-	// for entity := range ecs.Query[components.Obstacle](em) {
-	// 	obstacleTransform := ecs.MustGetComponent[components.Transform](em, entity)
+	for entity := range ecs.Query[components.Obstacle](em) {
+		obstacleTransform := ecs.MustGetComponent[components.Transform](em, entity)
 
-	// 	if obstacleTransform.Position.X < cameraLeft {
-	// 		em.Remove(entity)
-	// 	}
+		if obstacleTransform.Position.X < cameraLeft {
+			em.Remove(entity)
+		}
 
-	// 	if obstacleTransform.Position.X > playerTransform.Position.X {
-	// 		comingObstacles = append(comingObstacles, comingObstacle{
-	// 			id:        entity,
-	// 			transform: obstacleTransform,
-	// 		})
-	// 	}
+		if obstacleTransform.Position.X > playerTransform.Position.X {
+			comingObstacles = append(comingObstacles, comingObstacle{
+				id:        entity,
+				transform: obstacleTransform,
+			})
+		}
 
-	// 	if len(comingObstacles) > maxComingObstacles {
-	// 		return nil
-	// 	}
-	// }
+		if len(comingObstacles) > maxComingObstacles {
+			return nil
+		}
+	}
 
-	// var furthestDistance float64
+	var furthestDistance float64
 
-	// if len(comingObstacles) > 0 {
-	// 	furthest := slices.MaxFunc(comingObstacles, func(a, b comingObstacle) int {
-	// 		return int(a.transform.Position.X - b.transform.Position.X)
-	// 	})
+	if len(comingObstacles) > 0 {
+		furthest := slices.MaxFunc(comingObstacles, func(a, b comingObstacle) int {
+			return int(a.transform.Position.X - b.transform.Position.X)
+		})
 
-	// 	furthestDistance = furthest.transform.Position.X
-	// }
+		furthestDistance = furthest.transform.Position.X
+	}
 
-	// spacing := rand.Float64()*(maxObstacleSpacing-minObstacleSpacing) + minObstacleSpacing
-	// xPosition := furthestDistance + spacing
+	spacing := rand.Float64()*(maxObstacleSpacing-minObstacleSpacing) + minObstacleSpacing
+	xPosition := furthestDistance + spacing
 
-	// // Top obstacle
-	// if rand.Float64() < topObstacleSpawnChance {
-	// 	height := l.obstacleHeight(topMinObstacleHeight, topMaxObstacleHeight)
+	// Top obstacle
+	if rand.Float64() < topObstacleSpawnChance {
+		height := l.obstacleHeight(topMinObstacleHeight, topMaxObstacleHeight)
 
-	// 	if err := l.addObstacle(em,
-	// 		cp.Vector{
-	// 			X: xPosition,
-	// 			Y: l.obstacleOffset(cameraComponent.Bounds, height),
-	// 		},
-	// 		height,
-	// 	); err != nil {
-	// 		return fmt.Errorf("error adding obstacle: %w", err)
-	// 	}
+		if err := l.addObstacle(em,
+			cp.Vector{
+				X: xPosition,
+				Y: l.obstacleOffset(cameraComponent.Bounds, height),
+			},
+			height,
+		); err != nil {
+			return fmt.Errorf("error adding obstacle: %w", err)
+		}
 
-	// }
+	}
 
-	// // Bottom obstacle
-	// if rand.Float64() < bottomObstacleSpawnChance {
-	// 	height := l.obstacleHeight(botMinObstacleHeight, botMaxObstacleHeight)
+	// Bottom obstacle
+	if rand.Float64() < bottomObstacleSpawnChance {
+		height := l.obstacleHeight(botMinObstacleHeight, botMaxObstacleHeight)
 
-	// 	if err := l.addObstacle(em,
-	// 		cp.Vector{
-	// 			X: xPosition,
-	// 			Y: -l.obstacleOffset(cameraComponent.Bounds, height),
-	// 		},
-	// 		height,
-	// 	); err != nil {
-	// 		return fmt.Errorf("error adding obstacle: %w", err)
-	// 	}
-	// }
+		if err := l.addObstacle(em,
+			cp.Vector{
+				X: xPosition,
+				Y: -l.obstacleOffset(cameraComponent.Bounds, height),
+			},
+			height,
+		); err != nil {
+			return fmt.Errorf("error adding obstacle: %w", err)
+		}
+	}
 
 	return nil
 }
