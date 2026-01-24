@@ -241,7 +241,7 @@ func (em *EntityManager) Teardown() {
 	em.componentPools = nil
 }
 
-func AddComponent[C any](em *EntityManager, entityID EntityID) *C {
+func AddComponent[C any](em *EntityManager, entityID EntityID) (*C, error) {
 	componentType := reflect.TypeFor[C]()
 	pool := em.getOrCreatePool(componentType, func() any {
 		return new(C)
@@ -255,10 +255,10 @@ func AddComponent[C any](em *EntityManager, entityID EntityID) *C {
 			slog.Any("error", err),
 		)
 
-		return nil
+		return nil, fmt.Errorf("ecs.AddComponent: failed to add component: %w", err)
 	}
 
-	return component
+	return component, nil
 }
 
 func RemoveComponent[C any](em *EntityManager, entityID EntityID) {

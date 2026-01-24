@@ -46,8 +46,9 @@ func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 
 	entityID := em.NewEntity()
 
-	transform := ecs.AddComponent[TransformComponent](em, entityID)
+	transform, err := ecs.AddComponent[TransformComponent](em, entityID)
 	assert.NotNil(tb, transform)
+	assert.NoError(tb, err)
 
 	return entityID
 }
@@ -57,14 +58,13 @@ func NewCameraEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 
 	entityID := em.NewEntity()
 
-	transform := ecs.AddComponent[TransformComponent](em, entityID)
-	if _, ok := tb.(*testing.B); !ok {
-		assert.NotNil(tb, transform)
-	}
-	camera := ecs.AddComponent[CameraComponent](em, entityID)
-	if _, ok := tb.(*testing.B); !ok {
-		assert.NotNil(tb, camera)
-	}
+	transform, err := ecs.AddComponent[TransformComponent](em, entityID)
+	assert.NotNil(tb, transform)
+	assert.NoError(tb, err)
+
+	camera, err := ecs.AddComponent[CameraComponent](em, entityID)
+	assert.NotNil(tb, camera)
+	assert.NoError(tb, err)
 
 	return entityID
 }

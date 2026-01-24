@@ -5,6 +5,7 @@ import (
 
 	"github.com/samix73/game/ecs"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func highZoomFilter(c *CameraComponent) bool {
@@ -69,15 +70,18 @@ func TestWhere(t *testing.T) {
 	em := ecs.NewEntityManager()
 
 	camera1Entity := em.NewEntity()
-	camera1 := ecs.AddComponent[CameraComponent](em, camera1Entity)
+	camera1, err := ecs.AddComponent[CameraComponent](em, camera1Entity)
+	require.NoError(t, err)
 	camera1.Zoom = 1.5
 
 	camera2Entity := em.NewEntity()
-	camera2 := ecs.AddComponent[CameraComponent](em, camera2Entity)
+	camera2, err := ecs.AddComponent[CameraComponent](em, camera2Entity)
+	require.NoError(t, err)
 	camera2.Zoom = 0.4
 
 	camera3Entity := em.NewEntity()
-	camera3 := ecs.AddComponent[CameraComponent](em, camera3Entity)
+	camera3, err := ecs.AddComponent[CameraComponent](em, camera3Entity)
+	require.NoError(t, err)
 	camera3.Zoom = 0.6
 
 	cameras := ecs.Where(em, ecs.Query[CameraComponent](em), ecs.And(highZoomFilter, lowZoomFilter))
