@@ -4,23 +4,28 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/jakecoffman/cp"
 	"github.com/samix73/game/ecs"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/image/math/f64"
 )
 
+func init() {
+	ecs.RegisterComponent[TransformComponent]()
+	ecs.RegisterComponent[CameraComponent]()
+}
+
 type TransformComponent struct {
-	Position f64.Vec2
+	Position cp.Vector
 	Rotation float64
 }
 
 func (t *TransformComponent) Init() {
-	t.Position = f64.Vec2{0, 0}
+	t.Position = cp.Vector{X: 0, Y: 0}
 	t.Rotation = 0
 }
 
 func (t *TransformComponent) Reset() {
-	t.Position = f64.Vec2{0, 0}
+	t.Position = cp.Vector{X: 0, Y: 0}
 	t.Rotation = 0
 }
 
@@ -79,6 +84,40 @@ func TestEntityCreation(t *testing.T) {
 	assert.Equal(t, camera, ecs.EntityID(2))
 	empty := NewEmptyEntity(t, em)
 	assert.Equal(t, empty, ecs.EntityID(3))
+}
+
+func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
+	em := ecs.NewEntityManager()
+
+	// Create an entity with both Transform and Camera components
+	entityID := NewCameraEntity(t, em)
+
+	// Query for only Transform component (entity has both Transform and Camera)
+	transformEntities := slices.Collect(ecs.Query[TransformComponent](em))
+
+	// Entity should be found when querying for just Transform, even though it also has Camera
+	assert.Contains(t, transformEntities, entityID, "Entity with Transform+Camera should be found when querying for just Transform")
+	assert.Equal(t, 1, len(transformEntities), "Should find exactly 1 entity with Transform component")
+
+	// Query for both components
+	bothComponents := slices.Collect(ecs.Query2[TransformComponent, CameraComponent](em))
+	assert.Contains(t, bothComponents, entityID, "Entity should be found when querying for both components")
+	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
+
+	// Create an entity with only Transform
+	playerID := NewPlayerEntity(t, em)
+
+	// Query for Transform should now return both entities
+	transformEntities = slices.Collect(ecs.Query[TransformComponent](em))
+	assert.Contains(t, transformEntities, entityID, "Camera entity should still be in Transform query")
+	assert.Contains(t, transformEntities, playerID, "Player entity should be in Transform query")
+	assert.Equal(t, 2, len(transformEntities), "Should find 2 entities with Transform component")
+
+	// Query for both components should only return the camera entity
+	bothComponents = slices.Collect(ecs.Query2[TransformComponent, CameraComponent](em))
+	assert.Contains(t, bothComponents, entityID, "Only camera entity has both components")
+	assert.NotContains(t, bothComponents, playerID, "Player entity should not be in query for both components")
+	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
 }
 
 func BenchmarkQueryEntities(b *testing.B) {

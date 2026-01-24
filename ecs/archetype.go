@@ -14,10 +14,11 @@ type Component interface {
 
 // Archetype represents a group of entities with the same component signature.
 type Archetype struct {
-	signature    []reflect.Type
-	entities     []EntityID
-	components   map[reflect.Type][]any // Component type -> slice of component data
-	entityLookup map[EntityID]int       // Entity ID -> index in entities array
+	signature     []reflect.Type
+	signatureMask uint64 // Bitmask for fast signature comparison
+	entities      []EntityID
+	components    map[reflect.Type][]any // Component type -> slice of component data
+	entityLookup  map[EntityID]int       // Entity ID -> index in entities array
 }
 
 func NewArchetype(componentTypes []reflect.Type) *Archetype {
@@ -27,11 +28,15 @@ func NewArchetype(componentTypes []reflect.Type) *Archetype {
 		return signature[i].String() < signature[j].String()
 	})
 
+	// Compute signature bitmask for fast comparison
+	signatureMask := getComponentBitmask(signature)
+
 	arch := &Archetype{
-		signature:    signature,
-		entities:     make([]EntityID, 0, 64),
-		components:   make(map[reflect.Type][]any),
-		entityLookup: make(map[EntityID]int),
+		signature:     signature,
+		signatureMask: signatureMask,
+		entities:      make([]EntityID, 0, 64),
+		components:    make(map[reflect.Type][]any),
+		entityLookup:  make(map[EntityID]int),
 	}
 
 	for _, compType := range signature {
@@ -146,17 +151,6 @@ func (a *Archetype) SignatureMatches(componentTypes []reflect.Type) bool {
 		return false
 	}
 
-	sorted := make([]reflect.Type, len(componentTypes))
-	copy(sorted, componentTypes)
-	sort.Slice(sorted, func(i, j int) bool {
-		return sorted[i].String() < sorted[j].String()
-	})
-
-	for i := range a.signature {
-		if a.signature[i] != sorted[i] {
-			return false
-		}
-	}
-
-	return true
+	queryMask := getComponentBitmask(componentTypes)
+	return a.signatureMask == queryMask
 }

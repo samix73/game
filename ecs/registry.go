@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"fmt"
 	"log/slog"
 	"reflect"
 )
@@ -12,6 +13,8 @@ type (
 var (
 	systemsRegistry    = make(map[string]SystemCtor[System])
 	componentsRegistry = make(map[string]any)
+	componentTypeBits  = make(map[reflect.Type]uint)
+	nextComponentBit   uint
 )
 
 func getName[S any]() string {
@@ -48,6 +51,18 @@ func RegisterComponent[T any]() {
 
 	componentsRegistry[name] = *new(T)
 
+	// Assign a unique bit position for bitmask filtering
+	componentType := reflect.TypeFor[T]()
+	if _, exists := componentTypeBits[componentType]; !exists {
+		if nextComponentBit < 64 {
+			componentTypeBits[componentType] = nextComponentBit
+			nextComponentBit++
+		} else {
+			slog.Warn("ecs.RegisterComponent: exceeded 64 component types, bitmask optimization disabled for new components",
+				slog.String("name", name))
+		}
+	}
+
 	slog.Debug("ecs.RegisterComponent: registered component", slog.String("name", name))
 }
 
@@ -73,4 +88,19 @@ func GetSystem(name string) (SystemCtor[System], bool) {
 	}
 
 	return ctor, true
+}
+
+// getComponentBitmask computes a bitmask from component types for fast signature matching.
+func getComponentBitmask(componentTypes []reflect.Type) uint64 {
+	var mask uint64
+	for _, ct := range componentTypes {
+		bitPos, exists := componentTypeBits[ct]
+		if !exists {
+			// Component not registered - this shouldn't happen in normal operation
+			panic(fmt.Sprintf("component type %s not registered, call RegisterComponent first", ct.Name()))
+		}
+		mask |= (1 << bitPos)
+	}
+
+	return mask
 }
