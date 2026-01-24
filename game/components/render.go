@@ -1,8 +1,11 @@
 package components
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/ecs"
+	"github.com/samix73/game/game/assets"
 )
 
 func init() {
@@ -12,9 +15,28 @@ func init() {
 
 // Renderable represents a 2D entity that can be rendered on the screen.
 type Renderable struct {
-	Sprite *ebiten.Image
-	GeoM   ebiten.GeoM
-	Order  int // Rendering order; lower values are rendered first
+	Order      int // Rendering order; lower values are rendered first
+	SpritePath string
+	Sprite     *ebiten.Image `toml:"-"`
+	GeoM       ebiten.GeoM   `toml:"-"`
+}
+
+func (r *Renderable) UnmarshalTOML(data any) error {
+	d, ok := data.(map[string]any)
+	if !ok {
+		return fmt.Errorf("failed to decode renderable: expected map[string]any, got %T", data)
+	}
+
+	r.SpritePath = d["SpritePath"].(string)
+	r.Order = int(d["Order"].(int64))
+
+	var err error
+	r.Sprite, err = assets.GetSprite(r.SpritePath)
+	if err != nil {
+		return fmt.Errorf("failed to decode renderable: %w", err)
+	}
+
+	return nil
 }
 
 func (r *Renderable) Reset() {
