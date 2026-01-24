@@ -1,0 +1,28 @@
+[Player]
+
+[Transform]
+[Transform.Position]
+X = 100.0
+Y = 0.0
+Rotation = 0.0
+
+[RigidBody]
+Mass = 1.0
+Gravity = true
+[RigidBody.Velocity]
+X = 150.0
+Y = 0.0
+
+[Collider]
+[Collider.Bounds]
+L = -17.0
+B = -12.0
+R = 17.0
+T = 12.0
+
+[Renderable]
+SpritePath = "biog.png"
+Order = 10
+
+[Score]
+Distance = 0.0
