@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
-	"sort"
 )
 
 type Component interface {
@@ -21,16 +20,7 @@ type Archetype struct {
 	entityLookup  map[EntityID]int       // Entity ID -> index in entities array
 }
 
-func NewArchetype(componentTypes []reflect.Type) *Archetype {
-	signature := make([]reflect.Type, len(componentTypes))
-	copy(signature, componentTypes)
-	sort.Slice(signature, func(i, j int) bool {
-		return signature[i].String() < signature[j].String()
-	})
-
-	// Compute signature bitmask for fast comparison
-	signatureMask := getComponentBitmask(signature)
-
+func NewArchetype(signature []reflect.Type, signatureMask uint64) *Archetype {
 	arch := &Archetype{
 		signature:     signature,
 		signatureMask: signatureMask,
@@ -121,14 +111,10 @@ func (a *Archetype) HasComponent(componentTpe reflect.Type) bool {
 	return exists
 }
 
-func (a *Archetype) MatchesQuery(componentTypes []reflect.Type) bool {
-	// Check if archetype has all required component types
-	for _, required := range componentTypes {
-		if !a.HasComponent(required) {
-			return false
-		}
-	}
-	return true
+// MatchesQuery checks if the archetype matches a query based on component signatures.
+func (a *Archetype) MatchesQuery(queryMask uint64) bool {
+	// Subset match: Archetype must have at least all components in queryMask
+	return (a.signatureMask & queryMask) == queryMask
 }
 
 func (a *Archetype) Entities() iter.Seq[EntityID] {
@@ -146,11 +132,6 @@ func (a *Archetype) Count() int {
 }
 
 // SignatureMatches checks if two signatures are identical
-func (a *Archetype) SignatureMatches(componentTypes []reflect.Type) bool {
-	if len(a.signature) != len(componentTypes) {
-		return false
-	}
-
-	queryMask := getComponentBitmask(componentTypes)
+func (a *Archetype) SignatureMatches(queryMask uint64) bool {
 	return a.signatureMask == queryMask
 }

@@ -43,13 +43,15 @@ func (em *EntityManager) NewEntity() EntityID {
 }
 
 func (em *EntityManager) getOrCreateArchetype(componentTypes []reflect.Type) *Archetype {
+	signatureMask := getComponentBitmask(componentTypes)
+
 	for _, arch := range em.archetypes {
-		if arch.SignatureMatches(componentTypes) {
+		if arch.SignatureMatches(signatureMask) {
 			return arch
 		}
 	}
 
-	archetype := NewArchetype(componentTypes)
+	archetype := NewArchetype(componentTypes, signatureMask)
 	em.archetypes = append(em.archetypes, archetype)
 
 	return archetype
@@ -144,9 +146,11 @@ func (em *EntityManager) Query(componentTypes ...any) iter.Seq[EntityID] {
 		reflectTypes[i] = reflect.TypeOf(ct)
 	}
 
+	queryMask := getComponentBitmask(reflectTypes)
+
 	return func(yield func(EntityID) bool) {
 		for _, archetype := range em.archetypes {
-			if !archetype.MatchesQuery(reflectTypes) {
+			if !archetype.MatchesQuery(queryMask) {
 				continue
 			}
 
