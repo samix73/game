@@ -76,11 +76,13 @@ func TestWhere(t *testing.T) {
 	camera1.Zoom = 1.5
 
 	camera2EntityID, err := em.NewEntity()
+	require.NoError(t, err)
 	camera2, err := ecs.AddComponent[CameraComponent](em, camera2EntityID)
 	require.NoError(t, err)
 	camera2.Zoom = 0.4
 
 	camera3EntityID, err := em.NewEntity()
+	require.NoError(t, err)
 	camera3, err := ecs.AddComponent[CameraComponent](em, camera3EntityID)
 	require.NoError(t, err)
 	camera3.Zoom = 0.6

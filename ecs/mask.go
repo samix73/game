@@ -13,3 +13,15 @@ func (m *Bitmask) HasFlag(bitPos uint) bool {
 func (m *Bitmask) SetFlag(bitPos uint) {
 	*m |= (1 << bitPos)
 }
+
+func (m *Bitmask) ClearFlag(bitPos uint) {
+	*m &= ^(1 << bitPos)
+}
+
+func (m *Bitmask) Clear() {
+	*m = 0
+}
+
+func (m *Bitmask) Clone() Bitmask {
+	return *m
+}

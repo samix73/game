@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"unsafe"
 )
 
 type Component interface {
@@ -18,10 +19,10 @@ type archetypeComponentSignature struct {
 
 // Archetype represents a group of entities with the same component signature.
 type Archetype struct {
-	signature     []archetypeComponentSignature
 	signatureMask Bitmask // Bitmask for fast signature comparison
+	signature     []archetypeComponentSignature
 	entities      []EntityID
-	components    map[uint][]any   // Indexed by component bit position
+	components    map[uint][]byte  // Indexed by component bit position
 	entityLookup  map[EntityID]int // Entity ID -> index in entities array
 }
 
@@ -43,7 +44,7 @@ func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask Bi
 		signature:     signature,
 		signatureMask: signatureMask,
 		entities:      make([]EntityID, 0, 64),
-		components:    make(map[uint][]any), // Support up to 64 components
+		components:    make(map[uint][]byte), // Support up to 64 components
 		entityLookup:  make(map[EntityID]int),
 	}, nil
 }
@@ -64,13 +65,22 @@ func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type
 
 	for _, componentType := range a.signature {
 		typ := componentType.typ
+		bitPos := componentType.bit
+
 		componentData, exists := componentsData[typ]
 		if !exists {
 			return fmt.Errorf("Component of type %s not provided for entity %d", typ.Name(), entityID)
 		}
 
-		bitPos := componentType.bit
-		a.components[bitPos] = append(a.components[bitPos], componentData)
+		val := reflect.ValueOf(componentData)
+		if val.Kind() != reflect.Pointer {
+			return fmt.Errorf("Component of type %s must be a pointer", typ.Name())
+		}
+
+		dataPtr := val.UnsafePointer()
+
+		src := unsafe.Slice((*byte)(dataPtr), typ.Size())
+		a.components[bitPos] = append(a.components[bitPos], src...)
 	}
 
 	return nil
@@ -86,9 +96,17 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 	// Extract component data before removal
 	componentData := make(map[reflect.Type]any)
 	for _, componentType := range a.signature {
+		typ := componentType.typ
 		bitPos := componentType.bit
-		component := a.components[bitPos][index]
-		componentData[componentType.typ] = component
+
+		// Calculate the offset for this entity's component data
+		offset := uintptr(index) * typ.Size()
+		buffer := a.components[bitPos]
+
+		// Create a pointer to the component data in the buffer
+		dataPtr := unsafe.Pointer(&buffer[offset])
+
+		componentData[typ] = reflect.NewAt(typ, dataPtr).Interface()
 	}
 
 	// Swap-and-pop removal
@@ -98,14 +116,26 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 		a.entities[index] = lastEntityID
 		a.entityLookup[lastEntityID] = index
 
+		// Copy the last entity's component data to the removed entity's position
 		for _, componentType := range a.signature {
-			a.components[componentType.bit][index] = a.components[componentType.bit][lastIndex]
+			typ := componentType.typ
+			bitPos := componentType.bit
+			componentSize := typ.Size()
+
+			srcOffset := uintptr(lastIndex) * componentSize
+			dstOffset := uintptr(index) * componentSize
+
+			buffer := a.components[bitPos]
+			copy(buffer[dstOffset:dstOffset+componentSize], buffer[srcOffset:srcOffset+componentSize])
 		}
 	}
 
 	a.entities = a.entities[:lastIndex]
 	for _, componentType := range a.signature {
-		a.components[componentType.bit] = a.components[componentType.bit][:lastIndex]
+		typ := componentType.typ
+		componentSize := typ.Size()
+		newLen := uintptr(lastIndex) * componentSize
+		a.components[componentType.bit] = a.components[componentType.bit][:newLen]
 	}
 
 	delete(a.entityLookup, entityID)
@@ -113,26 +143,33 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 	return componentData
 }
 
-func (a *Archetype) GetComponent(entityID EntityID, componentType reflect.Type) (any, bool) {
+// GetComponentPtr returns a pointer to the component data for the given entity.
+// It is the responsibility of the caller to ensure that the component type is correct
+// and that the entity exists in the archetype.
+func (a *Archetype) GetComponentPtr(entityID EntityID, componentType reflect.Type) (unsafe.Pointer, bool) {
+	if componentType.Kind() != reflect.Struct {
+		return nil, false
+	}
+
 	bitPos, exists := getComponentBit(componentType)
 	if !exists {
 		return nil, false
 	}
 
-	return a.GetComponentByBit(entityID, bitPos)
-}
-
-func (a *Archetype) GetComponentByBit(entityID EntityID, bitPos uint) (any, bool) {
 	index, exists := a.entityLookup[entityID]
 	if !exists {
 		return nil, false
 	}
 
-	if !a.signatureMask.HasFlag(bitPos) {
+	buffer, ok := a.components[bitPos]
+	if !ok {
 		return nil, false
 	}
 
-	return a.components[bitPos][index], true
+	offset := uintptr(index) * componentType.Size()
+	dataPtr := unsafe.Pointer(&buffer[offset])
+
+	return dataPtr, true
 }
 
 func (a *Archetype) HasComponent(componentType reflect.Type) bool {

@@ -342,12 +342,12 @@ func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
 	var zero C
 	componentType := reflect.TypeOf(zero)
 
-	component, exists := archetype.GetComponent(entityID, componentType)
+	dataPtr, exists := archetype.GetComponentPtr(entityID, componentType)
 	if !exists {
 		return nil, false
 	}
 
-	return component.(*C), true
+	return (*C)(dataPtr), true
 }
 
 func MustGetComponent[C any](em *EntityManager, entityID EntityID) *C {
