@@ -118,6 +118,33 @@ func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
 	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
 }
 
+func BenchmarkGetComponent(b *testing.B) {
+	em := ecs.NewEntityManager()
+
+	// Create a set of entities with Transform components
+	for range 500_000 {
+		NewPlayerEntity(b, em)
+	}
+
+	for range 500_000 {
+		NewCameraEntity(b, em)
+	}
+
+	for range 1000 {
+		_, err := em.NewEntity()
+		require.NoError(b, err)
+	}
+
+	entityIDs := slices.Collect(ecs.Query[TransformComponent](em))
+
+	b.ResetTimer()
+	for b.Loop() {
+		for _, entityID := range entityIDs {
+			ecs.GetComponent[TransformComponent](em, entityID)
+		}
+	}
+}
+
 func BenchmarkQueryEntities(b *testing.B) {
 	em := ecs.NewEntityManager()
 
@@ -135,57 +162,15 @@ func BenchmarkQueryEntities(b *testing.B) {
 		require.NoError(b, err)
 	}
 
-	b.Run("Query Only", func(b *testing.B) {
+	b.Run("Query", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query[TransformComponent](em) {
-				_ = entityID // Just consume the entityID
-			}
+			_ = slices.Collect(ecs.Query[TransformComponent](em))
 		}
 	})
 
-	b.Run("Query2 Only", func(b *testing.B) {
+	b.Run("Query2", func(b *testing.B) {
 		for b.Loop() {
-			for entityID := range ecs.Query2[TransformComponent, CameraComponent](em) {
-				_ = entityID // Just consume the entityID
-			}
-		}
-	})
-
-	b.Run("GetComponent Only", func(b *testing.B) {
-		// Pre-collect entity IDs
-		entityIDs := slices.Collect(ecs.Query[TransformComponent](em))
-
-		b.ResetTimer()
-		for b.Loop() {
-			for _, entityID := range entityIDs {
-				if _, ok := ecs.GetComponent[TransformComponent](em, entityID); !ok {
-					b.Fatalf("Expected component for entity %d", entityID)
-				}
-			}
-		}
-	})
-
-	b.Run("Query + GetComponent", func(b *testing.B) {
-		for b.Loop() {
-			for entityID := range ecs.Query[TransformComponent](em) {
-				if _, ok := ecs.GetComponent[TransformComponent](em, entityID); !ok {
-					b.Fatalf("Expected component for entity %d", entityID)
-				}
-			}
-		}
-	})
-
-	b.Run("Query2 + GetComponent", func(b *testing.B) {
-		for b.Loop() {
-			for entityID := range ecs.Query2[TransformComponent, CameraComponent](em) {
-				if _, ok := ecs.GetComponent[TransformComponent](em, entityID); !ok {
-					b.Fatalf("Expected component for entity %d", entityID)
-				}
-
-				if _, ok := ecs.GetComponent[CameraComponent](em, entityID); !ok {
-					b.Fatalf("Expected component for entity %d", entityID)
-				}
-			}
+			_ = slices.Collect(ecs.Query2[TransformComponent, CameraComponent](em))
 		}
 	})
 }

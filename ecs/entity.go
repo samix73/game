@@ -339,8 +339,7 @@ func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
 		return nil, false
 	}
 
-	var zero C
-	componentType := reflect.TypeOf(zero)
+	componentType := reflect.TypeFor[C]()
 
 	dataPtr, exists := archetype.GetComponentPtr(entityID, componentType)
 	if !exists {
@@ -353,8 +352,7 @@ func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
 func MustGetComponent[C any](em *EntityManager, entityID EntityID) *C {
 	component, exists := GetComponent[C](em, entityID)
 	if !exists {
-		var zero C
-		panic(fmt.Sprintf("Entity %d does not have component of type %s", entityID, reflect.TypeOf(zero).Name()))
+		panic(fmt.Sprintf("Entity %d does not have component of type %s", entityID, reflect.TypeFor[C]().Name()))
 	}
 
 	return component
