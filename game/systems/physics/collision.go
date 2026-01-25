@@ -1,6 +1,8 @@
 package physics
 
 import (
+	"fmt"
+
 	"github.com/jakecoffman/cp"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game/components"
@@ -31,12 +33,20 @@ func (c *CollisionSystem) checkCollision(a, b collisionCandidate) bool {
 	return a.bounds.Intersects(b.bounds)
 }
 
-func (c *CollisionSystem) registerCollision(a, b ecs.EntityID) {
-	aCol := ecs.AddComponent[components.Collision](c.EntityManager(), a)
+func (c *CollisionSystem) registerCollision(a, b ecs.EntityID) error {
+	aCol, err := ecs.AddComponent[components.Collision](c.EntityManager(), a)
+	if err != nil {
+		return fmt.Errorf("error adding collision: %w", err)
+	}
 	aCol.Entity = b
 
-	bCol := ecs.AddComponent[components.Collision](c.EntityManager(), b)
+	bCol, err := ecs.AddComponent[components.Collision](c.EntityManager(), b)
+	if err != nil {
+		return fmt.Errorf("error adding collision: %w", err)
+	}
 	bCol.Entity = a
+
+	return nil
 }
 
 func (c *CollisionSystem) removeCollision(a, b ecs.EntityID) {

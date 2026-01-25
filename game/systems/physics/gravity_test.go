@@ -12,11 +12,13 @@ import (
 func testRigidbodyEntity(t *testing.T, em *ecs.EntityManager, gravity bool) ecs.EntityID {
 	t.Helper()
 
-	entity := em.NewEntity()
-	rigidBody := ecs.AddComponent[components.RigidBody](em, entity)
+	entityID, err := em.NewEntity()
+	require.NoError(t, err)
+	rigidBody, err := ecs.AddComponent[components.RigidBody](em, entityID)
+	require.NoError(t, err)
 	rigidBody.Gravity = gravity
 
-	return entity
+	return entityID
 }
 
 func TestNewGravitySystem_CreatesInstance(t *testing.T) {

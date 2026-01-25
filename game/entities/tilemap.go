@@ -1,6 +1,8 @@
 package entities
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game/components"
@@ -10,12 +12,18 @@ const (
 	tileSize = 16
 )
 
-func NewTileMapEntity(em *ecs.EntityManager, img *ebiten.Image, layer, width, height int, tiles []int) ecs.EntityID {
-	entity := em.NewEntity()
+func NewTileMapEntity(em *ecs.EntityManager, img *ebiten.Image, layer, width, height int, tiles []int) (ecs.EntityID, error) {
+	entityID, err := em.NewEntity()
+	if err != nil {
+		return 0, fmt.Errorf("error creating entity: %w", err)
+	}
 
-	ecs.AddComponent[components.Transform](em, entity)
-	ecs.AddComponent[components.Renderable](em, entity)
-	tileMap := ecs.AddComponent[components.TileMap](em, entity)
+	ecs.AddComponent[components.Transform](em, entityID)
+	ecs.AddComponent[components.Renderable](em, entityID)
+	tileMap, err := ecs.AddComponent[components.TileMap](em, entityID)
+	if err != nil {
+		return entityID, fmt.Errorf("error adding tilemap: %w", err)
+	}
 
 	tileMap.TileSize = tileSize
 	tileMap.Layer = layer
@@ -26,5 +34,5 @@ func NewTileMapEntity(em *ecs.EntityManager, img *ebiten.Image, layer, width, he
 
 	tileMap.Tiles = tiles
 
-	return entity
+	return entityID, nil
 }

@@ -17,6 +17,16 @@ var (
 		Keys:        []ebiten.Key{ebiten.KeyP, ebiten.KeyEscape},
 		MouseButton: []ebiten.MouseButton{},
 	}
+
+	JumpAction = Action{
+		Keys:        []ebiten.Key{ebiten.KeySpace},
+		MouseButton: []ebiten.MouseButton{},
+	}
+
+	RestartAction = Action{
+		Keys:        []ebiten.Key{ebiten.KeyR},
+		MouseButton: []ebiten.MouseButton{},
+	}
 )
 
 func IsPressed(action Action) bool {

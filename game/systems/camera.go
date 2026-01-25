@@ -1,6 +1,7 @@
 package systems
 
 import (
+	"fmt"
 	"log/slog"
 	"slices"
 
@@ -29,18 +30,23 @@ func NewCameraSystem(priority int) *CameraSystem {
 	}
 }
 
-func (c *CameraSystem) createDefaultCamera() ecs.EntityID {
+func (c *CameraSystem) createDefaultCamera() (ecs.EntityID, error) {
 	cfg := c.Game().Config()
-	return entities.NewCameraEntity(
+	entityID, err := entities.NewCameraEntity(
 		c.EntityManager(),
 		true,
 		float64(cfg.ScreenWidth), float64(cfg.ScreenHeight),
 	)
+	if err != nil {
+		return 0, fmt.Errorf("error creating default camera: %w", err)
+	}
+
+	return entityID, nil
 }
 
-func (c *CameraSystem) getActiveCamera() ecs.EntityID {
+func (c *CameraSystem) getActiveCamera() (ecs.EntityID, error) {
 	if c.activeCamera != ecs.UndefinedSystemID {
-		return c.activeCamera
+		return c.activeCamera, nil
 	}
 
 	em := c.EntityManager()
@@ -49,7 +55,7 @@ func (c *CameraSystem) getActiveCamera() ecs.EntityID {
 	if ok {
 		c.activeCamera = activeCamera
 
-		return activeCamera
+		return activeCamera, nil
 	}
 
 	camera, ok := ecs.First(ecs.Query[components.Camera](em))
@@ -57,16 +63,15 @@ func (c *CameraSystem) getActiveCamera() ecs.EntityID {
 		ecs.AddComponent[components.ActiveCamera](em, camera)
 		activeCamera = camera
 	} else {
-		activeCamera = c.createDefaultCamera()
+		activeCamera, err := c.createDefaultCamera()
+		if err != nil {
+			return 0, fmt.Errorf("error creating default camera: %w", err)
+		}
+
+		c.activeCamera = activeCamera
 	}
 
-	if activeCamera == ecs.UndefinedSystemID {
-		return ecs.UndefinedSystemID
-	}
-
-	c.activeCamera = activeCamera
-
-	return activeCamera
+	return activeCamera, nil
 }
 
 // inView checks if the entity is within the camera's view and returns its on-screen position if it is.
@@ -104,7 +109,11 @@ func (c *CameraSystem) inView(cameraTransform *components.Transform, entityTrans
 func (c *CameraSystem) Update() error {
 	em := c.EntityManager()
 
-	camera := c.getActiveCamera()
+	camera, err := c.getActiveCamera()
+	if err != nil {
+		return fmt.Errorf("error getting active camera: %w", err)
+	}
+
 	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
 
 	for entity := range ecs.Query2[components.Transform, components.Renderable](em) {
@@ -128,7 +137,9 @@ func (c *CameraSystem) Update() error {
 			continue
 		}
 
-		ecs.AddComponent[components.Render](em, entity)
+		if !ecs.HasComponent[components.Render](em, entity) {
+			ecs.AddComponent[components.Render](em, entity)
+		}
 
 		render.GeoM.SetElement(0, 2, onScreenPos.X)
 		render.GeoM.SetElement(1, 2, onScreenPos.Y)
