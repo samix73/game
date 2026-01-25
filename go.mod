@@ -8,7 +8,6 @@ require (
 	github.com/jakecoffman/cp v1.2.1
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/goleak v1.3.0
-	golang.org/x/image v0.31.0
 )
 
 require (

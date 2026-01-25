@@ -31,15 +31,35 @@ func NewEntityManager() *EntityManager {
 	}
 }
 
-func (em *EntityManager) NewEntity() (EntityID, error) {
+func (em *EntityManager) NewEntity(components ...any) (EntityID, error) {
 	id := em.nextID
 	em.nextID++
 
-	archetype, err := em.getOrCreateArchetype([]archetypeComponentSignature{})
+	signature := make([]archetypeComponentSignature, 0, len(components))
+	componentData := make(map[reflect.Type]any, len(components))
+	for _, component := range components {
+		typ := reflect.TypeOf(component)
+		if typ.Kind() == reflect.Pointer {
+			typ = typ.Elem()
+		}
+
+		bit, ok := getComponentBit(typ)
+		if !ok {
+			return 0, fmt.Errorf("ecs.EntityManager.NewEntity: component %s not registered, call RegisterComponent first", typ.Name())
+		}
+
+		signature = append(signature, archetypeComponentSignature{
+			typ: typ,
+			bit: bit,
+		})
+		componentData[typ] = component
+	}
+
+	archetype, err := em.getOrCreateArchetype(signature)
 	if err != nil {
 		return 0, fmt.Errorf("ecs.EntityManager.NewEntity: %w", err)
 	}
-	if err := archetype.AddEntity(id, make(map[reflect.Type]any)); err != nil {
+	if err := archetype.AddEntity(id, componentData); err != nil {
 		return 0, fmt.Errorf("ecs.EntityManager.NewEntity: %w", err)
 	}
 	em.entityArchetype[id] = archetype
@@ -88,13 +108,16 @@ func (em *EntityManager) HasComponent(entityID EntityID, componentType any) bool
 	return archetype.HasComponent(reflect.TypeOf(componentType))
 }
 
-func (em *EntityManager) Remove(entityID EntityID) {
+func (em *EntityManager) Remove(entityID EntityID) error {
 	archetype, exists := em.entityArchetype[entityID]
 	if !exists {
-		return
+		return fmt.Errorf("ecs.EntityManager.Remove: entity %d does not exist", entityID)
 	}
 
-	componentData := archetype.RemoveEntity(entityID)
+	componentData, err := archetype.RemoveEntity(entityID)
+	if err != nil {
+		return fmt.Errorf("ecs.EntityManager.Remove: %w", err)
+	}
 
 	// Return components to pools
 	for componentType, component := range componentData {
@@ -104,6 +127,8 @@ func (em *EntityManager) Remove(entityID EntityID) {
 	}
 
 	delete(em.entityArchetype, entityID)
+
+	return nil
 }
 
 func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) error {
@@ -117,7 +142,10 @@ func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) e
 		return fmt.Errorf("ecs.EntityManager.RemoveComponent: entity %d does not have component %s", entityID, removedRefType.Name())
 	}
 
-	componentData := archetype.RemoveEntity(entityID)
+	componentData, err := archetype.RemoveEntity(entityID)
+	if err != nil {
+		return fmt.Errorf("ecs.EntityManager.RemoveComponent: %w", err)
+	}
 
 	// Get the component to return to pool
 	removedComponent := componentData[removedRefType]
@@ -223,12 +251,15 @@ func (em *EntityManager) AddComponent(entityID EntityID, component any) error {
 		return fmt.Errorf("entity %d already has component of type %s", entityID, componentType.Name())
 	}
 
+	// Get current component data
+	componentData, err := archetype.RemoveEntity(entityID)
+	if err != nil {
+		return fmt.Errorf("ecs.EntityManager.AddComponent: %w", err)
+	}
+
 	if resettable, ok := any(component).(Component); ok {
 		resettable.Init()
 	}
-
-	// Get current component data
-	componentData := archetype.RemoveEntity(entityID)
 
 	// Add new component
 	componentData[componentType] = component

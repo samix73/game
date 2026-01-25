@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
+	"slices"
 
 	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -123,14 +125,10 @@ func (g *Game) loadEntities(em *EntityManager, entityCfgs []EntityConfig, worldM
 			componentsByName[componentName] = component
 		}
 
-		entityID, err := em.NewEntity()
-		if err != nil {
+		componentsData := slices.Collect(maps.Values(componentsByName))
+
+		if _, err := em.NewEntity(componentsData...); err != nil {
 			return fmt.Errorf("ecs.Game.loadEntities: %w", err)
-		}
-		for _, component := range componentsByName {
-			if err := em.AddComponent(entityID, component); err != nil {
-				return fmt.Errorf("ecs.Game.loadEntities: %w", err)
-			}
 		}
 	}
 

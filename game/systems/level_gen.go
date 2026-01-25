@@ -109,7 +109,9 @@ func (l *LevelGenSystem) Update() error {
 		obstacleTransform := ecs.MustGetComponent[components.Transform](em, entity)
 
 		if obstacleTransform.Position.X < cameraLeft-100 {
-			em.Remove(entity)
+			if err := em.Remove(entity); err != nil {
+				return fmt.Errorf("error removing obstacle: %w", err)
+			}
 			continue
 		}
 

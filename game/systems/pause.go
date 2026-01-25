@@ -1,6 +1,8 @@
 package systems
 
 import (
+	"log/slog"
+
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/keys"
 )
@@ -41,6 +43,8 @@ func (p *PauseSystem) Update() error {
 	}
 
 	p.paused = !p.paused
+
+	slog.Info("Paused", "paused", p.paused)
 
 	return nil
 }

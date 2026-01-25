@@ -72,6 +72,10 @@ func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type
 			return fmt.Errorf("Component of type %s not provided for entity %d", typ.Name(), entityID)
 		}
 
+		if componentData == nil {
+			return fmt.Errorf("Component of type %s is nil for entity %d", typ.Name(), entityID)
+		}
+
 		val := reflect.ValueOf(componentData)
 		if val.Kind() != reflect.Pointer {
 			return fmt.Errorf("Component of type %s must be a pointer", typ.Name())
@@ -87,10 +91,10 @@ func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type
 }
 
 // RemoveEntity removes an entity and its component data from the archetype.
-func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
+func (a *Archetype) RemoveEntity(entityID EntityID) (map[reflect.Type]any, error) {
 	index, exists := a.entityLookup[entityID]
 	if !exists {
-		return nil
+		return nil, fmt.Errorf("entity %d not found in archetype", entityID)
 	}
 
 	// Extract component data before removal
@@ -101,7 +105,16 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 
 		// Calculate the offset for this entity's component data
 		offset := uintptr(index) * typ.Size()
-		buffer := a.components[bitPos]
+		buffer, exists := a.components[bitPos]
+
+		// Check if buffer exists and has sufficient length
+		if !exists {
+			return nil, fmt.Errorf("ecs.Archetype.RemoveEntity: Component of type %s not found for entity %d", typ.Name(), entityID)
+		}
+
+		if len(buffer) == 0 {
+			return nil, fmt.Errorf("ecs.Archetype.RemoveEntity: Component of type %s has no data for entity %d", typ.Name(), entityID)
+		}
 
 		// Create a pointer to the component data in the buffer
 		dataPtr := unsafe.Pointer(&buffer[offset])
@@ -140,7 +153,7 @@ func (a *Archetype) RemoveEntity(entityID EntityID) map[reflect.Type]any {
 
 	delete(a.entityLookup, entityID)
 
-	return componentData
+	return componentData, nil
 }
 
 // GetComponentPtr returns a pointer to the component data for the given entity.
