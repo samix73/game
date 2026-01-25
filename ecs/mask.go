@@ -2,6 +2,14 @@ package ecs
 
 type Bitmask uint64
 
+func NewBitmask(bits ...uint) Bitmask {
+	var mask Bitmask
+	for _, bit := range bits {
+		mask.SetFlag(bit)
+	}
+	return mask
+}
+
 func (m *Bitmask) HasFlags(queryMask Bitmask) bool {
 	return (*m & queryMask) == queryMask
 }

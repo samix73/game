@@ -6,7 +6,9 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[Transform]()
+	if err := ecs.RegisterComponent[Transform](); err != nil {
+		panic(err)
+	}
 }
 
 // Transform represents the position and rotation of an entity in 2D space.

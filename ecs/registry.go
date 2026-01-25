@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"fmt"
 	"log/slog"
 	"reflect"
 )
@@ -43,11 +44,10 @@ func RegisterSystem[S System](systemCtor SystemCtor[S]) {
 	slog.Debug("ecs.RegisterSystem: registered system", slog.String("name", name))
 }
 
-func RegisterComponent[T any]() {
+func RegisterComponent[T any]() error {
 	name := getName[T]()
 	if _, ok := componentsRegistry[name]; ok {
-		slog.Error("ecs.RegisterComponent: component already registered", slog.String("name", name))
-		return
+		return fmt.Errorf("ecs.RegisterComponent: component %s already registered", name)
 	}
 
 	componentsRegistry[name] = *new(T)
@@ -59,12 +59,12 @@ func RegisterComponent[T any]() {
 			componentTypeBits[componentType] = nextComponentBit
 			nextComponentBit++
 		} else {
-			slog.Warn("ecs.RegisterComponent: exceeded 64 component types, bitmask optimization disabled for new components",
-				slog.String("name", name))
+			return fmt.Errorf("ecs.RegisterComponent: exceeded 64 component types, bitmask optimization disabled for new components %s", name)
 		}
 	}
 
 	slog.Debug("ecs.RegisterComponent: registered component", slog.String("name", name))
+	return nil
 }
 
 func NewComponent(em *EntityManager, name string) (any, bool) {

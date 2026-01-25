@@ -9,8 +9,12 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[Renderable]()
-	ecs.RegisterComponent[Render]()
+	if err := ecs.RegisterComponent[Renderable](); err != nil {
+		panic(err)
+	}
+	if err := ecs.RegisterComponent[Render](); err != nil {
+		panic(err)
+	}
 }
 
 // Renderable represents a 2D entity that can be rendered on the screen.

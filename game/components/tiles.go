@@ -8,7 +8,9 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[TileMap]()
+	if err := ecs.RegisterComponent[TileMap](); err != nil {
+		panic(err)
+	}
 }
 
 var _ ecs.Component = (*TileMap)(nil)

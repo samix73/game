@@ -6,8 +6,12 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[Camera]()
-	ecs.RegisterComponent[ActiveCamera]()
+	if err := ecs.RegisterComponent[Camera](); err != nil {
+		panic(err)
+	}
+	if err := ecs.RegisterComponent[ActiveCamera](); err != nil {
+		panic(err)
+	}
 }
 
 var _ ecs.Component = (*Camera)(nil)

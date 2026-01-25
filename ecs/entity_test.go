@@ -11,8 +11,12 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[TransformComponent]()
-	ecs.RegisterComponent[CameraComponent]()
+	if err := ecs.RegisterComponent[TransformComponent](); err != nil {
+		panic(err)
+	}
+	if err := ecs.RegisterComponent[CameraComponent](); err != nil {
+		panic(err)
+	}
 }
 
 type TransformComponent struct {

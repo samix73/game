@@ -3,7 +3,9 @@ package components
 import "github.com/samix73/game/ecs"
 
 func init() {
-	ecs.RegisterComponent[Score]()
+	if err := ecs.RegisterComponent[Score](); err != nil {
+		panic(err)
+	}
 }
 
 var _ ecs.Component = (*Score)(nil)

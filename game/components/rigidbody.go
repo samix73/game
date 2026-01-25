@@ -6,7 +6,9 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[RigidBody]()
+	if err := ecs.RegisterComponent[RigidBody](); err != nil {
+		panic(err)
+	}
 }
 
 // RigidBody represents a physics body with mass, velocity, and gravity.

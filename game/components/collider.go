@@ -6,8 +6,12 @@ import (
 )
 
 func init() {
-	ecs.RegisterComponent[Collider]()
-	ecs.RegisterComponent[Collision]()
+	if err := ecs.RegisterComponent[Collider](); err != nil {
+		panic(err)
+	}
+	if err := ecs.RegisterComponent[Collision](); err != nil {
+		panic(err)
+	}
 }
 
 var _ ecs.Component = (*Collider)(nil)

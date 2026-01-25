@@ -3,7 +3,9 @@ package components
 import "github.com/samix73/game/ecs"
 
 func init() {
-	ecs.RegisterComponent[Obstacle]()
+	if err := ecs.RegisterComponent[Obstacle](); err != nil {
+		panic(err)
+	}
 }
 
 var _ ecs.Component = (*Obstacle)(nil)

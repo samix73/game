@@ -26,9 +26,14 @@ type Archetype struct {
 	entityLookup  map[EntityID]int // Entity ID -> index in entities array
 }
 
+// NewArchetype creates a new archetype with the given component types and signature mask.
 func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask Bitmask) (*Archetype, error) {
 	signature := make([]archetypeComponentSignature, len(componentTypes))
 	for i, compType := range componentTypes {
+		if compType.typ.Kind() == reflect.Pointer {
+			return nil, fmt.Errorf("component type %s must not be a pointer", compType.typ.Name())
+		}
+
 		if compType.bit == 0 {
 			var exists bool
 			compType.bit, exists = getComponentBit(compType.typ)
@@ -49,6 +54,7 @@ func NewArchetype(componentTypes []archetypeComponentSignature, signatureMask Bi
 	}, nil
 }
 
+// Signature returns the component signature of the archetype.
 func (a *Archetype) Signature() []archetypeComponentSignature {
 	return a.signature
 }
@@ -65,6 +71,10 @@ func (a *Archetype) AddEntity(entityID EntityID, componentsData map[reflect.Type
 
 	for _, componentType := range a.signature {
 		typ := componentType.typ
+		if typ.Kind() == reflect.Pointer {
+			return fmt.Errorf("Component of type key %s must not be a pointer", typ.Name())
+		}
+
 		bitPos := componentType.bit
 
 		componentData, exists := componentsData[typ]
@@ -160,7 +170,7 @@ func (a *Archetype) RemoveEntity(entityID EntityID) (map[reflect.Type]any, error
 // It is the responsibility of the caller to ensure that the component type is correct
 // and that the entity exists in the archetype.
 func (a *Archetype) GetComponentPtr(entityID EntityID, componentType reflect.Type) (unsafe.Pointer, bool) {
-	if componentType.Kind() != reflect.Struct {
+	if componentType.Kind() == reflect.Pointer {
 		return nil, false
 	}
 
@@ -200,6 +210,7 @@ func (a *Archetype) MatchesQuery(queryMask Bitmask) bool {
 	return a.signatureMask.HasFlags(queryMask)
 }
 
+// Entities returns an iterator over the entities in the archetype.
 func (a *Archetype) Entities() iter.Seq[EntityID] {
 	return func(yield func(EntityID) bool) {
 		for _, entityID := range a.entities {
@@ -210,6 +221,7 @@ func (a *Archetype) Entities() iter.Seq[EntityID] {
 	}
 }
 
+// Count returns the number of entities in the archetype.
 func (a *Archetype) Count() int {
 	return len(a.entities)
 }
