@@ -137,12 +137,21 @@ func BenchmarkGetComponent(b *testing.B) {
 
 	entityIDs := slices.Collect(ecs.Query[TransformComponent](em))
 
-	b.ResetTimer()
-	for b.Loop() {
-		for _, entityID := range entityIDs {
-			ecs.GetComponent[TransformComponent](em, entityID)
+	b.Run("GetComponent single entity", func(b *testing.B) {
+		b.ResetTimer()
+		for b.Loop() {
+			ecs.GetComponent[TransformComponent](em, entityIDs[0])
 		}
-	}
+	})
+
+	b.Run("GetComponent all entities", func(b *testing.B) {
+		b.ResetTimer()
+		for b.Loop() {
+			for _, entityID := range entityIDs {
+				ecs.GetComponent[TransformComponent](em, entityID)
+			}
+		}
+	})
 }
 
 func BenchmarkQueryEntities(b *testing.B) {
