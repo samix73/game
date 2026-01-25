@@ -8,7 +8,9 @@ import (
 var _ ecs.System = (*RestartSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewRestartSystem)
+	if err := ecs.RegisterSystem(NewRestartSystem); err != nil {
+		panic(err)
+	}
 }
 
 type RestartSystem struct {

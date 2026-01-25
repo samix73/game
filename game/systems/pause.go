@@ -10,7 +10,9 @@ import (
 var _ ecs.System = (*PauseSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewPauseSystem)
+	if err := ecs.RegisterSystem(NewPauseSystem); err != nil {
+		panic(err)
+	}
 }
 
 type PauseSystem struct {

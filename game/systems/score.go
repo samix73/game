@@ -8,7 +8,9 @@ import (
 var _ ecs.System = (*ScoreSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewScoreSystem)
+	if err := ecs.RegisterSystem(NewScoreSystem); err != nil {
+		panic(err)
+	}
 }
 
 type ScoreSystem struct {

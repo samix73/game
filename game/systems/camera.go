@@ -15,7 +15,9 @@ import (
 var _ ecs.DrawableSystem = (*CameraSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewCameraSystem)
+	if err := ecs.RegisterSystem(NewCameraSystem); err != nil {
+		panic(err)
+	}
 }
 
 type CameraSystem struct {
@@ -138,7 +140,9 @@ func (c *CameraSystem) Update() error {
 		}
 
 		if !ecs.HasComponent[components.Render](em, entity) {
-			ecs.AddComponent[components.Render](em, entity)
+			if _, err := ecs.AddComponent[components.Render](em, entity); err != nil {
+				return fmt.Errorf("systems.CameraSystem.Update error adding render component: %w", err)
+			}
 		}
 
 		render.GeoM.SetElement(0, 2, onScreenPos.X)

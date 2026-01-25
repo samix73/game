@@ -30,11 +30,10 @@ func getName[S any]() string {
 
 // RegisterSystem registers a system constructor in the ECS registry
 // to allow for dynamic system creation.
-func RegisterSystem[S System](systemCtor SystemCtor[S]) {
+func RegisterSystem[S System](systemCtor SystemCtor[S]) error {
 	name := getName[S]()
 	if _, ok := systemsRegistry[name]; ok {
-		slog.Error("ecs.RegisterSystem: system already registered", slog.String("name", name))
-		return
+		return fmt.Errorf("ecs.RegisterSystem: system %s already registered", name)
 	}
 
 	systemsRegistry[name] = func(priority int) System {
@@ -42,6 +41,7 @@ func RegisterSystem[S System](systemCtor SystemCtor[S]) {
 	}
 
 	slog.Debug("ecs.RegisterSystem: registered system", slog.String("name", name))
+	return nil
 }
 
 func RegisterComponent[T any]() error {

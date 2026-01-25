@@ -11,7 +11,9 @@ import (
 var _ ecs.System = (*CollisionSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewCollisionSystem)
+	if err := ecs.RegisterSystem(NewCollisionSystem); err != nil {
+		panic(err)
+	}
 }
 
 type collisionCandidate struct {

@@ -176,7 +176,7 @@ func (sm *SystemManager) Update() error {
 		}
 
 		if err := system.Update(); err != nil {
-			return fmt.Errorf("error updating system %d: %w", system.ID(), err)
+			return fmt.Errorf("ecs.SystemManager.Update error updating system %d: %w", system.ID(), err)
 		}
 	}
 

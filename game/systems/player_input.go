@@ -10,7 +10,9 @@ import (
 var _ ecs.System = (*PlayerInputSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewPlayerInputSystem)
+	if err := ecs.RegisterSystem(NewPlayerInputSystem); err != nil {
+		panic(err)
+	}
 }
 
 type PlayerInputSystem struct {
@@ -31,11 +33,8 @@ func (p *PlayerInputSystem) Update() error {
 	em := p.EntityManager()
 
 	// Find the player entity
-	for entity := range ecs.Query[components.Player](em) {
-		rb, hasRB := ecs.GetComponent[components.RigidBody](em, entity)
-		if !hasRB {
-			continue
-		}
+	for entity := range ecs.Query2[components.Player, components.RigidBody](em) {
+		rb := ecs.MustGetComponent[components.RigidBody](em, entity)
 
 		// Apply upward impulse for jump
 		jumpForce := cp.Vector{X: 0, Y: 400}

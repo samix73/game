@@ -5,10 +5,10 @@ name = "RestartSystem"
 priority = 0
 [[systems]]
 name = "PauseSystem"
-# priority = 1
-# [[systems]]
-# name = "PlayerInputSystem"
-# priority = 2
+priority = 1
+[[systems]]
+name = "PlayerInputSystem"
+priority = 2
 # [[systems]]
 # name = "GravitySystem"
 # priority = 3
@@ -24,9 +24,9 @@ name = "PauseSystem"
 # [[systems]]
 # name = "GameOverSystem"
 # priority = 7
-# [[systems]]
-# name = "CameraSystem"
-# priority = 8
+[[systems]]
+name = "CameraSystem"
+priority = 8
 # [[systems]]
 # name = "ScoreSystem"
 # priority = 9

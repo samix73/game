@@ -12,7 +12,9 @@ import (
 var _ ecs.DrawableSystem = (*GameOverSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewGameOverSystem)
+	if err := ecs.RegisterSystem(NewGameOverSystem); err != nil {
+		panic(err)
+	}
 }
 
 type GameOverSystem struct {

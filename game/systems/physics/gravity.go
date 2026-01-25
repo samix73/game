@@ -11,7 +11,9 @@ var gravity = cp.Vector{X: 0, Y: -981}
 var _ ecs.System = (*GravitySystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewGravitySystem)
+	if err := ecs.RegisterSystem(NewGravitySystem); err != nil {
+		panic(err)
+	}
 }
 
 type GravitySystem struct {

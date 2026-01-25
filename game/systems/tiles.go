@@ -9,7 +9,9 @@ import (
 var _ ecs.System = (*TileSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewTileSystem)
+	if err := ecs.RegisterSystem(NewTileSystem); err != nil {
+		panic(err)
+	}
 }
 
 type TileSystem struct {

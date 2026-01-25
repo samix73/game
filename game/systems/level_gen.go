@@ -21,7 +21,9 @@ const (
 )
 
 func init() {
-	ecs.RegisterSystem(NewLevelGenSystem)
+	if err := ecs.RegisterSystem(NewLevelGenSystem); err != nil {
+		panic(err)
+	}
 }
 
 var _ ecs.System = (*LevelGenSystem)(nil)

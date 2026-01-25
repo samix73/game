@@ -11,8 +11,12 @@ import (
 var _ ecs.System = (*PhysicsSystem)(nil)
 
 func init() {
-	ecs.RegisterSystem(NewPhysicsSystem)
-	ecs.RegisterSystem(NewCollisionResolverSystem)
+	if err := ecs.RegisterSystem(NewPhysicsSystem); err != nil {
+		panic(err)
+	}
+	if err := ecs.RegisterSystem(NewCollisionResolverSystem); err != nil {
+		panic(err)
+	}
 }
 
 type PhysicsSystem struct {
