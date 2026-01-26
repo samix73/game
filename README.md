@@ -8,6 +8,83 @@ This is an ECS-based game engine built with Go, using [Ebitengine](https://ebite
 
 ## Architecture
 The engine follows a strict **Entity-Component-System (ECS)** architecture.
+
+### Library Overview
+```mermaid
+classDiagram
+    class Game {
+        +World activeWorld
+        +Update()
+        +Draw()
+    }
+    class World {
+        +SystemManager systemManager
+        +EntityManager entityManager
+        +Update()
+        +Draw()
+    }
+    class SystemManager {
+        Collection of systems exectued in order of priority
+        +List~System~ systems
+        +Update()
+        +Draw()
+    }
+    class EntityManager {
+        Collection of archetypes with same component signature
+        +List~Archetype~ archetypes
+        +List~Entity~ entities
+        +Query(signature) List~Entity~
+    }
+    class Archetype {
+        +Bitmask signature
+        +Map~ComponentBit, byte[]~ components
+    }
+    class System {
+        +EntityManager entityManager
+        +Update()
+        +Draw()
+    }
+    class Component {
+        Component can be any data type
+        Pure data
+    }
+    class Entity {
+        Entity is an id assigned by the entity manager to set of components
+        ID
+    }
+    
+    Game "1" *-- "1" World
+    World "1" *-- "1" SystemManager
+    World "1" *-- "1" EntityManager
+    SystemManager "1" *-- "n" System
+    System "n" *-- "1" EntityManager
+    EntityManager "1" *-- "n" Archetype
+```
+
+### Engine Lifecycle (Ebiten Integration)
+```mermaid
+sequenceDiagram
+    participant E as Ebitengine
+    participant G as ecs.Game
+    participant W as ecs.World
+    participant SM as ecs.SystemManager
+    participant S as ecs.System
+    
+    E->>G: Update()
+    G->>W: Update()
+    W->>SM: Update()
+    loop Every System
+        SM->>S: Update()
+    end
+    
+    E->>G: Draw(screen)
+    G->>W: Draw(screen)
+    W->>SM: Draw(screen)
+    loop Every DrawableSystem
+        SM->>S: Draw(screen)
+    end
+```
+
 - **`ecs`**: Core framework (World, EntityManager, SystemManager, Registry).
 - **`game/components`**: Pure data structures.
 - **`game/systems`**: Logic processors that operate on component queries.

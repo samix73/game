@@ -122,6 +122,26 @@ func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
 	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
 }
 
+// TODO there is a case where adding a component while iterating moves the entity to a different archetype
+// and the iteration might miss it or double count it. Need to fix this. This test is trying to capture that.
+func TestAddCommentWhileIterating(t *testing.T) {
+	em := ecs.NewEntityManager()
+
+	NewPlayerEntity(t, em)
+	entityID := NewPlayerEntity(t, em)
+
+	for entity := range ecs.Query[TransformComponent](em) {
+		if entity == entityID {
+			component, err := ecs.AddComponent[CameraComponent](em, entity)
+			require.NoError(t, err)
+			assert.NotNil(t, component)
+		}
+	}
+
+	exists := ecs.HasComponent[CameraComponent](em, entityID)
+	assert.True(t, exists)
+}
+
 func BenchmarkGetComponent(b *testing.B) {
 	em := ecs.NewEntityManager()
 
