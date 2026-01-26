@@ -163,7 +163,7 @@ func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
 	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
 }
 
-// TODO there is a case where adding a component while iterating moves the entity to a different archetype
+// there is a case where adding a component while iterating moves the entity to a different archetype
 // and the iteration might miss it or double count it. Need to fix this. This test is trying to capture that.
 //
 // The edge case occurs because:
@@ -198,20 +198,9 @@ func TestAddComponentWhileIterating(t *testing.T) {
 		if i%2 == 0 {
 			_, err = ecs.AddComponent[CameraComponent](em, entityID)
 			require.NoError(t, err)
-		}
-
-		if i%2 == 0 {
 			_, err = ecs.AddComponent[HealthComponent](em, entityID)
 			require.NoError(t, err)
-		}
-
-		if i%2 == 0 {
 			_, err = ecs.AddComponent[VelocityComponent](em, entityID)
-			require.NoError(t, err)
-		}
-
-		if i%2 == 0 {
-			_, err = ecs.AddComponent[MassComponent](em, entityID)
 			require.NoError(t, err)
 		}
 
@@ -233,6 +222,11 @@ func TestAddComponentWhileIterating(t *testing.T) {
 
 		if ecs.HasComponent[HealthComponent](em, entity) {
 			err := ecs.RemoveComponent[HealthComponent](em, entity)
+			require.NoError(t, err)
+		}
+
+		if ecs.HasComponent[VelocityComponent](em, entity) {
+			err := ecs.RemoveComponent[VelocityComponent](em, entity)
 			require.NoError(t, err)
 		}
 	}
@@ -262,6 +256,48 @@ func TestAddComponentWhileIterating(t *testing.T) {
 	assert.Empty(t, missedEntities, "No entities should be missed during iteration")
 	assert.Empty(t, doubleCountedEntities, "No entities should be double-counted during iteration")
 	assert.Equal(t, 10, len(visitedEntities), "Should have visited exactly 10 unique entities")
+}
+
+func TestModifyOtherEntityWhileIterating(t *testing.T) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(t, err)
+
+	em := ecs.NewEntityManager()
+
+	// Create 5 entities
+	entities := make([]ecs.EntityID, 5)
+	for i := range 5 {
+		e, err := em.NewEntity()
+		require.NoError(t, err)
+		_, err = ecs.AddComponent[TransformComponent](em, e)
+		require.NoError(t, err)
+		entities[i] = e
+	}
+
+	visited := make(map[ecs.EntityID]int)
+
+	// Iterate
+	// Expectation with 5 entities: [0, 1, 2, 3, 4]
+	// Backwards iteration visits: 4, 3, 2, 1, 0
+	for e := range ecs.Query[TransformComponent](em) {
+		visited[e]++
+
+		// When we visit the last entity (entities[4]), remove the first entity (entities[0])
+		if e == entities[4] {
+			// Only try to remove if it still has the component (avoid error on double-visit)
+			if ecs.HasComponent[TransformComponent](em, entities[0]) {
+				err := ecs.RemoveComponent[TransformComponent](em, entities[0])
+				require.NoError(t, err)
+			}
+		}
+	}
+
+	// Assertions
+	// Entity 4 should be visited exactly once. If it's visited twice, the test fails.
+	assert.Equal(t, 1, visited[entities[4]], "Entity 4 should be visited exactly once")
+
+	// Entity 0 should NOT be visited because it was removed before we reached index 0
+	assert.Equal(t, 0, visited[entities[0]], "Entity 0 should not be visited")
 }
 
 func BenchmarkGetComponent(b *testing.B) {

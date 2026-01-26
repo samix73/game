@@ -185,14 +185,32 @@ func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) e
 }
 
 func (em *EntityManager) Query(queryMask Bitmask) iter.Seq[EntityID] {
-	return func(yield func(EntityID) bool) {
-		for _, archetype := range em.archetypes {
-			if !archetype.MatchesQuery(queryMask) {
-				continue
-			}
+	type archSnap struct {
+		a   *Archetype
+		len int
+	}
 
-			for entityID := range archetype.Entities() {
-				if !yield(entityID) {
+	// Snapshot matching archetypes and their lengths to handle modification during iteration
+	snapshots := make([]archSnap, 0, len(em.archetypes))
+	for i := range em.archetypes {
+		if em.archetypes[i].MatchesQuery(queryMask) {
+			snapshots = append(snapshots, archSnap{
+				a:   em.archetypes[i],
+				len: len(em.archetypes[i].entities),
+			})
+		}
+	}
+
+	return func(yield func(EntityID) bool) {
+		for i := range snapshots {
+			// Iterate backwards to avoid skipping entities when the current element is removed (Swap-and-Pop)
+			for j := snapshots[i].len - 1; j >= 0; j-- {
+				// Sanity check bound in case entities were removed by side effects
+				if j >= len(snapshots[i].a.entities) {
+					continue
+				}
+
+				if !yield(snapshots[i].a.entities[j]) {
 					return
 				}
 			}
