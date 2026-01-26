@@ -10,15 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	if err := ecs.RegisterComponent[TransformComponent](); err != nil {
-		panic(err)
-	}
-	if err := ecs.RegisterComponent[CameraComponent](); err != nil {
-		panic(err)
-	}
-}
-
 type TransformComponent struct {
 	Position cp.Vector
 	Rotation float64
@@ -44,6 +35,46 @@ func (c *CameraComponent) Init() {
 
 func (c *CameraComponent) Reset() {
 	c.Zoom = 1.0
+}
+
+type VelocityComponent struct {
+	X, Y float64
+}
+
+func (v *VelocityComponent) Init() {
+	v.X = 0
+	v.Y = 0
+}
+
+func (v *VelocityComponent) Reset() {
+	v.X = 0
+	v.Y = 0
+}
+
+type MassComponent struct {
+	Value float64
+}
+
+func (m *MassComponent) Init() {
+	m.Value = 1.0
+}
+
+func (m *MassComponent) Reset() {
+	m.Value = 1.0
+}
+
+type HealthComponent struct {
+	Current, Max int
+}
+
+func (h *HealthComponent) Init() {
+	h.Current = 100
+	h.Max = 100
+}
+
+func (h *HealthComponent) Reset() {
+	h.Current = 100
+	h.Max = 100
 }
 
 func NewPlayerEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
@@ -77,6 +108,11 @@ func NewCameraEntity(tb testing.TB, em *ecs.EntityManager) ecs.EntityID {
 }
 
 func TestEntityCreation(t *testing.T) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(t, err)
+	err = ecs.RegisterComponent[CameraComponent]()
+	require.NoError(t, err)
+
 	em := ecs.NewEntityManager()
 
 	player := NewPlayerEntity(t, em)
@@ -89,6 +125,11 @@ func TestEntityCreation(t *testing.T) {
 }
 
 func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(t, err)
+	err = ecs.RegisterComponent[CameraComponent]()
+	require.NoError(t, err)
+
 	em := ecs.NewEntityManager()
 
 	// Create an entity with both Transform and Camera components
@@ -124,25 +165,111 @@ func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
 
 // TODO there is a case where adding a component while iterating moves the entity to a different archetype
 // and the iteration might miss it or double count it. Need to fix this. This test is trying to capture that.
-func TestAddCommentWhileIterating(t *testing.T) {
+//
+// The edge case occurs because:
+//  1. When we add a component to an entity, it's removed from its current archetype
+//  2. The removal uses swap-and-pop: the last entity is moved to the removed entity's position
+//  3. If we're iterating by index and the iterator reads the slice length dynamically,
+//     the swapped entity at the current position may be skipped
+func TestAddComponentWhileIterating(t *testing.T) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(t, err)
+	err = ecs.RegisterComponent[CameraComponent]()
+	require.NoError(t, err)
+	err = ecs.RegisterComponent[VelocityComponent]()
+	require.NoError(t, err)
+	err = ecs.RegisterComponent[MassComponent]()
+	require.NoError(t, err)
+	err = ecs.RegisterComponent[HealthComponent]()
+	require.NoError(t, err)
+
 	em := ecs.NewEntityManager()
 
-	NewPlayerEntity(t, em)
-	entityID := NewPlayerEntity(t, em)
+	// Create 10 entities with ONLY Transform component
+	entityIDs := make([]ecs.EntityID, 10)
+	visitedEntities := make(map[ecs.EntityID]int)
+	for i := range 10 {
+		entityID, err := em.NewEntity()
+		require.NoError(t, err)
+
+		_, err = ecs.AddComponent[TransformComponent](em, entityID)
+		require.NoError(t, err)
+
+		if i%2 == 0 {
+			_, err = ecs.AddComponent[CameraComponent](em, entityID)
+			require.NoError(t, err)
+		}
+
+		if i%2 == 0 {
+			_, err = ecs.AddComponent[HealthComponent](em, entityID)
+			require.NoError(t, err)
+		}
+
+		if i%2 == 0 {
+			_, err = ecs.AddComponent[VelocityComponent](em, entityID)
+			require.NoError(t, err)
+		}
+
+		if i%2 == 0 {
+			_, err = ecs.AddComponent[MassComponent](em, entityID)
+			require.NoError(t, err)
+		}
+
+		entityIDs[i] = entityID
+		visitedEntities[entityID] = 0
+	}
+
+	// Track which entities we visit during iteration and how many times
+	var visitOrder []ecs.EntityID
 
 	for entity := range ecs.Query[TransformComponent](em) {
-		if entity == entityID {
-			component, err := ecs.AddComponent[CameraComponent](em, entity)
+		visitedEntities[entity]++
+		visitOrder = append(visitOrder, entity)
+
+		if !ecs.HasComponent[CameraComponent](em, entity) {
+			_, err := ecs.AddComponent[CameraComponent](em, entity)
 			require.NoError(t, err)
-			assert.NotNil(t, component)
+		}
+
+		if ecs.HasComponent[HealthComponent](em, entity) {
+			err := ecs.RemoveComponent[HealthComponent](em, entity)
+			require.NoError(t, err)
 		}
 	}
 
-	exists := ecs.HasComponent[CameraComponent](em, entityID)
-	assert.True(t, exists)
+	t.Logf("Visit order: %v", visitOrder)
+	t.Logf("Visit counts: %v", visitedEntities)
+
+	// Assert that all 10 entities were visited exactly once
+	// The LAST entity (10) should be SKIPPED because it was swapped into position 0
+	// which was already processed
+	missedEntities := []ecs.EntityID{}
+	doubleCountedEntities := []ecs.EntityID{}
+
+	for _, entityID := range entityIDs {
+		count := visitedEntities[entityID]
+		if count == 0 {
+			missedEntities = append(missedEntities, entityID)
+		} else if count > 1 {
+			doubleCountedEntities = append(doubleCountedEntities, entityID)
+		}
+	}
+
+	t.Logf("Missed entities: %v", missedEntities)
+	t.Logf("Double-counted entities: %v", doubleCountedEntities)
+
+	// This assertion should FAIL
+	assert.Empty(t, missedEntities, "No entities should be missed during iteration")
+	assert.Empty(t, doubleCountedEntities, "No entities should be double-counted during iteration")
+	assert.Equal(t, 10, len(visitedEntities), "Should have visited exactly 10 unique entities")
 }
 
 func BenchmarkGetComponent(b *testing.B) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(b, err)
+	err = ecs.RegisterComponent[CameraComponent]()
+	require.NoError(b, err)
+
 	em := ecs.NewEntityManager()
 
 	// Create a set of entities with Transform components
@@ -179,6 +306,11 @@ func BenchmarkGetComponent(b *testing.B) {
 }
 
 func BenchmarkQueryEntities(b *testing.B) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(b, err)
+	err = ecs.RegisterComponent[CameraComponent]()
+	require.NoError(b, err)
+
 	em := ecs.NewEntityManager()
 
 	// Create a set of entities with Transform components
