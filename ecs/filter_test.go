@@ -69,6 +69,9 @@ func TestNot(t *testing.T) {
 func TestWhere(t *testing.T) {
 	em := ecs.NewEntityManager()
 
+	err := ecs.RegisterComponent[CameraComponent]()
+	require.NoError(t, err)
+
 	camera1EntityID, err := em.NewEntity()
 	require.NoError(t, err)
 	camera1, err := ecs.AddComponent[CameraComponent](em, camera1EntityID)
@@ -87,13 +90,11 @@ func TestWhere(t *testing.T) {
 	require.NoError(t, err)
 	camera3.Zoom = 0.6
 
-	cameras := ecs.Where(em, ecs.Query[CameraComponent](em), ecs.And(highZoomFilter, lowZoomFilter))
-
 	gotCameras := make([]*CameraComponent, 0)
-	for c := range cameras {
+	for c := range ecs.Where(em, ecs.Query[CameraComponent](em), ecs.And(highZoomFilter, lowZoomFilter)) {
 		gotCameras = append(gotCameras, ecs.MustGetComponent[CameraComponent](em, c))
 	}
 
-	assert.Len(t, gotCameras, 1)
-	assert.Equal(t, camera3, gotCameras[0])
+	require.Len(t, gotCameras, 1)
+	require.Equal(t, camera3, gotCameras[0])
 }

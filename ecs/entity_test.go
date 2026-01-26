@@ -300,6 +300,32 @@ func TestModifyOtherEntityWhileIterating(t *testing.T) {
 	assert.Equal(t, 0, visited[entities[0]], "Entity 0 should not be visited")
 }
 
+func TestModifyingComponentValue(t *testing.T) {
+	err := ecs.RegisterComponent[TransformComponent]()
+	require.NoError(t, err)
+
+	em := ecs.NewEntityManager()
+
+	// Create 5 entities
+	entities := make([]ecs.EntityID, 5)
+	for i := range 5 {
+		e, err := em.NewEntity()
+		require.NoError(t, err)
+		transform, err := ecs.AddComponent[TransformComponent](em, e)
+		require.NoError(t, err)
+
+		transform.Position = cp.Vector{X: 24, Y: 54}
+
+		entities[i] = e
+	}
+
+	for e := range ecs.Query[TransformComponent](em) {
+		transform := ecs.MustGetComponent[TransformComponent](em, e)
+		assert.Equal(t, 24, transform.Position.X)
+		assert.Equal(t, 54, transform.Position.Y)
+	}
+}
+
 func BenchmarkGetComponent(b *testing.B) {
 	err := ecs.RegisterComponent[TransformComponent]()
 	require.NoError(b, err)
