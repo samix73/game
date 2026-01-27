@@ -40,7 +40,7 @@ func (g *GameOverSystem) Update() error {
 	em := g.EntityManager()
 
 	// Check if player has collision with an obstacle
-	for entity := range ecs.Query2[components.Player, components.Collision](em) {
+	for _, entity := range ecs.Query2[components.Player, components.Collision](em) {
 		collision := ecs.MustGetComponent[components.Collision](em, entity)
 
 		// Check if the collision is with an obstacle

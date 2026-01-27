@@ -10,6 +10,7 @@ import (
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game/components"
 	"github.com/samix73/game/game/entities"
+	"github.com/samix73/game/helpers"
 )
 
 var _ ecs.DrawableSystem = (*CameraSystem)(nil)
@@ -53,14 +54,14 @@ func (c *CameraSystem) getActiveCamera() (ecs.EntityID, error) {
 
 	em := c.EntityManager()
 
-	activeCamera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
+	activeCamera, ok := helpers.First(ecs.Query[components.ActiveCamera](em))
 	if ok {
 		c.activeCamera = activeCamera
 
 		return activeCamera, nil
 	}
 
-	camera, ok := ecs.First(ecs.Query[components.Camera](em))
+	camera, ok := helpers.First(ecs.Query[components.Camera](em))
 	if ok {
 		ecs.AddComponent[components.ActiveCamera](em, camera)
 		activeCamera = camera
@@ -118,7 +119,7 @@ func (c *CameraSystem) Update() error {
 
 	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
 
-	for entity := range ecs.Query2[components.Transform, components.Renderable](em) {
+	for _, entity := range ecs.Query2[components.Transform, components.Renderable](em) {
 		entityTransform := ecs.MustGetComponent[components.Transform](em, entity)
 		render := ecs.MustGetComponent[components.Renderable](em, entity)
 		if render.Sprite == nil {
@@ -157,7 +158,7 @@ func (c *CameraSystem) Draw(screen *ebiten.Image) {
 
 	renderables := make([]*components.Renderable, 0)
 
-	for entity := range ecs.Query2[components.Render, components.Renderable](em) {
+	for _, entity := range ecs.Query2[components.Render, components.Renderable](em) {
 		renderable := ecs.MustGetComponent[components.Renderable](em, entity)
 
 		if renderable.Sprite == nil {

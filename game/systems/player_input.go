@@ -33,7 +33,7 @@ func (p *PlayerInputSystem) Update() error {
 	em := p.EntityManager()
 
 	// Find the player entity
-	for entity := range ecs.Query2[components.Player, components.RigidBody](em) {
+	for _, entity := range ecs.Query2[components.Player, components.RigidBody](em) {
 		rb := ecs.MustGetComponent[components.RigidBody](em, entity)
 
 		// Apply upward impulse for jump

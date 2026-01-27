@@ -10,6 +10,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game/components"
+	"github.com/samix73/game/helpers"
 )
 
 const (
@@ -82,7 +83,7 @@ func (l *LevelGenSystem) createPipe(em *ecs.EntityManager, position cp.Vector) e
 func (l *LevelGenSystem) Update() error {
 	em := l.EntityManager()
 
-	camera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
+	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](em))
 	if !ok {
 		return nil
 	}
@@ -90,7 +91,7 @@ func (l *LevelGenSystem) Update() error {
 	cameraComponent := ecs.MustGetComponent[components.Camera](em, camera)
 	cameraTransform := ecs.MustGetComponent[components.Transform](em, camera)
 
-	player, ok := ecs.First(ecs.Query[components.Player](em))
+	player, ok := helpers.First(ecs.Query[components.Player](em))
 	if !ok {
 		return nil
 	}
@@ -107,7 +108,7 @@ func (l *LevelGenSystem) Update() error {
 	comingObstacles := make([]comingObstacle, 0)
 
 	// Clean up obstacles that are off-screen and count upcoming ones
-	for entity := range ecs.Query[components.Obstacle](em) {
+	for _, entity := range ecs.Query[components.Obstacle](em) {
 		obstacleTransform := ecs.MustGetComponent[components.Transform](em, entity)
 
 		if obstacleTransform.Position.X < cameraLeft-100 {

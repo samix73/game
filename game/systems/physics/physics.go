@@ -33,7 +33,7 @@ func (p *PhysicsSystem) Update() error {
 	em := p.EntityManager()
 
 	// First, apply physics movement
-	for entity := range ecs.Query2[components.RigidBody, components.Transform](em) {
+	for _, entity := range ecs.Query2[components.RigidBody, components.Transform](em) {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](em, entity)
 		transform := ecs.MustGetComponent[components.Transform](em, entity)
 
@@ -72,7 +72,7 @@ func (cr *CollisionResolverSystem) Update() error {
 	em := cr.EntityManager()
 
 	// Handle all collision responses
-	for entity := range ecs.Query[components.Collision](em) {
+	for _, entity := range ecs.Query[components.Collision](em) {
 		collision := ecs.MustGetComponent[components.Collision](em, entity)
 		otherEntity := collision.Entity
 

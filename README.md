@@ -109,7 +109,7 @@ func init() {
 ### 2. Querying Entities
 Use `ecs.Query` variants to iterate entities with specific component signatures.
 ```go
-for entity := range ecs.Query[components.Transform](em) {
+for _, entity := range ecs.Query[components.Transform](em) {
     transform := ecs.MustGetComponent[components.Transform](em, entity)
     // Perform logic
 }

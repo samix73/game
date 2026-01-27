@@ -3,6 +3,7 @@ package systems
 import (
 	"github.com/samix73/game/ecs"
 	"github.com/samix73/game/game/components"
+	"github.com/samix73/game/helpers"
 )
 
 var _ ecs.System = (*ScoreSystem)(nil)
@@ -29,7 +30,7 @@ func (s *ScoreSystem) Update() error {
 	em := s.EntityManager()
 
 	// Get the active camera to track distance
-	camera, ok := ecs.First(ecs.Query[components.ActiveCamera](em))
+	camera, ok := helpers.First(ecs.Query[components.ActiveCamera](em))
 	if !ok {
 		return nil
 	}
@@ -41,7 +42,7 @@ func (s *ScoreSystem) Update() error {
 	s.lastCameraX = cameraTransform.Position.X
 
 	// Update player score
-	for entity := range ecs.Query[components.Score](em) {
+	for _, entity := range ecs.Query[components.Score](em) {
 		score := ecs.MustGetComponent[components.Score](em, entity)
 		if distance > 0 {
 			score.Distance += distance

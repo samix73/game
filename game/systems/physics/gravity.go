@@ -31,7 +31,7 @@ func NewGravitySystem(priority int) *GravitySystem {
 
 func (g *GravitySystem) Update() error {
 	em := g.EntityManager()
-	for entity := range ecs.Query[components.RigidBody](em) {
+	for _, entity := range ecs.Query[components.RigidBody](em) {
 		rigidBody := ecs.MustGetComponent[components.RigidBody](em, entity)
 		if rigidBody == nil {
 			continue

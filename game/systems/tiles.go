@@ -65,7 +65,7 @@ func (t *TileSystem) buildTileSet(em *ecs.EntityManager, entity ecs.EntityID, tm
 func (t *TileSystem) Update() error {
 	em := t.EntityManager()
 
-	for entity := range ecs.Query2[components.TileMap, components.Renderable](em) {
+	for _, entity := range ecs.Query2[components.TileMap, components.Renderable](em) {
 		tm := ecs.MustGetComponent[components.TileMap](em, entity)
 
 		if !t.validateTileMap(tm) {

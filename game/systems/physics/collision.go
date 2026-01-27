@@ -69,7 +69,7 @@ func (c *CollisionSystem) Update() error {
 	active := make([]collisionCandidate, 0, 16)
 	static := make([]collisionCandidate, 0, 1024)
 
-	for entity := range ecs.Query2[components.Collider, components.Transform](em) {
+	for _, entity := range ecs.Query2[components.Collider, components.Transform](em) {
 		transform := ecs.MustGetComponent[components.Transform](em, entity)
 		col := ecs.MustGetComponent[components.Collider](em, entity)
 

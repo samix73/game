@@ -3,10 +3,8 @@ package ecs
 import (
 	"bytes"
 	"fmt"
-	"iter"
 	"log/slog"
 	"reflect"
-	"slices"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -383,18 +381,6 @@ func MustGetComponent[C any](em *EntityManager, entityID EntityID) *C {
 	}
 
 	return component
-}
-
-func First(iterator iter.Seq[EntityID]) (EntityID, bool) {
-	for item := range iterator {
-		return item, true
-	}
-
-	return 0, false
-}
-
-func Count(it iter.Seq[EntityID]) int {
-	return len(slices.Collect(it))
 }
 
 func evaluateFilter[C any](em *EntityManager, entityID EntityID, filter Filter[C]) bool {
