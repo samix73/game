@@ -1,14 +1,10 @@
 package ecs
 
 import (
-	"bytes"
 	"fmt"
 	"log/slog"
 	"reflect"
 	"sync"
-
-	"github.com/BurntSushi/toml"
-	"github.com/samix73/game/game/assets"
 )
 
 type EntityID = uint64
@@ -33,77 +29,46 @@ func (em *EntityManager) NewEntity(components ...any) (EntityID, error) {
 	id := em.nextID
 	em.nextID++
 
-	signature := make([]archetypeComponentSignature, 0, len(components))
-	componentData := make(map[reflect.Type]any, len(components))
+	var signature Bitmask
+	var componentData = make(map[ComponentID]any, len(components))
 	for _, component := range components {
-		typ := reflect.TypeOf(component)
-		if typ.Kind() == reflect.Pointer {
-			typ = typ.Elem()
-		}
-
-		bit, ok := getComponentBit(typ)
+		componentID, ok := getComponentID(reflect.TypeOf(component))
 		if !ok {
-			return 0, fmt.Errorf("ecs.EntityManager.NewEntity: component %s not registered, call RegisterComponent first", typ.Name())
+			return 0, fmt.Errorf("ecs.EntityManager.NewEntity: component %T not registered, call RegisterComponent first", component)
 		}
-
-		signature = append(signature, archetypeComponentSignature{
-			typ: typ,
-			bit: bit,
-		})
-		componentData[typ] = component
+		signature.Set(componentID)
+		componentData[componentID] = component
 	}
 
-	archetype, err := em.getOrCreateArchetype(signature)
-	if err != nil {
-		return 0, fmt.Errorf("ecs.EntityManager.NewEntity: %w", err)
-	}
+	archetype := em.getOrCreateArchetype(signature)
 	if err := archetype.AddEntity(id, componentData); err != nil {
-		return 0, fmt.Errorf("ecs.EntityManager.NewEntity: %w", err)
+		return 0, fmt.Errorf("ecs.EntityManager.NewEntity: failed to add entity %w", err)
 	}
 	em.entityArchetype[id] = archetype
 
 	return id, nil
 }
 
-func (em *EntityManager) getOrCreateArchetype(componentTypes []archetypeComponentSignature) (*Archetype, error) {
-	signatureMask, ok := getComponentsBitmask(componentTypes)
-	if !ok {
-		return nil, fmt.Errorf("ecs.EntityManager.getOrCreateArchetype: component type not registered, call RegisterComponent first")
-	}
-
-	for _, arch := range em.archetypes {
-		if arch.SignatureMatches(signatureMask) {
-			return arch, nil
+func (em *EntityManager) getOrCreateArchetype(signature Bitmask) *Archetype {
+	for _, archetype := range em.archetypes {
+		if archetype.SignatureMatches(signature) {
+			return archetype
 		}
 	}
 
-	archetype, err := NewArchetype(componentTypes, signatureMask)
-	if err != nil {
-		return nil, fmt.Errorf("ecs.EntityManager.getOrCreateArchetype: %w", err)
-	}
+	archetype := NewArchetype(signature)
 	em.archetypes = append(em.archetypes, archetype)
 
-	return archetype, nil
+	return archetype
 }
 
-func (em *EntityManager) getOrCreatePool(componentType reflect.Type, newFn func() any) *sync.Pool {
-	if pool, exists := em.componentPools[componentType]; exists {
-		return pool
-	}
-
-	pool := &sync.Pool{New: newFn}
-	em.componentPools[componentType] = pool
-
-	return pool
-}
-
-func (em *EntityManager) HasComponent(entityID EntityID, componentType any) bool {
+func (em *EntityManager) HasComponent(entityID EntityID, componentID ComponentID) bool {
 	archetype, exists := em.entityArchetype[entityID]
 	if !exists {
 		return false
 	}
 
-	return archetype.HasComponent(reflect.TypeOf(componentType))
+	return archetype.HasComponent(entityID, componentID)
 }
 
 func (em *EntityManager) Remove(entityID EntityID) error {
@@ -118,10 +83,12 @@ func (em *EntityManager) Remove(entityID EntityID) error {
 	}
 
 	// Return components to pools
-	for componentType, component := range componentData {
-		if pool, exists := em.componentPools[componentType]; exists {
-			pool.Put(component)
+	for componentID, component := range componentData {
+		pool, ok := getComponentPool(componentID)
+		if !ok {
+			return fmt.Errorf("ecs.EntityManager.Remove: component %d not registered", componentID)
 		}
+		pool.Put(component)
 	}
 
 	delete(em.entityArchetype, entityID)
@@ -129,15 +96,14 @@ func (em *EntityManager) Remove(entityID EntityID) error {
 	return nil
 }
 
-func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) error {
+func (em *EntityManager) RemoveComponent(entityID EntityID, componentID ComponentID) error {
 	archetype, exists := em.entityArchetype[entityID]
 	if !exists {
 		return fmt.Errorf("ecs.EntityManager.RemoveComponent: entity %d does not exist", entityID)
 	}
 
-	removedRefType := reflect.TypeOf(componentType)
-	if !archetype.HasComponent(removedRefType) {
-		return fmt.Errorf("ecs.EntityManager.RemoveComponent: entity %d does not have component %s", entityID, removedRefType.Name())
+	if !archetype.HasComponent(entityID, componentID) {
+		return fmt.Errorf("ecs.EntityManager.RemoveComponent: entity %d does not have component %d", entityID, componentID)
 	}
 
 	componentData, err := archetype.RemoveEntity(entityID)
@@ -146,34 +112,30 @@ func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) e
 	}
 
 	// Get the component to return to pool
-	removedComponent := componentData[removedRefType]
+	removedComponent := componentData[componentID]
 
 	// Remove the specified component type
-	delete(componentData, removedRefType)
+	delete(componentData, componentID)
 
 	// Return removed component to pool
 	if resettable, ok := removedComponent.(Component); ok {
 		resettable.Reset()
 	}
 
-	pool := em.getOrCreatePool(removedRefType, func() any { return reflect.New(removedRefType).Interface() })
+	pool, ok := getComponentPool(componentID)
+	if !ok {
+		return fmt.Errorf("ecs.EntityManager.RemoveComponent: component %d not registered", componentID)
+	}
 	pool.Put(removedComponent)
 
 	// Calculate new signature
-	newSignature := make([]archetypeComponentSignature, 0, len(archetype.Signature())-1)
-	for _, t := range archetype.Signature() {
-		if t.typ == removedRefType {
-			continue
-		}
-
-		newSignature = append(newSignature, t)
+	var newSignature Bitmask
+	for componentID := range componentData {
+		newSignature.Set(componentID)
 	}
 
 	// Move entity to new archetype
-	newArchetype, err := em.getOrCreateArchetype(newSignature)
-	if err != nil {
-		return fmt.Errorf("ecs.EntityManager.RemoveComponent: %w", err)
-	}
+	newArchetype := em.getOrCreateArchetype(newSignature)
 	if err := newArchetype.AddEntity(entityID, componentData); err != nil {
 		return fmt.Errorf("ecs.EntityManager.RemoveComponent: %w", err)
 	}
@@ -194,110 +156,61 @@ func (em *EntityManager) Query(queryMask Bitmask) []EntityID {
 	return entities
 }
 
-// LoadEntity loads an entity asset and adds it to the entity manager.
-func (em *EntityManager) LoadEntity(name string) (EntityID, error) {
-	entityData, err := assets.GetEntity(name)
-	if err != nil {
-		return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: %w", err)
-	}
-
-	var protoEntity EntityComponentsConfig
-	md, err := toml.NewDecoder(bytes.NewReader(entityData)).Decode(&protoEntity)
-	if err != nil {
-		return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: %w", err)
-	}
-
-	entity, err := em.NewEntity()
-	if err != nil {
-		return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: %w", err)
-	}
-
-	for componentName, args := range protoEntity {
-		component, ok := NewComponent(em, componentName)
-		if !ok {
-			return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: component %s not found", componentName)
-		}
-
-		if err := md.PrimitiveDecode(args, component); err != nil {
-			return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: PrimitiveDecode %w", err)
-		}
-
-		if err := em.AddComponent(entity, component); err != nil {
-			return 0, fmt.Errorf("ecs.EntityManager.LoadEntity: AddComponent %w", err)
-		}
-	}
-
-	return entity, nil
-}
-
-func (em *EntityManager) AddComponent(entityID EntityID, component any) error {
+func (em *EntityManager) AddComponent(entityID EntityID, componentID ComponentID) (any, error) {
 	archetype, exists := em.entityArchetype[entityID]
 	if !exists {
-		return fmt.Errorf("entity %d does not exist", entityID)
+		return nil, fmt.Errorf("entity %d does not exist", entityID)
 	}
 
-	componentType := reflect.TypeOf(component)
-	if componentType.Kind() == reflect.Pointer {
-		componentType = componentType.Elem()
-	}
-
-	if archetype.HasComponent(componentType) {
-		return fmt.Errorf("entity %d already has component of type %s", entityID, componentType.Name())
+	if archetype.HasComponent(entityID, componentID) {
+		return nil, fmt.Errorf("ecs.EntityManager.AddComponent: entity %d already has component %d", entityID, componentID)
 	}
 
 	// Get current component data
 	componentData, err := archetype.RemoveEntity(entityID)
 	if err != nil {
-		return fmt.Errorf("ecs.EntityManager.AddComponent: %w", err)
+		return nil, fmt.Errorf("ecs.EntityManager.AddComponent: failed to remove entity %d: %w", entityID, err)
 	}
+
+	pool, ok := getComponentPool(componentID)
+	if !ok {
+		return nil, fmt.Errorf("ecs.EntityManager.AddComponent: component %d not registered", componentID)
+	}
+
+	component := pool.Get()
 
 	if resettable, ok := any(component).(Component); ok {
 		resettable.Init()
 	}
 
 	// Add new component
-	componentData[componentType] = component
-
-	bitPos, ok := getComponentBit(componentType)
-	if !ok {
-		return fmt.Errorf("component type %s not registered, call RegisterComponent first", componentType.Name())
-	}
+	componentData[componentID] = component
 
 	// Calculate new signature
-	newSignature := make([]archetypeComponentSignature, 0, len(archetype.signature)+1)
-	newSignature = append(newSignature, archetype.signature...)
-	newSignature = append(newSignature, archetypeComponentSignature{
-		typ: componentType,
-		bit: bitPos,
-	})
+	var newSignature Bitmask
+	for componentID := range componentData {
+		newSignature.Set(componentID)
+	}
 
 	// Move entity to new archetype
-	newArchetype, err := em.getOrCreateArchetype(newSignature)
-	if err != nil {
-		return fmt.Errorf("ecs.EntityManager.AddComponent: %w", err)
-	}
+	newArchetype := em.getOrCreateArchetype(newSignature)
 	if err := newArchetype.AddEntity(entityID, componentData); err != nil {
-		return fmt.Errorf("ecs.EntityManager.AddComponent: %w", err)
+		return nil, fmt.Errorf("ecs.EntityManager.AddComponent: %w", err)
 	}
 	em.entityArchetype[entityID] = newArchetype
 
-	return nil
-}
-
-func (em *EntityManager) Teardown() {
-	em.archetypes = nil
-	em.entityArchetype = nil
-	em.componentPools = nil
+	return component, nil
 }
 
 func AddComponent[C any](em *EntityManager, entityID EntityID) (*C, error) {
 	componentType := reflect.TypeFor[C]()
-	pool := em.getOrCreatePool(componentType, func() any {
-		return new(C)
-	})
+	componentID, ok := getComponentID(componentType)
+	if !ok {
+		return nil, fmt.Errorf("ecs.AddComponent: component %s not registered", componentType.Name())
+	}
 
-	component := pool.Get().(*C)
-	if err := em.AddComponent(entityID, component); err != nil {
+	component, err := em.AddComponent(entityID, componentID)
+	if err != nil {
 		slog.Error("ecs.AddComponent: failed to add component",
 			slog.String("type", componentType.Name()),
 			slog.Uint64("entityID", entityID),
@@ -307,12 +220,23 @@ func AddComponent[C any](em *EntityManager, entityID EntityID) (*C, error) {
 		return nil, fmt.Errorf("ecs.AddComponent: failed to add component: %w", err)
 	}
 
-	return component, nil
+	return component.(*C), nil
+}
+
+func (em *EntityManager) Teardown() {
+	em.archetypes = nil
+	em.entityArchetype = nil
+	em.componentPools = nil
 }
 
 func RemoveComponent[C any](em *EntityManager, entityID EntityID) error {
-	var zero C
-	if err := em.RemoveComponent(entityID, zero); err != nil {
+	componentType := reflect.TypeFor[C]()
+	componentID, ok := getComponentID(componentType)
+	if !ok {
+		return fmt.Errorf("ecs.RemoveComponent: component %s not registered", componentType.Name())
+	}
+
+	if err := em.RemoveComponent(entityID, componentID); err != nil {
 		return fmt.Errorf("ecs.RemoveComponent: %w", err)
 	}
 
@@ -320,7 +244,7 @@ func RemoveComponent[C any](em *EntityManager, entityID EntityID) error {
 }
 
 func Query[C any](em *EntityManager) []EntityID {
-	queryMask, ok := ComponentsBitMask(reflect.TypeFor[C]())
+	queryMask, ok := getComponentsBitmask([]reflect.Type{reflect.TypeFor[C]()})
 	if !ok {
 		return []EntityID{}
 	}
@@ -329,10 +253,10 @@ func Query[C any](em *EntityManager) []EntityID {
 }
 
 func Query2[C1, C2 any](em *EntityManager) []EntityID {
-	queryMask, ok := ComponentsBitMask(
+	queryMask, ok := getComponentsBitmask([]reflect.Type{
 		reflect.TypeFor[C1](),
 		reflect.TypeFor[C2](),
-	)
+	})
 	if !ok {
 		return []EntityID{}
 	}
@@ -341,11 +265,11 @@ func Query2[C1, C2 any](em *EntityManager) []EntityID {
 }
 
 func Query3[C1, C2, C3 any](em *EntityManager) []EntityID {
-	queryMask, ok := ComponentsBitMask(
+	queryMask, ok := getComponentsBitmask([]reflect.Type{
 		reflect.TypeFor[C1](),
 		reflect.TypeFor[C2](),
 		reflect.TypeFor[C3](),
-	)
+	})
 	if !ok {
 		return []EntityID{}
 	}
@@ -354,8 +278,13 @@ func Query3[C1, C2, C3 any](em *EntityManager) []EntityID {
 }
 
 func HasComponent[C any](em *EntityManager, entityID EntityID) bool {
-	var zero C
-	return em.HasComponent(entityID, zero)
+	componentType := reflect.TypeFor[C]()
+	componentID, ok := getComponentID(componentType)
+	if !ok {
+		return false
+	}
+
+	return em.HasComponent(entityID, componentID)
 }
 
 func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
@@ -365,13 +294,17 @@ func GetComponent[C any](em *EntityManager, entityID EntityID) (*C, bool) {
 	}
 
 	componentType := reflect.TypeFor[C]()
+	componentID, ok := getComponentID(componentType)
+	if !ok {
+		return nil, false
+	}
 
-	dataPtr, exists := archetype.GetComponentPtr(entityID, componentType)
+	component, exists := archetype.GetComponent(entityID, componentID)
 	if !exists {
 		return nil, false
 	}
 
-	return (*C)(dataPtr), true
+	return component.(*C), true
 }
 
 func MustGetComponent[C any](em *EntityManager, entityID EntityID) *C {

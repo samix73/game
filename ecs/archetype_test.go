@@ -10,127 +10,57 @@ import (
 )
 
 func TestNewArchetype(t *testing.T) {
-	type Position struct {
-		X, Y, Z float64
-	}
-	err := RegisterComponent[Position]()
-	require.NoError(t, err)
-
-	positionBit, exists := getComponentBit(reflect.TypeFor[Position]())
-	require.True(t, exists)
-
 	tests := []struct {
-		name           string
-		componentTypes []archetypeComponentSignature
-		signatureMask  Bitmask
-		want           *Archetype
-		wantErr        bool
+		name          string
+		signatureMask Bitmask
+		want          *Archetype
 	}{
 		{
-			name:           "valid: no components",
-			componentTypes: []archetypeComponentSignature{},
-			signatureMask:  0,
+			name:          "valid: no components",
+			signatureMask: NewBitmask(1),
 			want: &Archetype{
-				signatureMask: 0,
-				signature:     []archetypeComponentSignature{},
-				entities:      []EntityID{},
-				components:    map[uint][]byte{},
-				entityLookup:  map[EntityID]int{},
-			},
-			wantErr: false,
-		},
-		{
-			name: "valid: one component",
-			componentTypes: []archetypeComponentSignature{
-				{
-					typ: reflect.TypeFor[int](),
-					bit: 1,
-				},
-			},
-			signatureMask: 1,
-			want: &Archetype{
-				signatureMask: 1,
-				signature:     []archetypeComponentSignature{{typ: reflect.TypeFor[int](), bit: 1}},
-				entities:      []EntityID{},
-				components:    map[uint][]byte{},
-				entityLookup:  map[EntityID]int{},
-			},
-			wantErr: false,
-		},
-		{
-			name: "valid: two components",
-			componentTypes: []archetypeComponentSignature{
-				{
-					typ: reflect.TypeFor[int](),
-					bit: 1,
-				},
-				{
-					typ: reflect.TypeFor[float64](),
-					bit: 2,
-				},
-			},
-			signatureMask: 3,
-			want: &Archetype{
-				signatureMask: 3,
-				signature: []archetypeComponentSignature{
-					{typ: reflect.TypeFor[int](), bit: 1},
-					{typ: reflect.TypeFor[float64](), bit: 2},
-				},
+				signature:    NewBitmask(1),
 				entities:     []EntityID{},
-				components:   map[uint][]byte{},
+				components:   map[ComponentID]reflect.Value{},
 				entityLookup: map[EntityID]int{},
 			},
-			wantErr: false,
 		},
 		{
-			name: "valid: no bit set",
-			componentTypes: []archetypeComponentSignature{
-				{
-					typ: reflect.TypeFor[Position](),
-					bit: 0, // should be set by NewArchetype
-				},
-			},
-			signatureMask: 1,
+			name:          "valid: one component",
+			signatureMask: NewBitmask(1),
 			want: &Archetype{
-				signatureMask: 1,
-				signature:     []archetypeComponentSignature{{typ: reflect.TypeFor[Position](), bit: positionBit}},
-				entities:      []EntityID{},
-				components:    map[uint][]byte{},
-				entityLookup:  map[EntityID]int{},
+				signature:    NewBitmask(1),
+				entities:     []EntityID{},
+				components:   map[ComponentID]reflect.Value{},
+				entityLookup: map[EntityID]int{},
 			},
-			wantErr: false,
 		},
 		{
-			name: "invalid: pointer component",
-			componentTypes: []archetypeComponentSignature{
-				{
-					typ: reflect.TypeFor[*int](),
-					bit: 0,
-				},
+			name:          "valid: two components",
+			signatureMask: NewBitmask(1, 2),
+			want: &Archetype{
+				signature:    NewBitmask(1, 2),
+				entities:     []EntityID{},
+				components:   map[ComponentID]reflect.Value{},
+				entityLookup: map[EntityID]int{},
 			},
-			signatureMask: 0,
-			wantErr:       true,
 		},
 		{
-			name: "invalid: component type not registered",
-			componentTypes: []archetypeComponentSignature{
-				{
-					typ: reflect.TypeFor[int](),
-					bit: 0,
-				},
+			name:          "valid: no bit set",
+			signatureMask: NewBitmask(1),
+			want: &Archetype{
+				signature:    NewBitmask(1),
+				entities:     []EntityID{},
+				components:   map[ComponentID]reflect.Value{},
+				entityLookup: map[EntityID]int{},
 			},
-			signatureMask: 0,
-			wantErr:       true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := NewArchetype(tt.componentTypes, tt.signatureMask)
-			if tt.wantErr {
-				require.Error(t, gotErr)
-				return
-			}
-			require.NoError(t, gotErr)
+			t.Parallel()
+
+			got := NewArchetype(tt.signatureMask)
 			require.Equal(t, tt.want, got)
 		})
 	}
@@ -140,157 +70,125 @@ func TestArchetype_AddEntity(t *testing.T) {
 	err := RegisterComponent[int]()
 	require.NoError(t, err)
 
-	intBit, ok := getComponentBit(reflect.TypeFor[int]())
+	intComponentID, ok := getComponentID(reflect.TypeFor[int]())
 	require.True(t, ok)
 
 	err = RegisterComponent[float64]()
 	require.NoError(t, err)
 
-	float64Bit, ok := getComponentBit(reflect.TypeFor[float64]())
+	float64ComponentID, ok := getComponentID(reflect.TypeFor[float64]())
 	require.True(t, ok)
 
 	type entityToAdd struct {
 		entityID   EntityID
-		components map[reflect.Type]any
+		components map[ComponentID]any
 		wantErr    bool
 	}
 
 	tests := []struct {
-		name           string
-		componentTypes []archetypeComponentSignature
-		signatureMask  Bitmask
-		entities       []entityToAdd
+		name          string
+		signatureMask Bitmask
+		entitiesToAdd []entityToAdd
 	}{
 		{
-			name:           "valid: no components",
-			componentTypes: []archetypeComponentSignature{},
-			signatureMask:  0,
-			entities: []entityToAdd{
+			name:          "valid: no components",
+			signatureMask: NewBitmask(),
+			entitiesToAdd: []entityToAdd{
 				{
-					entityID:   0,
-					components: map[reflect.Type]any{},
+					entityID:   1,
+					components: map[ComponentID]any{},
 					wantErr:    false,
 				},
 			},
 		},
 		{
-			name: "valid: one component",
-			componentTypes: []archetypeComponentSignature{
+			name:          "valid: one component",
+			signatureMask: NewBitmask(intComponentID),
+			entitiesToAdd: []entityToAdd{
 				{
-					typ: reflect.TypeFor[int](),
-					bit: intBit,
-				},
-			},
-			signatureMask: Bitmask(intBit),
-			entities: []entityToAdd{
-				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[int](): helpers.New(1)},
+					entityID:   1,
+					components: map[ComponentID]any{intComponentID: helpers.New(1)},
 					wantErr:    false,
 				},
 			},
 		},
 		{
-			name: "valid: two components",
-			componentTypes: []archetypeComponentSignature{
+			name:          "valid: two components",
+			signatureMask: NewBitmask(intComponentID, float64ComponentID),
+			entitiesToAdd: []entityToAdd{
 				{
-					typ: reflect.TypeFor[int](),
-					bit: intBit,
-				},
-				{
-					typ: reflect.TypeFor[float64](),
-					bit: float64Bit,
-				},
-			},
-			signatureMask: NewBitmask(intBit, float64Bit),
-			entities: []entityToAdd{
-				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[int](): helpers.New(1), reflect.TypeFor[float64](): helpers.New(2.0)},
-					wantErr:    false,
+					entityID: 1,
+					components: map[ComponentID]any{
+						intComponentID:     helpers.New(1),
+						float64ComponentID: helpers.New(2.0),
+					},
+					wantErr: false,
 				},
 			},
 		},
 		{
-			name: "invalid: pointer component",
-			componentTypes: []archetypeComponentSignature{
+			name:          "invalid: nil component",
+			signatureMask: NewBitmask(intComponentID),
+			entitiesToAdd: []entityToAdd{
 				{
-					typ: reflect.TypeFor[int](),
-					bit: intBit,
-				},
-			},
-			signatureMask: NewBitmask(intBit),
-			entities: []entityToAdd{
-				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[*int](): helpers.New(1)}, // componentsData key must be not be of a pointer type
-					wantErr:    true,
+					entityID: 1,
+					components: map[ComponentID]any{
+						intComponentID: nil,
+					},
+					wantErr: true,
 				},
 			},
 		},
 		{
-			name: "invalid: nil component",
-			componentTypes: []archetypeComponentSignature{
+			name:          "invalid: component type not registered",
+			signatureMask: NewBitmask(intComponentID),
+			entitiesToAdd: []entityToAdd{
 				{
-					typ: reflect.TypeFor[int](),
-					bit: intBit,
-				},
-			},
-			signatureMask: NewBitmask(intBit),
-			entities: []entityToAdd{
-				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[int](): nil},
-					wantErr:    true,
+					entityID: 1,
+					components: map[ComponentID]any{
+						2323: helpers.New("test"),
+					},
+					wantErr: true,
 				},
 			},
 		},
 		{
-			name: "invalid: component type not registered",
-			componentTypes: []archetypeComponentSignature{
+			name:          "invalid: same entity ID",
+			signatureMask: NewBitmask(intComponentID),
+			entitiesToAdd: []entityToAdd{
 				{
-					typ: reflect.TypeFor[int](),
-					bit: intBit,
-				},
-			},
-			signatureMask: NewBitmask(intBit),
-			entities: []entityToAdd{
-				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[string](): helpers.New("test")},
-					wantErr:    true,
-				},
-			},
-		},
-		{
-			name: "invalid: same entity ID",
-			componentTypes: []archetypeComponentSignature{
-				{
-					typ: reflect.TypeFor[int](),
-					bit: intBit,
-				},
-			},
-			signatureMask: NewBitmask(intBit),
-			entities: []entityToAdd{
-				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[int](): helpers.New(1)},
+					entityID:   1,
+					components: map[ComponentID]any{intComponentID: helpers.New(1)},
 					wantErr:    false,
 				},
 				{
-					entityID:   0,
-					components: map[reflect.Type]any{reflect.TypeFor[int](): helpers.New(2)},
+					entityID:   1,
+					components: map[ComponentID]any{intComponentID: helpers.New(2)},
 					wantErr:    true,
+				},
+			},
+		},
+		{
+			name:          "invalid: component is not pointer",
+			signatureMask: NewBitmask(intComponentID),
+			entitiesToAdd: []entityToAdd{
+				{
+					entityID: 1,
+					components: map[ComponentID]any{
+						intComponentID: 1,
+					},
+					wantErr: true,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a, err := NewArchetype(tt.componentTypes, tt.signatureMask)
-			require.NoError(t, err)
+			t.Parallel()
 
-			for _, entityToAdd := range tt.entities {
+			a := NewArchetype(tt.signatureMask)
+
+			for _, entityToAdd := range tt.entitiesToAdd {
 				gotErr := a.AddEntity(entityToAdd.entityID, entityToAdd.components)
 				if entityToAdd.wantErr {
 					require.Error(t, gotErr)
@@ -304,11 +202,11 @@ func TestArchetype_AddEntity(t *testing.T) {
 
 				require.Contains(t, a.entityLookup, entityToAdd.entityID)
 
-				for componentType, componentData := range entityToAdd.components {
-					dataPtr, exists := a.GetComponentPtr(entityToAdd.entityID, componentType)
-					require.Truef(t, exists, "component %v not found", componentType)
+				for componentID, componentData := range entityToAdd.components {
+					gotComponent, exists := a.GetComponent(entityToAdd.entityID, componentID)
+					require.Truef(t, exists, "component %v not found", componentID)
 
-					require.Equal(t, componentData, reflect.NewAt(componentType, dataPtr).Interface())
+					require.Equal(t, componentData, gotComponent)
 				}
 			}
 		})
@@ -319,111 +217,101 @@ func TestArchetype_RemoveEntity(t *testing.T) {
 	err := RegisterComponent[int]()
 	require.NoError(t, err)
 
-	intBit, ok := getComponentBit(reflect.TypeFor[int]())
+	intComponentID, ok := getComponentID(reflect.TypeFor[int]())
 	require.True(t, ok)
 
 	err = RegisterComponent[float64]()
 	require.NoError(t, err)
 
-	float64Bit, ok := getComponentBit(reflect.TypeFor[float64]())
+	float64ComponentID, ok := getComponentID(reflect.TypeFor[float64]())
 	require.True(t, ok)
 
 	type entityToAdd struct {
 		entityID       EntityID
-		componentsData map[reflect.Type]any
+		componentsData map[ComponentID]any
 	}
 
 	type entityToRemove struct {
 		entityID EntityID
-		want     map[reflect.Type]any
+		want     map[ComponentID]any
 		wantErr  bool
 	}
 
 	tests := []struct {
 		name             string
-		componentTypes   []archetypeComponentSignature
 		entitiesToAdd    []entityToAdd
 		entitiesToRemove []entityToRemove
 		signatureMask    Bitmask
 	}{
 		{
-			name:           "valid: no components",
-			componentTypes: []archetypeComponentSignature{},
-			signatureMask:  0,
+			name:          "valid: no components",
+			signatureMask: NewBitmask(),
 			entitiesToAdd: []entityToAdd{
 				{
 					entityID:       0,
-					componentsData: map[reflect.Type]any{},
+					componentsData: map[ComponentID]any{},
 				},
 			},
 			entitiesToRemove: []entityToRemove{
 				{
 					entityID: 0,
-					want:     map[reflect.Type]any{},
+					want:     map[ComponentID]any{},
 					wantErr:  false,
 				},
 			},
 		},
 		{
-			name:           "valid: one component",
-			componentTypes: []archetypeComponentSignature{{typ: reflect.TypeFor[int](), bit: intBit}},
-			signatureMask:  NewBitmask(intBit),
+			name:          "valid: one component",
+			signatureMask: NewBitmask(intComponentID),
 			entitiesToAdd: []entityToAdd{
 				{
 					entityID: 0,
-					componentsData: map[reflect.Type]any{
-						reflect.TypeFor[int](): helpers.New(1),
+					componentsData: map[ComponentID]any{
+						intComponentID: helpers.New(1),
 					},
 				},
 			},
 			entitiesToRemove: []entityToRemove{
 				{
 					entityID: 0,
-					want: map[reflect.Type]any{
-						reflect.TypeFor[int](): helpers.New(1),
+					want: map[ComponentID]any{
+						intComponentID: helpers.New(1),
 					},
 					wantErr: false,
 				},
 			},
 		},
 		{
-			name: "valid: two components",
-			componentTypes: []archetypeComponentSignature{
-				{typ: reflect.TypeFor[int](), bit: intBit},
-				{typ: reflect.TypeFor[float64](), bit: float64Bit},
-			},
-			signatureMask: NewBitmask(intBit, float64Bit),
+			name:          "valid: two components",
+			signatureMask: NewBitmask(intComponentID, float64ComponentID),
 			entitiesToAdd: []entityToAdd{
 				{
 					entityID: 0,
-					componentsData: map[reflect.Type]any{
-						reflect.TypeFor[int]():     helpers.New(1),
-						reflect.TypeFor[float64](): helpers.New(2.0),
+					componentsData: map[ComponentID]any{
+						intComponentID:     helpers.New(1),
+						float64ComponentID: helpers.New(2.0),
 					},
 				},
 			},
 			entitiesToRemove: []entityToRemove{
 				{
 					entityID: 0,
-					want: map[reflect.Type]any{
-						reflect.TypeFor[int]():     helpers.New(1),
-						reflect.TypeFor[float64](): helpers.New(2.0),
+					want: map[ComponentID]any{
+						intComponentID:     helpers.New(1),
+						float64ComponentID: helpers.New(2.0),
 					},
 					wantErr: false,
 				},
 			},
 		},
 		{
-			name: "invalid: entity not found",
-			componentTypes: []archetypeComponentSignature{
-				{typ: reflect.TypeFor[int](), bit: intBit},
-			},
-			signatureMask: NewBitmask(intBit),
+			name:          "invalid: entity not found",
+			signatureMask: NewBitmask(intComponentID),
 			entitiesToAdd: []entityToAdd{
 				{
 					entityID: 0,
-					componentsData: map[reflect.Type]any{
-						reflect.TypeFor[int](): helpers.New(1),
+					componentsData: map[ComponentID]any{
+						intComponentID: helpers.New(1),
 					},
 				},
 			},
@@ -436,31 +324,28 @@ func TestArchetype_RemoveEntity(t *testing.T) {
 			},
 		},
 		{
-			name: "invalid: remove same entity twice",
-			componentTypes: []archetypeComponentSignature{
-				{typ: reflect.TypeFor[int](), bit: intBit},
-			},
-			signatureMask: NewBitmask(intBit),
+			name:          "invalid: remove same entity twice",
+			signatureMask: NewBitmask(intComponentID),
 			entitiesToAdd: []entityToAdd{
 				{
 					entityID: 0,
-					componentsData: map[reflect.Type]any{
-						reflect.TypeFor[int](): helpers.New(1),
+					componentsData: map[ComponentID]any{
+						intComponentID: helpers.New(1),
 					},
 				},
 			},
 			entitiesToRemove: []entityToRemove{
 				{
 					entityID: 0,
-					want: map[reflect.Type]any{
-						reflect.TypeFor[int](): helpers.New(1),
+					want: map[ComponentID]any{
+						intComponentID: helpers.New(1),
 					},
 					wantErr: false,
 				},
 				{
 					entityID: 0,
-					want: map[reflect.Type]any{
-						reflect.TypeFor[int](): helpers.New(1),
+					want: map[ComponentID]any{
+						intComponentID: helpers.New(1),
 					},
 					wantErr: true,
 				},
@@ -469,10 +354,10 @@ func TestArchetype_RemoveEntity(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a, err := NewArchetype(tt.componentTypes, tt.signatureMask)
-			require.NoError(t, err)
+			t.Parallel()
 
-			// Add entities
+			a := NewArchetype(tt.signatureMask)
+
 			for _, entityToAdd := range tt.entitiesToAdd {
 				gotErr := a.AddEntity(entityToAdd.entityID, entityToAdd.componentsData)
 				require.NoError(t, gotErr)
@@ -490,10 +375,66 @@ func TestArchetype_RemoveEntity(t *testing.T) {
 					return e == entityToRemove.entityID
 				}))
 				for componentType := range entityToRemove.want {
-					_, exists := a.GetComponentPtr(entityToRemove.entityID, componentType)
+					exists := a.HasComponent(entityToRemove.entityID, componentType)
 					require.False(t, exists)
 				}
 			}
 		})
 	}
+}
+
+func TestArchetype_MatchesQuery(t *testing.T) {
+	t.Parallel()
+
+	// Archetype has components 1 and 2
+	archMask := NewBitmask()
+	archMask.Set(1)
+	archMask.Set(2)
+	arch := NewArchetype(archMask)
+
+	// Query for 1 and 2 -> Match
+	query1 := NewBitmask()
+	query1.Set(1)
+	query1.Set(2)
+	require.True(t, arch.MatchesQuery(query1))
+
+	// Query for only 1 -> Match (Archetype has all of query)
+	query2 := NewBitmask()
+	query2.Set(1)
+	require.True(t, arch.MatchesQuery(query2))
+
+	// Query for 1, 2, and 3 -> No Match (Archetype missing 3)
+	query3 := NewBitmask()
+	query3.Set(1)
+	query3.Set(2)
+	query3.Set(3)
+	require.False(t, arch.MatchesQuery(query3))
+}
+
+func TestArchetype_SignatureMatches(t *testing.T) {
+	t.Parallel()
+
+	// Archetype has components 1 and 2
+	archMask := NewBitmask()
+	archMask.Set(1)
+	archMask.Set(2)
+	arch := NewArchetype(archMask)
+
+	// Exact match -> Match
+	sig1 := NewBitmask()
+	sig1.Set(1)
+	sig1.Set(2)
+	require.True(t, arch.SignatureMatches(sig1))
+
+	// Subset -> No Match (Exact match required)
+	sig2 := NewBitmask()
+	sig2.Set(1)
+	require.False(t, arch.SignatureMatches(sig2))
+
+	// Superset -> No Match
+	sig3 := NewBitmask()
+	sig3.Set(1)
+	sig3.Set(2)
+	sig3.Set(3)
+	require.False(t, arch.SignatureMatches(sig3))
 }

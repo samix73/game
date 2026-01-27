@@ -4,19 +4,21 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"sync"
 )
+
+type ComponentID = uint
 
 type (
 	SystemCtor[S System] func(priority int) S
 )
 
-const maxComponents = 64
-
 var (
-	systemsRegistry    = make(map[string]SystemCtor[System])
-	componentsRegistry = make(map[string]any)
-	componentTypeBits  = make(map[reflect.Type]uint)
-	nextComponentBit   uint
+	systemsRegistry                  = make(map[string]SystemCtor[System])
+	componentsNameLookup             = make(map[string]any)
+	componentTypeLookup              = make(map[reflect.Type]ComponentID)
+	componentsPools                  = make(map[ComponentID]*sync.Pool)
+	nextComponentBit     ComponentID = 1
 )
 
 func getName[S any]() string {
@@ -46,39 +48,47 @@ func RegisterSystem[S System](systemCtor SystemCtor[S]) error {
 
 func RegisterComponent[T any]() error {
 	name := getName[T]()
-	if _, ok := componentsRegistry[name]; ok {
+	if _, ok := componentsNameLookup[name]; ok {
 		return fmt.Errorf("ecs.RegisterComponent: component %s already registered", name)
 	}
 
-	componentsRegistry[name] = *new(T)
+	componentsNameLookup[name] = *new(T)
 
 	// Assign a unique bit position for bitmask filtering
 	componentType := reflect.TypeFor[T]()
-	if _, exists := componentTypeBits[componentType]; !exists {
-		if nextComponentBit < maxComponents {
-			componentTypeBits[componentType] = nextComponentBit
-			nextComponentBit++
-		} else {
-			return fmt.Errorf("ecs.RegisterComponent: exceeded 64 component types, bitmask optimization disabled for new components %s", name)
-		}
+	if componentType.Kind() == reflect.Ptr {
+		componentType = componentType.Elem()
 	}
+
+	if _, exists := componentTypeLookup[componentType]; exists {
+		return fmt.Errorf("ecs.RegisterComponent: component %s already registered", name)
+	}
+
+	componentTypeLookup[componentType] = nextComponentBit
+	componentsPools[nextComponentBit] = &sync.Pool{New: func() any { return reflect.New(componentType).Interface() }}
+	nextComponentBit++
 
 	slog.Debug("ecs.RegisterComponent: registered component", slog.String("name", name))
 	return nil
 }
 
 func NewComponent(em *EntityManager, name string) (any, bool) {
-	comp, ok := componentsRegistry[name]
+	comp, ok := componentsNameLookup[name]
 	if !ok {
 		return nil, false
 	}
 
-	componentType := reflect.TypeOf(comp)
-	pool := em.getOrCreatePool(componentType, func() any {
-		return reflect.New(componentType).Interface()
-	})
+	componentID, ok := getComponentID(reflect.TypeOf(comp))
+	if !ok {
+		return nil, false
+	}
 
-	return pool.Get(), true
+	componentPool, ok := getComponentPool(componentID)
+	if !ok {
+		return nil, false
+	}
+
+	return componentPool.Get(), true
 }
 
 // GetSystem retrieves a system constructor from the ECS registry by name.
@@ -91,39 +101,40 @@ func GetSystem(name string) (SystemCtor[System], bool) {
 	return ctor, true
 }
 
+func getComponentPool(componentID ComponentID) (*sync.Pool, bool) {
+	pool, exists := componentsPools[componentID]
+	return pool, exists
+}
+
 // getComponentsBitmask computes a bitmask from component types for fast signature matching.
-func getComponentsBitmask(componentTypes []archetypeComponentSignature) (Bitmask, bool) {
+func getComponentsBitmask(componentTypes []reflect.Type) (Bitmask, bool) {
 	var mask Bitmask
 	for _, ct := range componentTypes {
-		bitPos := ct.bit
-		if bitPos == 0 {
-			var ok bool
-			bitPos, ok = getComponentBit(ct.typ)
-			if !ok {
-				return 0, false
-			}
+		bitPos, ok := getComponentID(ct)
+		if !ok {
+			return Bitmask{}, false
 		}
 
-		mask.SetFlag(bitPos)
+		mask.Set(bitPos)
 	}
 
 	return mask, true
 }
 
-func getComponentBit(componentType reflect.Type) (uint, bool) {
-	bitPos, exists := componentTypeBits[componentType]
+// getComponentID returns the bitmask position for a component type.
+func getComponentID(componentType reflect.Type) (ComponentID, bool) {
+	if componentType.Kind() == reflect.Pointer {
+		componentType = componentType.Elem()
+	}
+
+	bitPos, exists := componentTypeLookup[componentType]
 	return bitPos, exists
 }
 
-func ComponentsBitMask(head reflect.Type, tail ...reflect.Type) (Bitmask, bool) {
-	componentSignature := make([]archetypeComponentSignature, 1+len(tail))
-	componentSignature[0].typ = head
-	for i := range tail {
-		componentSignature[i+1].typ = tail[i]
-	}
-	return getComponentsBitmask(componentSignature)
+func ComponentsBitMask(componentTypes []reflect.Type) (Bitmask, bool) {
+	return getComponentsBitmask(componentTypes)
 }
 
-func ComponentBit[T any]() (uint, bool) {
-	return getComponentBit(reflect.TypeFor[T]())
+func GetComponentID[T any]() (ComponentID, bool) {
+	return getComponentID(reflect.TypeFor[T]())
 }

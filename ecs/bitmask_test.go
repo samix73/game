@@ -10,7 +10,7 @@ func TestNewBitmask(t *testing.T) {
 	t.Parallel()
 
 	b := NewBitmask()
-	require.Empty(t, b)
+	require.Empty(t, b.bits)
 }
 
 func TestBitmask_SetAndHas(t *testing.T) {
@@ -89,4 +89,21 @@ func TestBitmask_HasAll(t *testing.T) {
 
 	b3.Set(1001)
 	require.False(t, b1.HasAll(b3))
+}
+
+func TestBitmask_Equals(t *testing.T) {
+	t.Parallel()
+
+	b1 := NewBitmask()
+	b1.Set(1)
+	b1.Set(100)
+
+	b2 := NewBitmask()
+	b2.Set(1)
+	b2.Set(100)
+
+	require.True(t, b1.Equals(b2))
+
+	b2.Set(2)
+	require.False(t, b1.Equals(b2))
 }
