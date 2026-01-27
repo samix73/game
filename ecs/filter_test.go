@@ -5,7 +5,6 @@ import (
 
 	"github.com/samix73/game/ecs"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func highZoomFilter(c *CameraComponent) bool {
@@ -64,37 +63,4 @@ func TestNot(t *testing.T) {
 	assert.False(t, ecs.Not(lowZoomFilter)(camera1))
 	assert.True(t, ecs.Not(lowZoomFilter)(camera2))
 	assert.False(t, ecs.Not(lowZoomFilter)(camera3))
-}
-
-func TestWhere(t *testing.T) {
-	em := ecs.NewEntityManager()
-
-	err := ecs.RegisterComponent[CameraComponent]()
-	require.NoError(t, err)
-
-	camera1EntityID, err := em.NewEntity()
-	require.NoError(t, err)
-	camera1, err := ecs.AddComponent[CameraComponent](em, camera1EntityID)
-	require.NoError(t, err)
-	camera1.Zoom = 1.5
-
-	camera2EntityID, err := em.NewEntity()
-	require.NoError(t, err)
-	camera2, err := ecs.AddComponent[CameraComponent](em, camera2EntityID)
-	require.NoError(t, err)
-	camera2.Zoom = 0.4
-
-	camera3EntityID, err := em.NewEntity()
-	require.NoError(t, err)
-	camera3, err := ecs.AddComponent[CameraComponent](em, camera3EntityID)
-	require.NoError(t, err)
-	camera3.Zoom = 0.6
-
-	gotCameras := make([]*CameraComponent, 0)
-	for c := range ecs.Where(em, ecs.Query[CameraComponent](em), ecs.And(highZoomFilter, lowZoomFilter)) {
-		gotCameras = append(gotCameras, ecs.MustGetComponent[CameraComponent](em, c))
-	}
-
-	require.Len(t, gotCameras, 1)
-	require.Equal(t, camera3, gotCameras[0])
 }

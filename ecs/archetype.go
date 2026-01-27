@@ -2,7 +2,6 @@ package ecs
 
 import (
 	"fmt"
-	"iter"
 	"reflect"
 	"unsafe"
 )
@@ -211,14 +210,8 @@ func (a *Archetype) MatchesQuery(queryMask Bitmask) bool {
 }
 
 // Entities returns an iterator over the entities in the archetype.
-func (a *Archetype) Entities() iter.Seq[EntityID] {
-	return func(yield func(EntityID) bool) {
-		for i := 0; i < len(a.entities); i++ {
-			if !yield(a.entities[i]) {
-				break
-			}
-		}
-	}
+func (a *Archetype) Entities() []EntityID {
+	return a.entities
 }
 
 // Count returns the number of entities in the archetype.

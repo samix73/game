@@ -184,38 +184,16 @@ func (em *EntityManager) RemoveComponent(entityID EntityID, componentType any) e
 	return nil
 }
 
-func (em *EntityManager) Query(queryMask Bitmask) iter.Seq[EntityID] {
-	type archSnap struct {
-		a   *Archetype
-		len int
-	}
+func (em *EntityManager) Query(queryMask Bitmask) []EntityID {
+	entities := make([]EntityID, 0)
 
-	// Snapshot matching archetypes and their lengths to handle modification during iteration
-	snapshots := make([]archSnap, 0, len(em.archetypes))
 	for i := range em.archetypes {
 		if em.archetypes[i].MatchesQuery(queryMask) {
-			snapshots = append(snapshots, archSnap{
-				a:   em.archetypes[i],
-				len: len(em.archetypes[i].entities),
-			})
+			entities = append(entities, em.archetypes[i].Entities()...)
 		}
 	}
 
-	return func(yield func(EntityID) bool) {
-		for i := range snapshots {
-			// Iterate backwards to avoid skipping entities when the current element is removed (Swap-and-Pop)
-			for j := snapshots[i].len - 1; j >= 0; j-- {
-				// Sanity check bound in case entities were removed by side effects
-				if j >= len(snapshots[i].a.entities) {
-					continue
-				}
-
-				if !yield(snapshots[i].a.entities[j]) {
-					return
-				}
-			}
-		}
-	}
+	return entities
 }
 
 // LoadEntity loads an entity asset and adds it to the entity manager.
@@ -343,35 +321,35 @@ func RemoveComponent[C any](em *EntityManager, entityID EntityID) error {
 	return nil
 }
 
-func Query[C any](em *EntityManager) iter.Seq[EntityID] {
+func Query[C any](em *EntityManager) []EntityID {
 	queryMask, ok := ComponentsBitMask(reflect.TypeFor[C]())
 	if !ok {
-		return func(yield func(EntityID) bool) {}
+		return []EntityID{}
 	}
 
 	return em.Query(queryMask)
 }
 
-func Query2[C1, C2 any](em *EntityManager) iter.Seq[EntityID] {
+func Query2[C1, C2 any](em *EntityManager) []EntityID {
 	queryMask, ok := ComponentsBitMask(
 		reflect.TypeFor[C1](),
 		reflect.TypeFor[C2](),
 	)
 	if !ok {
-		return func(yield func(EntityID) bool) {}
+		return []EntityID{}
 	}
 
 	return em.Query(queryMask)
 }
 
-func Query3[C1, C2, C3 any](em *EntityManager) iter.Seq[EntityID] {
+func Query3[C1, C2, C3 any](em *EntityManager) []EntityID {
 	queryMask, ok := ComponentsBitMask(
 		reflect.TypeFor[C1](),
 		reflect.TypeFor[C2](),
 		reflect.TypeFor[C3](),
 	)
 	if !ok {
-		return func(yield func(EntityID) bool) {}
+		return []EntityID{}
 	}
 
 	return em.Query(queryMask)
@@ -432,52 +410,47 @@ func evaluateFilter[C any](em *EntityManager, entityID EntityID, filter Filter[C
 	return filter(component)
 }
 
-func QueryWith[C any](em *EntityManager, filter Filter[C]) iter.Seq[EntityID] {
+func QueryWith[C any](em *EntityManager, filter Filter[C]) []EntityID {
 	if filter == nil {
 		return Query[C](em)
 	}
 
-	return func(yield func(EntityID) bool) {
-		for entityID := range Query[C](em) {
-			if evaluateFilter(em, entityID, filter) {
-				if !yield(entityID) {
-					break
-				}
-			}
+	entities := Query[C](em)
+	for i, entityID := range entities {
+		if !evaluateFilter(em, entityID, filter) {
+			entities = append(entities[:i], entities[i+1:]...)
 		}
 	}
+
+	return entities
 }
 
-func QueryWith2[C1, C2 any](em *EntityManager, filter1 Filter[C1], filter2 Filter[C2]) iter.Seq[EntityID] {
+func QueryWith2[C1, C2 any](em *EntityManager, filter1 Filter[C1], filter2 Filter[C2]) []EntityID {
 	if filter1 == nil && filter2 == nil {
 		return Query2[C1, C2](em)
 	}
 
-	return func(yield func(EntityID) bool) {
-		for entityID := range Query2[C1, C2](em) {
-			if evaluateFilter(em, entityID, filter1) && evaluateFilter(em, entityID, filter2) {
-				if !yield(entityID) {
-					break
-				}
-			}
+	entities := Query2[C1, C2](em)
+	for i, entityID := range entities {
+		if !evaluateFilter(em, entityID, filter1) || !evaluateFilter(em, entityID, filter2) {
+			entities = append(entities[:i], entities[i+1:]...)
 		}
 	}
+
+	return entities
 }
 
-func QueryWith3[C1, C2, C3 any](em *EntityManager, filter1 Filter[C1], filter2 Filter[C2], filter3 Filter[C3]) iter.Seq[EntityID] {
+func QueryWith3[C1, C2, C3 any](em *EntityManager, filter1 Filter[C1], filter2 Filter[C2], filter3 Filter[C3]) []EntityID {
 	if filter1 == nil && filter2 == nil && filter3 == nil {
 		return Query3[C1, C2, C3](em)
 	}
 
-	return func(yield func(EntityID) bool) {
-		for entityID := range Query3[C1, C2, C3](em) {
-			if evaluateFilter(em, entityID, filter1) &&
-				evaluateFilter(em, entityID, filter2) &&
-				evaluateFilter(em, entityID, filter3) {
-				if !yield(entityID) {
-					break
-				}
-			}
+	entities := Query3[C1, C2, C3](em)
+	for i, entityID := range entities {
+		if !evaluateFilter(em, entityID, filter1) || !evaluateFilter(em, entityID, filter2) || !evaluateFilter(em, entityID, filter3) {
+			entities = append(entities[:i], entities[i+1:]...)
 		}
 	}
+
+	return entities
 }

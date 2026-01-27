@@ -1,7 +1,6 @@
 package ecs_test
 
 import (
-	"slices"
 	"testing"
 
 	"github.com/jakecoffman/cp"
@@ -136,14 +135,14 @@ func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
 	entityID := NewCameraEntity(t, em)
 
 	// Query for only Transform component (entity has both Transform and Camera)
-	transformEntities := slices.Collect(ecs.Query[TransformComponent](em))
+	transformEntities := ecs.Query[TransformComponent](em)
 
 	// Entity should be found when querying for just Transform, even though it also has Camera
 	assert.Contains(t, transformEntities, entityID, "Entity with Transform+Camera should be found when querying for just Transform")
 	assert.Equal(t, 1, len(transformEntities), "Should find exactly 1 entity with Transform component")
 
 	// Query for both components
-	bothComponents := slices.Collect(ecs.Query2[TransformComponent, CameraComponent](em))
+	bothComponents := ecs.Query2[TransformComponent, CameraComponent](em)
 	assert.Contains(t, bothComponents, entityID, "Entity should be found when querying for both components")
 	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
 
@@ -151,13 +150,13 @@ func TestQuerySingleComponentFromMultiComponentEntity(t *testing.T) {
 	playerID := NewPlayerEntity(t, em)
 
 	// Query for Transform should now return both entities
-	transformEntities = slices.Collect(ecs.Query[TransformComponent](em))
+	transformEntities = ecs.Query[TransformComponent](em)
 	assert.Contains(t, transformEntities, entityID, "Camera entity should still be in Transform query")
 	assert.Contains(t, transformEntities, playerID, "Player entity should be in Transform query")
 	assert.Equal(t, 2, len(transformEntities), "Should find 2 entities with Transform component")
 
 	// Query for both components should only return the camera entity
-	bothComponents = slices.Collect(ecs.Query2[TransformComponent, CameraComponent](em))
+	bothComponents = ecs.Query2[TransformComponent, CameraComponent](em)
 	assert.Contains(t, bothComponents, entityID, "Only camera entity has both components")
 	assert.NotContains(t, bothComponents, playerID, "Player entity should not be in query for both components")
 	assert.Equal(t, 1, len(bothComponents), "Should find exactly 1 entity with both components")
@@ -211,7 +210,7 @@ func TestAddComponentWhileIterating(t *testing.T) {
 	// Track which entities we visit during iteration and how many times
 	var visitOrder []ecs.EntityID
 
-	for entity := range ecs.Query[TransformComponent](em) {
+	for _, entity := range ecs.Query[TransformComponent](em) {
 		visitedEntities[entity]++
 		visitOrder = append(visitOrder, entity)
 
@@ -279,7 +278,7 @@ func TestModifyOtherEntityWhileIterating(t *testing.T) {
 	// Iterate
 	// Expectation with 5 entities: [0, 1, 2, 3, 4]
 	// Backwards iteration visits: 4, 3, 2, 1, 0
-	for e := range ecs.Query[TransformComponent](em) {
+	for _, e := range ecs.Query[TransformComponent](em) {
 		visited[e]++
 
 		// When we visit the last entity (entities[4]), remove the first entity (entities[0])
@@ -319,7 +318,7 @@ func TestModifyingComponentValue(t *testing.T) {
 		entities[i] = e
 	}
 
-	for e := range ecs.Query[TransformComponent](em) {
+	for _, e := range ecs.Query[TransformComponent](em) {
 		transform := ecs.MustGetComponent[TransformComponent](em, e)
 		assert.Equal(t, 24, transform.Position.X)
 		assert.Equal(t, 54, transform.Position.Y)
@@ -348,7 +347,7 @@ func BenchmarkGetComponent(b *testing.B) {
 		require.NoError(b, err)
 	}
 
-	entityIDs := slices.Collect(ecs.Query[TransformComponent](em))
+	entityIDs := ecs.Query[TransformComponent](em)
 
 	b.Run("GetComponent single entity", func(b *testing.B) {
 		b.ResetTimer()
@@ -391,13 +390,13 @@ func BenchmarkQueryEntities(b *testing.B) {
 
 	b.Run("Query", func(b *testing.B) {
 		for b.Loop() {
-			_ = slices.Collect(ecs.Query[TransformComponent](em))
+			_ = ecs.Query[TransformComponent](em)
 		}
 	})
 
 	b.Run("Query2", func(b *testing.B) {
 		for b.Loop() {
-			_ = slices.Collect(ecs.Query2[TransformComponent, CameraComponent](em))
+			_ = ecs.Query2[TransformComponent, CameraComponent](em)
 		}
 	})
 }
