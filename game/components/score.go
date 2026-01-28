@@ -1,11 +1,9 @@
 package components
 
-import "github.com/samix73/game/ecs"
+import ecs "github.com/samix73/ebiten-ecs"
 
 func init() {
-	if err := ecs.RegisterComponent[Score](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[Score]()
 }
 
 var _ ecs.Component = (*Score)(nil)

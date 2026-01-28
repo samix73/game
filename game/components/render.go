@@ -4,17 +4,13 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/assets"
 )
 
 func init() {
-	if err := ecs.RegisterComponent[Renderable](); err != nil {
-		panic(err)
-	}
-	if err := ecs.RegisterComponent[Render](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[Renderable]()
+	ecs.RegisterComponent[Render]()
 }
 
 // Renderable represents a 2D entity that can be rendered on the screen.

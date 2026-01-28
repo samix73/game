@@ -2,7 +2,7 @@ package systems
 
 import (
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 	"github.com/samix73/game/keys"
 )
@@ -10,9 +10,7 @@ import (
 var _ ecs.System = (*PlayerInputSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewPlayerInputSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewPlayerInputSystem)
 }
 
 type PlayerInputSystem struct {

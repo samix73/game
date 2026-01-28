@@ -2,13 +2,11 @@ package components
 
 import (
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 )
 
 func init() {
-	if err := ecs.RegisterComponent[Transform](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[Transform]()
 }
 
 // Transform represents the position and rotation of an entity in 2D space.

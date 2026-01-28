@@ -1,7 +1,7 @@
 package systems
 
 import (
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 	"github.com/samix73/game/helpers"
 )
@@ -9,9 +9,7 @@ import (
 var _ ecs.System = (*ScoreSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewScoreSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewScoreSystem)
 }
 
 type ScoreSystem struct {

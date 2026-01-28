@@ -1,11 +1,9 @@
 package components
 
-import "github.com/samix73/game/ecs"
+import ecs "github.com/samix73/ebiten-ecs"
 
 func init() {
-	if err := ecs.RegisterComponent[Player](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[Player]()
 }
 
 var _ ecs.Component = (*Player)(nil)

@@ -5,16 +5,14 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 )
 
 var _ ecs.DrawableSystem = (*GameOverSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewGameOverSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewGameOverSystem)
 }
 
 type GameOverSystem struct {

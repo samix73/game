@@ -2,16 +2,12 @@ package components
 
 import (
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 )
 
 func init() {
-	if err := ecs.RegisterComponent[Camera](); err != nil {
-		panic(err)
-	}
-	if err := ecs.RegisterComponent[ActiveCamera](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[Camera]()
+	ecs.RegisterComponent[ActiveCamera]()
 }
 
 var _ ecs.Component = (*Camera)(nil)

@@ -2,13 +2,11 @@ package components
 
 import (
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 )
 
 func init() {
-	if err := ecs.RegisterComponent[RigidBody](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[RigidBody]()
 }
 
 // RigidBody represents a physics body with mass, velocity, and gravity.

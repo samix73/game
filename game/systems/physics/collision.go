@@ -4,16 +4,14 @@ import (
 	"fmt"
 
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 )
 
 var _ ecs.System = (*CollisionSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewCollisionSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewCollisionSystem)
 }
 
 type collisionCandidate struct {

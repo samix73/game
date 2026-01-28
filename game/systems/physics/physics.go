@@ -4,19 +4,15 @@ import (
 	"log/slog"
 
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 )
 
 var _ ecs.System = (*PhysicsSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewPhysicsSystem); err != nil {
-		panic(err)
-	}
-	if err := ecs.RegisterSystem(NewCollisionResolverSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewPhysicsSystem)
+	ecs.RegisterSystem(NewCollisionResolverSystem)
 }
 
 type PhysicsSystem struct {

@@ -1,16 +1,14 @@
 package systems
 
 import (
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/keys"
 )
 
 var _ ecs.System = (*RestartSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewRestartSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewRestartSystem)
 }
 
 type RestartSystem struct {

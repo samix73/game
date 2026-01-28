@@ -7,7 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 	"github.com/samix73/game/game/entities"
 	"github.com/samix73/game/helpers"
@@ -16,9 +16,7 @@ import (
 var _ ecs.DrawableSystem = (*CameraSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewCameraSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewCameraSystem)
 }
 
 type CameraSystem struct {

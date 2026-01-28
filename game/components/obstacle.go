@@ -1,11 +1,9 @@
 package components
 
-import "github.com/samix73/game/ecs"
+import ecs "github.com/samix73/ebiten-ecs"
 
 func init() {
-	if err := ecs.RegisterComponent[Obstacle](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[Obstacle]()
 }
 
 var _ ecs.Component = (*Obstacle)(nil)

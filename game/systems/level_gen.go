@@ -8,7 +8,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 	"github.com/samix73/game/helpers"
 )
@@ -22,9 +22,7 @@ const (
 )
 
 func init() {
-	if err := ecs.RegisterSystem(NewLevelGenSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewLevelGenSystem)
 }
 
 var _ ecs.System = (*LevelGenSystem)(nil)

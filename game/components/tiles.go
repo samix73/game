@@ -4,13 +4,11 @@ import (
 	"image"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 )
 
 func init() {
-	if err := ecs.RegisterComponent[TileMap](); err != nil {
-		panic(err)
-	}
+	ecs.RegisterComponent[TileMap]()
 }
 
 var _ ecs.Component = (*TileMap)(nil)

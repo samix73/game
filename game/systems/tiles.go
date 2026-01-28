@@ -2,16 +2,14 @@ package systems
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 )
 
 var _ ecs.System = (*TileSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewTileSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewTileSystem)
 }
 
 type TileSystem struct {

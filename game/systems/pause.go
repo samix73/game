@@ -3,16 +3,14 @@ package systems
 import (
 	"log/slog"
 
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/keys"
 )
 
 var _ ecs.System = (*PauseSystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewPauseSystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewPauseSystem)
 }
 
 type PauseSystem struct {

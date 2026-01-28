@@ -2,7 +2,7 @@ package physics
 
 import (
 	"github.com/jakecoffman/cp"
-	"github.com/samix73/game/ecs"
+	ecs "github.com/samix73/ebiten-ecs"
 	"github.com/samix73/game/game/components"
 )
 
@@ -11,9 +11,7 @@ var gravity = cp.Vector{X: 0, Y: -981}
 var _ ecs.System = (*GravitySystem)(nil)
 
 func init() {
-	if err := ecs.RegisterSystem(NewGravitySystem); err != nil {
-		panic(err)
-	}
+	ecs.RegisterSystem(NewGravitySystem)
 }
 
 type GravitySystem struct {
