@@ -177,5 +177,9 @@ func (c *CameraSystem) Draw(screen *ebiten.Image) {
 	}
 }
 
+func (c *CameraSystem) Start() error {
+	return nil
+}
+
 func (c *CameraSystem) Teardown() {
 }

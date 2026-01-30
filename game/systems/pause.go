@@ -49,5 +49,9 @@ func (p *PauseSystem) Update() error {
 	return nil
 }
 
+func (p *PauseSystem) Start() error {
+	return nil
+}
+
 func (p *PauseSystem) Teardown() {
 }

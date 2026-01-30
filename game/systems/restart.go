@@ -37,4 +37,8 @@ func (r *RestartSystem) Update() error {
 	return game.SetActiveWorld(world)
 }
 
+func (r *RestartSystem) Start() error {
+	return nil
+}
+
 func (r *RestartSystem) Teardown() {}

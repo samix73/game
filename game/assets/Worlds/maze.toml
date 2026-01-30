@@ -1,0 +1,17 @@
+name = "main_world"
+
+[[systems]]
+name = "RestartSystem"
+priority = 0
+[[systems]]
+name = "PauseSystem"
+priority = 1
+[[systems]]
+name = "CameraSystem"
+priority = 2
+
+[[entities]]
+path = "game/assets/Entities/ActiveCamera.toml"
+
+[[entities]]
+path = "game/assets/Entities/Maze.toml"

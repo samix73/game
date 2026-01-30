@@ -50,5 +50,9 @@ func (s *ScoreSystem) Update() error {
 	return nil
 }
 
+func (s *ScoreSystem) Start() error {
+	return nil
+}
+
 func (s *ScoreSystem) Teardown() {
 }

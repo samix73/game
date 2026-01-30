@@ -48,7 +48,7 @@ func main() {
 		Fullscreen:   *fullscreen,
 	})
 
-	world, err := g.LoadWorld("main_world")
+	world, err := g.LoadWorld("game/assets/Worlds/maze.toml")
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)

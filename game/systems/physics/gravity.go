@@ -52,5 +52,9 @@ func (g *GravitySystem) Update() error {
 	return nil
 }
 
+func (g *GravitySystem) Start() error {
+	return nil
+}
+
 func (g *GravitySystem) Teardown() {
 }

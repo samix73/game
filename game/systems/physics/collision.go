@@ -119,5 +119,9 @@ func (c *CollisionSystem) Update() error {
 	return nil
 }
 
+func (c *CollisionSystem) Start() error {
+	return nil
+}
+
 func (c *CollisionSystem) Teardown() {
 }

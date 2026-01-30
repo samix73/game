@@ -50,6 +50,10 @@ func (p *PhysicsSystem) Update() error {
 	return nil
 }
 
+func (p *PhysicsSystem) Start() error {
+	return nil
+}
+
 func (p *PhysicsSystem) Teardown() {
 }
 
@@ -101,6 +105,10 @@ func (cr *CollisionResolverSystem) Update() error {
 		// If neither has rigidbody, no physics response needed
 	}
 
+	return nil
+}
+
+func (cr *CollisionResolverSystem) Start() error {
 	return nil
 }
 

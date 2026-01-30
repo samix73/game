@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/hajimehoshi/ebiten/v2 v2.9.7
 	github.com/jakecoffman/cp v1.2.1
+	github.com/samix73/ebiten-ecs v0.7.1
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/goleak v1.3.0
 )
@@ -18,7 +19,6 @@ require (
 	github.com/jezek/xgb v1.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/samix73/ebiten-ecs v0.7.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

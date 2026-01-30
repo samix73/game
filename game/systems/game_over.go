@@ -82,5 +82,9 @@ func (g *GameOverSystem) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, restartText, screenWidth/2-100, screenHeight/2+20)
 }
 
+func (g *GameOverSystem) Start() error {
+	return nil
+}
+
 func (g *GameOverSystem) Teardown() {
 }

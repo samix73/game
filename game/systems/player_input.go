@@ -42,5 +42,9 @@ func (p *PlayerInputSystem) Update() error {
 	return nil
 }
 
+func (p *PlayerInputSystem) Start() error {
+	return nil
+}
+
 func (p *PlayerInputSystem) Teardown() {
 }

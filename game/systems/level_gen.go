@@ -167,4 +167,8 @@ func (l *LevelGenSystem) Update() error {
 	return nil
 }
 
+func (l *LevelGenSystem) Start() error {
+	return nil
+}
+
 func (l *LevelGenSystem) Teardown() {}
